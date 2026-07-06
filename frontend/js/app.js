@@ -12,6 +12,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 
 journal.init();
 learn.init();
+offline.init();
 
 // Service Worker (funktioniert nur über HTTPS oder localhost)
 if ("serviceWorker" in navigator) {

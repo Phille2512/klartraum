@@ -23,6 +23,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Klartraum-App", lifespan=lifespan)
 
 
+@app.middleware("http")
+async def no_cache_static(request, call_next):
+    # Browser sollen Frontend-Dateien immer gegen den Server prüfen (304, wenn
+    # unverändert) – sonst bleiben nach Updates alte Versionen im HTTP-Cache hängen.
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 # ---------- Schemas (API-Eingabe/-Ausgabe) ----------
 
 class DreamIn(BaseModel):

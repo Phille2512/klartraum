@@ -1,11 +1,12 @@
 // Service Worker: App-Shell cachen, damit die PWA schnell startet.
 // API-Anfragen gehen immer ans Netz (Traumdaten sollen aktuell sein).
-const CACHE = "klartraum-v1";
+const CACHE = "klartraum-v3";
 const SHELL = [
   "/",
   "/index.html",
   "/css/style.css",
   "/js/api.js",
+  "/js/offline.js",
   "/js/journal.js",
   "/js/stats.js",
   "/js/learn.js",
@@ -17,7 +18,12 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  event.waitUntil(
+    caches.open(CACHE).then((cache) =>
+      // "reload" umgeht den HTTP-Cache des Browsers – sonst landen alte Dateien im Shell-Cache
+      cache.addAll(SHELL.map((url) => new Request(url, { cache: "reload" })))
+    )
+  );
   self.skipWaiting();
 });
 
@@ -34,15 +40,14 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.pathname.startsWith("/api/")) return; // API immer live
 
+  // Netz zuerst (immer aktuelle App), Cache nur als Offline-Fallback
   event.respondWith(
-    caches.match(event.request).then(
-      (cached) =>
-        cached ||
-        fetch(event.request).then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-    )
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

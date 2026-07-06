@@ -156,6 +156,15 @@ button.danger { color: var(--danger); }
 
 .badge.sign { background: #3a3357; color: #c9bfff; }
 .badge.lucid { background: #4a3d1f; color: var(--lucid); }
+.badge.pending { background: #4a3d1f; color: var(--lucid); }
+
+.pending-entry { border: 1px dashed var(--lucid); opacity: 0.85; }
+
+.offline-hint {
+  border: 1px solid var(--accent);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
 
 .entry-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
 .entry-actions button { padding: 0.3rem 0.8rem; font-size: 0.85rem; }

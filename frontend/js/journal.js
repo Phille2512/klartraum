@@ -1,6 +1,8 @@
 // Tagebuch: Erfassen, Liste, Suche, Bearbeiten, Löschen
 const journal = {
   dreams: [],
+  pending: [],
+  serverOffline: false,
 
   init() {
     this.form = document.getElementById("dream-form");
@@ -23,10 +25,17 @@ const journal = {
   async load() {
     try {
       this.dreams = await api.listDreams({ search: this.search.value.trim() });
-      this.render();
+      this.serverOffline = false;
     } catch (err) {
-      showToast(err.message);
+      if (err.isNetworkError) {
+        this.dreams = [];
+        this.serverOffline = true;
+      } else {
+        showToast(err.message);
+      }
     }
+    this.pending = await offline.list().catch(() => []);
+    this.render();
   },
 
   async refreshDatalists() {
@@ -88,7 +97,17 @@ const journal = {
       this.closeForm();
       this.load();
     } catch (err) {
-      showToast(err.message);
+      if (!id && err.isNetworkError) {
+        // Server nicht erreichbar: Traum in die Offline-Warteschlange legen
+        await offline.enqueue(payload);
+        showToast("Offline gespeichert – wird übertragen, sobald der Server erreichbar ist 📥");
+        this.closeForm();
+        this.load();
+      } else if (err.isNetworkError) {
+        showToast("Bearbeiten geht nur mit Verbindung zum Server");
+      } else {
+        showToast(err.message);
+      }
     }
   },
 
@@ -104,14 +123,35 @@ const journal = {
   },
 
   render() {
-    if (!this.dreams.length) {
-      this.list.innerHTML = `<div class="empty-state">
+    const offlineHint = this.serverOffline
+      ? `<div class="card offline-hint">📡 Server nicht erreichbar – neue Träume werden auf diesem Gerät
+         zwischengespeichert und automatisch übertragen.</div>`
+      : "";
+
+    const pendingHtml = this.pending
+      .map(
+        (p) => `<article class="card dream-entry pending-entry">
+          <div class="entry-head">
+            <h3>${escapeHtml(p.payload.title)}</h3>
+            <span class="entry-date">${formatDate(p.payload.date)}</span>
+          </div>
+          ${p.payload.content ? `<p>${escapeHtml(p.payload.content)}</p>` : ""}
+          <div><span class="badge pending">⏳ wartet auf Übertragung</span></div>
+          <div class="entry-actions">
+            <button class="danger" onclick="journal.removePending(${p.queueId})">Verwerfen</button>
+          </div>
+        </article>`
+      )
+      .join("");
+
+    if (!this.dreams.length && !this.pending.length) {
+      this.list.innerHTML = offlineHint + `<div class="empty-state">
         ${this.search.value ? "Keine Träume gefunden." : "Noch keine Träume. Leg direkt nach dem Aufwachen los – auch Fragmente zählen!"}
       </div>`;
       return;
     }
     const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
-    this.list.innerHTML = this.dreams
+    this.list.innerHTML = offlineHint + pendingHtml + this.dreams
       .map(
         (d) => `<article class="card dream-entry">
           <div class="entry-head">
@@ -137,6 +177,13 @@ const journal = {
   edit(id) {
     const dream = this.dreams.find((d) => d.id === id);
     if (dream) this.openForm(dream);
+  },
+
+  async removePending(queueId) {
+    if (!confirm("Diesen noch nicht übertragenen Traum verwerfen?")) return;
+    await offline.remove(queueId);
+    showToast("Offline-Eintrag verworfen");
+    this.load();
   },
 };
 

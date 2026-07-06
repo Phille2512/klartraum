@@ -1,10 +1,17 @@
 // Kleiner Wrapper um fetch für die REST-API
 const api = {
   async request(path, options = {}) {
-    const res = await fetch(path, {
-      headers: { "Content-Type": "application/json" },
-      ...options,
-    });
+    let res;
+    try {
+      res = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+    } catch {
+      const err = new Error("Server nicht erreichbar");
+      err.isNetworkError = true;
+      throw err;
+    }
     if (!res.ok) {
       const detail = await res.json().catch(() => ({}));
       throw new Error(detail.detail || `Fehler ${res.status}`);
