@@ -57,7 +57,8 @@ const offline = {
           await this.remove(item.queueId);
           synced++;
         } catch (err) {
-          if (err.isNetworkError) break; // Server weiterhin offline – später erneut versuchen
+          // Server offline oder noch nicht angemeldet: Einträge behalten, später erneut
+          if (err.isNetworkError || err.isAuthError) break;
           // Server hat den Eintrag abgelehnt (z. B. ungültige Daten): nicht endlos wiederholen
           await this.remove(item.queueId);
           showToast(`Offline-Eintrag „${item.payload.title}" wurde abgelehnt: ${err.message}`);

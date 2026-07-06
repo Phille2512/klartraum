@@ -1,15 +1,20 @@
 // Kleiner Wrapper um fetch für die REST-API
 const api = {
   async request(path, options = {}) {
+    const headers = { "Content-Type": "application/json" };
+    if (auth.token) headers["Authorization"] = `Bearer ${auth.token}`;
     let res;
     try {
-      res = await fetch(path, {
-        headers: { "Content-Type": "application/json" },
-        ...options,
-      });
+      res = await fetch(path, { headers, ...options });
     } catch {
       const err = new Error("Server nicht erreichbar");
       err.isNetworkError = true;
+      throw err;
+    }
+    if (res.status === 401) {
+      auth.onUnauthorized();
+      const err = new Error("Nicht angemeldet");
+      err.isAuthError = true;
       throw err;
     }
     if (!res.ok) {

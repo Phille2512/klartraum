@@ -3,11 +3,12 @@ from collections import Counter
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field as PField
 from sqlmodel import Session, col, select
 
+import auth
 from database import get_session, init_db
 from models import Dream, DreamTag, Tag
 
@@ -31,6 +32,42 @@ async def no_cache_static(request, call_next):
     if not request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-cache"
     return response
+
+
+# ---------- Authentifizierung ----------
+
+def require_auth(authorization: str | None = Header(default=None)):
+    token = authorization.removeprefix("Bearer ").strip() if authorization else ""
+    if not auth.verify_token(token):
+        raise HTTPException(401, "Nicht angemeldet")
+
+
+class PasswordIn(BaseModel):
+    password: str = PField(min_length=4)
+
+
+@app.get("/api/auth/status")
+def auth_status():
+    return {"configured": auth.is_configured()}
+
+
+@app.post("/api/auth/setup")
+def auth_setup(payload: PasswordIn):
+    if auth.is_configured():
+        raise HTTPException(409, "Passwort ist bereits festgelegt")
+    auth.set_password(payload.password)
+    return {"token": auth.create_token()}
+
+
+@app.post("/api/auth/login")
+def auth_login(payload: PasswordIn):
+    if not auth.verify_password(payload.password):
+        raise HTTPException(401, "Falsches Passwort")
+    return {"token": auth.create_token()}
+
+
+# Alle Daten-Endpunkte erfordern ein gültiges Token
+router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
 
 # ---------- Schemas (API-Eingabe/-Ausgabe) ----------
@@ -92,7 +129,7 @@ def apply_tags(session: Session, dream: Dream, payload: DreamIn) -> None:
 
 # ---------- Träume ----------
 
-@app.get("/api/dreams", response_model=list[DreamOut])
+@router.get("/dreams", response_model=list[DreamOut])
 def list_dreams(
     search: str | None = None,
     tag: str | None = None,
@@ -118,7 +155,7 @@ def list_dreams(
     return [to_out(d) for d in dreams]
 
 
-@app.post("/api/dreams", response_model=DreamOut, status_code=201)
+@router.post("/dreams", response_model=DreamOut, status_code=201)
 def create_dream(payload: DreamIn, session: Session = Depends(get_session)):
     dream = Dream(**payload.model_dump(exclude={"tags", "dream_signs"}))
     apply_tags(session, dream, payload)
@@ -128,7 +165,7 @@ def create_dream(payload: DreamIn, session: Session = Depends(get_session)):
     return to_out(dream)
 
 
-@app.get("/api/dreams/{dream_id}", response_model=DreamOut)
+@router.get("/dreams/{dream_id}", response_model=DreamOut)
 def get_dream(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
@@ -136,7 +173,7 @@ def get_dream(dream_id: int, session: Session = Depends(get_session)):
     return to_out(dream)
 
 
-@app.put("/api/dreams/{dream_id}", response_model=DreamOut)
+@router.put("/dreams/{dream_id}", response_model=DreamOut)
 def update_dream(dream_id: int, payload: DreamIn, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
@@ -150,7 +187,7 @@ def update_dream(dream_id: int, payload: DreamIn, session: Session = Depends(get
     return to_out(dream)
 
 
-@app.delete("/api/dreams/{dream_id}", status_code=204)
+@router.delete("/dreams/{dream_id}", status_code=204)
 def delete_dream(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
@@ -162,7 +199,7 @@ def delete_dream(dream_id: int, session: Session = Depends(get_session)):
 
 # ---------- Tags ----------
 
-@app.get("/api/tags")
+@router.get("/tags")
 def list_tags(session: Session = Depends(get_session)):
     tags = session.exec(select(Tag)).all()
     return [
@@ -173,7 +210,7 @@ def list_tags(session: Session = Depends(get_session)):
 
 # ---------- Statistik ----------
 
-@app.get("/api/stats")
+@router.get("/stats")
 def stats(session: Session = Depends(get_session)):
     dreams = session.exec(select(Dream)).all()
     total = len(dreams)
@@ -227,6 +264,8 @@ def stats(session: Session = Depends(get_session)):
         ],
     }
 
+
+app.include_router(router)
 
 # Frontend zuletzt mounten, damit /api/* Vorrang hat
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

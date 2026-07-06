@@ -10,6 +10,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
   });
 });
 
+auth.init();
 journal.init();
 learn.init();
 offline.init();
