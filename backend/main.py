@@ -78,6 +78,7 @@ class DreamIn(BaseModel):
     content: str = ""
     lucidity: int = PField(default=2, ge=0, le=4)
     sleep_quality: int | None = PField(default=None, ge=1, le=5)
+    beifuss: bool = False
     notes_analysis: str | None = None
     tags: list[str] = []
     dream_signs: list[str] = []
@@ -90,6 +91,7 @@ class DreamOut(BaseModel):
     content: str
     lucidity: int
     sleep_quality: int | None
+    beifuss: bool
     notes_analysis: str | None
     tags: list[str]
     dream_signs: list[str]
@@ -103,6 +105,7 @@ def to_out(dream: Dream) -> DreamOut:
         content=dream.content,
         lucidity=dream.lucidity,
         sleep_quality=dream.sleep_quality,
+        beifuss=dream.beifuss,
         notes_analysis=dream.notes_analysis,
         tags=sorted(t.name for t in dream.tags if t.kind == "tag"),
         dream_signs=sorted(t.name for t in dream.tags if t.kind == "dream_sign"),
@@ -203,9 +206,26 @@ def delete_dream(dream_id: int, session: Session = Depends(get_session)):
 def list_tags(session: Session = Depends(get_session)):
     tags = session.exec(select(Tag)).all()
     return [
-        {"name": t.name, "kind": t.kind, "count": len(t.dreams)}
+        {"id": t.id, "name": t.name, "kind": t.kind, "category": t.category, "count": len(t.dreams)}
         for t in sorted(tags, key=lambda t: (-len(t.dreams), t.name))
     ]
+
+
+class CategoryIn(BaseModel):
+    category: str | None = PField(default=None, pattern="^(awareness|action|form|context)$")
+
+
+@router.put("/tags/{tag_id}/category")
+def set_tag_category(tag_id: int, payload: CategoryIn, session: Session = Depends(get_session)):
+    tag = session.get(Tag, tag_id)
+    if not tag:
+        raise HTTPException(404, "Tag nicht gefunden")
+    if tag.kind != "dream_sign":
+        raise HTTPException(400, "Nur Traumzeichen haben eine Kompass-Kategorie")
+    tag.category = payload.category
+    session.add(tag)
+    session.commit()
+    return {"id": tag.id, "name": tag.name, "category": tag.category}
 
 
 # ---------- Statistik ----------
@@ -241,6 +261,33 @@ def stats(session: Session = Depends(get_session)):
         for name, count in sign_counter.most_common(10)
     ]
 
+    # Traumkompass: Traumzeichen-Vorkommen je LaBerge-Kategorie
+    compass = {"awareness": 0, "action": 0, "form": 0, "context": 0, "uncategorized": 0}
+    for d in dreams:
+        for t in d.tags:
+            if t.kind == "dream_sign":
+                compass[t.category if t.category in compass else "uncategorized"] += 1
+
+    # Fokus-Zeichen: häufigstes Traumzeichen der letzten 14 Tage
+    cutoff = dt.date.today() - dt.timedelta(days=14)
+    recent_counter: Counter[str] = Counter()
+    for d in dreams:
+        if d.date >= cutoff:
+            for t in d.tags:
+                if t.kind == "dream_sign":
+                    recent_counter[t.name] += 1
+    focus = recent_counter.most_common(1)
+    focus_sign = {"name": focus[0][0], "count": focus[0][1]} if focus else None
+
+    # Beifuß-Experiment: Klartraum-Quote mit vs. ohne
+    def lucid_rate(group: list[Dream]) -> float | None:
+        if not group:
+            return None
+        return round(sum(1 for d in group if d.lucidity >= 3) / len(group) * 100, 1)
+
+    with_beifuss = [d for d in dreams if d.beifuss]
+    without_beifuss = [d for d in dreams if not d.beifuss]
+
     # Streak: an wie vielen Tagen in Folge (bis heute/gestern) wurde eingetragen?
     days = {d.date for d in dreams}
     streak = 0
@@ -262,6 +309,12 @@ def stats(session: Session = Depends(get_session)):
         "lucidity_distribution": [
             sum(1 for d in dreams if d.lucidity == level) for level in range(5)
         ],
+        "compass": compass,
+        "focus_sign": focus_sign,
+        "beifuss": {
+            "with": {"count": len(with_beifuss), "lucid_rate": lucid_rate(with_beifuss)},
+            "without": {"count": len(without_beifuss), "lucid_rate": lucid_rate(without_beifuss)},
+        },
     }
 
 

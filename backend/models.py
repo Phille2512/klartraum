@@ -13,6 +13,8 @@ class Tag(SQLModel, table=True):
     name: str = Field(index=True)
     # "tag" = freies Schlagwort, "dream_sign" = wiederkehrendes Traumzeichen
     kind: str = Field(default="tag", index=True)
+    # LaBerge-Kategorie für Traumzeichen: awareness | action | form | context
+    category: str | None = Field(default=None, index=True)
 
     dreams: list["Dream"] = Relationship(back_populates="tags", link_model=DreamTag)
 
@@ -26,6 +28,7 @@ class Dream(SQLModel, table=True):
     # 3 = kurz luzide, 4 = voll luzide
     lucidity: int = Field(default=2, ge=0, le=4)
     sleep_quality: int | None = Field(default=None, ge=1, le=5)
+    beifuss: bool = Field(default=False)  # Beifuß(-Tee) vor dem Schlafen?
     notes_analysis: str | None = None
     created_at: dt.datetime = Field(default_factory=dt.datetime.utcnow)
 

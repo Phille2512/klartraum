@@ -59,6 +59,7 @@ const journal = {
     document.getElementById("dream-content").value = dream ? dream.content : "";
     document.getElementById("dream-lucidity").value = dream ? dream.lucidity : "2";
     document.getElementById("dream-sleep").value = dream?.sleep_quality ?? "";
+    document.getElementById("dream-beifuss").checked = dream ? dream.beifuss : false;
     document.getElementById("dream-tags").value = dream ? dream.tags.join(", ") : "";
     document.getElementById("dream-signs").value = dream ? dream.dream_signs.join(", ") : "";
     document.getElementById("dream-notes").value = dream?.notes_analysis ?? "";
@@ -82,6 +83,7 @@ const journal = {
       content: document.getElementById("dream-content").value.trim(),
       lucidity: Number(document.getElementById("dream-lucidity").value),
       sleep_quality: sleep ? Number(sleep) : null,
+      beifuss: document.getElementById("dream-beifuss").checked,
       notes_analysis: document.getElementById("dream-notes").value.trim() || null,
       tags: splitList(document.getElementById("dream-tags").value),
       dream_signs: splitList(document.getElementById("dream-signs").value),
@@ -163,6 +165,7 @@ const journal = {
             <span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${lucidityLabels[d.lucidity]}</span>
             ${d.dream_signs.map((s) => `<span class="badge sign">🔮 ${escapeHtml(s)}</span>`).join("")}
             ${d.tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join("")}
+            ${d.beifuss ? `<span class="badge herb">🌿 Beifuß</span>` : ""}
           </div>
           ${d.notes_analysis ? `<p class="hint">📝 ${escapeHtml(d.notes_analysis)}</p>` : ""}
           <div class="entry-actions">

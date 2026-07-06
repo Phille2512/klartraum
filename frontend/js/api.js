@@ -42,6 +42,12 @@ const api = {
   listTags() {
     return this.request("/api/tags");
   },
+  setTagCategory(id, category) {
+    return this.request(`/api/tags/${id}/category`, {
+      method: "PUT",
+      body: JSON.stringify({ category }),
+    });
+  },
   stats() {
     return this.request("/api/stats");
   },

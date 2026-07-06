@@ -62,6 +62,9 @@
             </select>
           </label>
         </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="dream-beifuss"> 🌿 Beifuß getrunken
+        </label>
         <label>Traumzeichen <small>(wiederkehrende Muster, kommagetrennt)</small>
           <input type="text" id="dream-signs" list="signs-list" placeholder="z. B. fliegen, verstorbene Person, Zähne">
           <datalist id="signs-list"></datalist>
@@ -85,6 +88,18 @@
     <!-- ===== Analyse ===== -->
     <section id="tab-stats" class="tab">
       <div id="stat-cards" class="stat-cards"></div>
+      <div class="card chart-card">
+        <h2>🧭 Traumkompass <small>nach Stephen LaBerge</small></h2>
+        <p class="hint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
+          verrät, worauf sich deine Reality Checks lohnen.</p>
+        <canvas id="chart-compass"></canvas>
+        <div id="compass-sorter"></div>
+        <div id="mission"></div>
+      </div>
+      <div class="card">
+        <h2>🌿 Wirkt Beifuß bei dir?</h2>
+        <div id="beifuss-compare"></div>
+      </div>
       <div class="card chart-card">
         <h2>Klarträume pro Woche</h2>
         <canvas id="chart-weeks"></canvas>
