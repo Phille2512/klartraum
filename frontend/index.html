@@ -113,6 +113,20 @@
         <h2>Verteilung der Traumerinnerung</h2>
         <canvas id="chart-lucidity"></canvas>
       </div>
+      <div class="card chart-card">
+        <h2>📈 Erinnerungs-Training</h2>
+        <p class="hint">Ø Wörter pro Eintrag: Je mehr Details du erinnerst, desto länger werden
+          deine Einträge – diese Kurve sollte mit der Übung steigen.</p>
+        <canvas id="chart-recall"></canvas>
+      </div>
+      <div class="card">
+        <h2>📤 Datenexport</h2>
+        <p class="hint">Alle Träume als Datei – für eigene Auswertungen (Pandas!) oder als Backup.</p>
+        <div class="form-actions">
+          <button id="export-json">JSON exportieren</button>
+          <button id="export-csv">CSV exportieren</button>
+        </div>
+      </div>
     </section>
 
     <!-- ===== Lernen ===== -->
@@ -131,6 +145,17 @@
           </label>
         </div>
         <p id="reminder-status" class="hint"></p>
+      </div>
+      <div class="card">
+        <h2>🛏️ WBTB-Rechner</h2>
+        <p class="hint">Wake Back To Bed: Werde in den REM-reichen Morgenstunden kurz wach –
+          der beste Moment für einen Klartraum-Versuch.</p>
+        <div class="form-row">
+          <label>Ich schlafe ein gegen
+            <input type="time" id="wbtb-bedtime">
+          </label>
+        </div>
+        <div id="wbtb-result"></div>
       </div>
       <div id="guides"></div>
     </section>

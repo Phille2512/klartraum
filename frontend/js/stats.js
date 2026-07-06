@@ -41,6 +41,25 @@ const stats = {
     this.renderWeeks(data.per_week);
     this.renderSigns(data.top_dream_signs);
     this.renderLucidity(data.lucidity_distribution);
+    this.renderRecall(data.per_week);
+  },
+
+  renderRecall(perWeek) {
+    this.makeChart("chart-recall", {
+      type: "line",
+      data: {
+        labels: perWeek.map((w) => w.week),
+        datasets: [{
+          label: "Ø Wörter pro Eintrag",
+          data: perWeek.map((w) => w.avg_words),
+          borderColor: "#8fd49a",
+          backgroundColor: "rgba(143, 212, 154, 0.15)",
+          fill: true,
+          tension: 0.3,
+        }],
+      },
+      options: this.baseOptions(),
+    });
   },
 
   renderCompass(compass) {
@@ -215,6 +234,25 @@ const stats = {
       },
       options: { plugins: { legend: { position: "bottom", labels: { color: "#9d9ab5" } } } },
     });
+  },
+
+  async downloadExport(format) {
+    try {
+      const res = await fetch(`/api/export?format=${format}`, {
+        headers: auth.token ? { Authorization: `Bearer ${auth.token}` } : {},
+      });
+      if (!res.ok) throw new Error(`Export fehlgeschlagen (${res.status})`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klartraum-export-${todayISO()}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Export heruntergeladen 📤");
+    } catch (err) {
+      showToast(err.message);
+    }
   },
 
   baseOptions(scaleOverrides = {}, indexAxis = "x") {

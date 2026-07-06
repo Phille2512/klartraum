@@ -73,6 +73,32 @@ const learn = {
     select.value = localStorage.getItem("rc-interval") || "0";
     select.addEventListener("change", () => this.applyReminder(select.value, true));
     this.applyReminder(select.value, false);
+
+    const bedtime = document.getElementById("wbtb-bedtime");
+    bedtime.value = localStorage.getItem("wbtb-bedtime") || "";
+    bedtime.addEventListener("change", () => this.renderWbtb());
+    this.renderWbtb();
+  },
+
+  renderWbtb() {
+    const value = document.getElementById("wbtb-bedtime").value;
+    const el = document.getElementById("wbtb-result");
+    localStorage.setItem("wbtb-bedtime", value);
+    if (!value) {
+      el.innerHTML = "";
+      return;
+    }
+    const [h, m] = value.split(":").map(Number);
+    const base = new Date(2000, 0, 1, h, m);
+    const at = (minutes) =>
+      new Date(base.getTime() + minutes * 60000).toTimeString().slice(0, 5);
+    // Schlafzyklen dauern ~90 min; nach 4–5 Zyklen dominieren lange REM-Phasen
+    el.innerHTML = `<div class="mission-card">
+      <p>⏰ <strong>Wecker auf ${at(6 * 60)} Uhr</strong> stellen (nach 4 Schlafzyklen à 90 Minuten).</p>
+      <p>Alternativen: ${at(4.5 * 60)} Uhr (3 Zyklen, kürzere Nacht) oder ${at(7.5 * 60)} Uhr (5 Zyklen, sanfter).</p>
+      <p>Dann 15–30 Minuten ruhig wach bleiben – am besten alte Traumeinträge lesen – und
+      mit MILD-Absicht wieder einschlafen. 🌙</p>
+    </div>`;
   },
 
   async applyReminder(minutes, userTriggered) {

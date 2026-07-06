@@ -1,9 +1,13 @@
+import csv
 import datetime as dt
+import io
+import json
 from collections import Counter
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field as PField
 from sqlmodel import Session, col, select
@@ -242,12 +246,20 @@ def stats(session: Session = Depends(get_session)):
     for d in dreams:
         iso = d.date.isocalendar()
         key = f"{iso.year}-KW{iso.week:02d}"
-        entry = weeks.setdefault(key, {"total": 0, "lucid": 0})
+        entry = weeks.setdefault(key, {"total": 0, "lucid": 0, "words": 0})
         entry["total"] += 1
+        entry["words"] += len(d.content.split())
         if d.lucidity >= 3:
             entry["lucid"] += 1
     per_week = [
-        {"week": k, **v} for k, v in sorted(weeks.items())
+        {
+            "week": k,
+            "total": v["total"],
+            "lucid": v["lucid"],
+            # Ø Wörter pro Eintrag: Maß fürs Erinnerungs-Training
+            "avg_words": round(v["words"] / v["total"]),
+        }
+        for k, v in sorted(weeks.items())
     ][-12:]
 
     # Top-Traumzeichen
@@ -316,6 +328,41 @@ def stats(session: Session = Depends(get_session)):
             "without": {"count": len(without_beifuss), "lucid_rate": lucid_rate(without_beifuss)},
         },
     }
+
+
+# ---------- Export ----------
+
+@router.get("/export")
+def export_data(format: str = "json", session: Session = Depends(get_session)):
+    dreams = session.exec(select(Dream).order_by(col(Dream.date))).all()
+    rows = [to_out(d).model_dump() for d in dreams]
+    filename = f"klartraum-export-{dt.date.today().isoformat()}"
+
+    if format == "csv":
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow([
+            "id", "date", "title", "content", "lucidity", "sleep_quality",
+            "beifuss", "tags", "dream_signs", "notes_analysis",
+        ])
+        for r in rows:
+            writer.writerow([
+                r["id"], r["date"], r["title"], r["content"], r["lucidity"],
+                r["sleep_quality"], int(r["beifuss"]),
+                "|".join(r["tags"]), "|".join(r["dream_signs"]),
+                r["notes_analysis"] or "",
+            ])
+        return Response(
+            buf.getvalue(),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f"attachment; filename={filename}.csv"},
+        )
+
+    return Response(
+        json.dumps(rows, default=str, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename={filename}.json"},
+    )
 
 
 app.include_router(router)

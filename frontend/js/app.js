@@ -15,6 +15,9 @@ journal.init();
 learn.init();
 offline.init();
 
+document.getElementById("export-json").addEventListener("click", () => stats.downloadExport("json"));
+document.getElementById("export-csv").addEventListener("click", () => stats.downloadExport("csv"));
+
 // Service Worker (funktioniert nur über HTTPS oder localhost)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {
