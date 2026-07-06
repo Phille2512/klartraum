@@ -1,0 +1,223 @@
+/* Mobile-first, dunkles Design – nachts angenehm zu lesen */
+:root {
+  --bg: #12131f;
+  --bg-card: #1e2032;
+  --bg-input: #2a2c44;
+  --text: #e8e6f0;
+  --text-dim: #9d9ab5;
+  --accent: #8b7ff5;
+  --accent-dark: #6a5fd0;
+  --lucid: #f5c66a;
+  --danger: #e06c75;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #1a1b2e;
+  padding: 0.75rem 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+}
+
+nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-dim);
+  font-size: 1rem;
+  padding: 0.6rem 0.5rem;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.tab { display: none; }
+.tab.active { display: block; }
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+
+.hidden { display: none !important; }
+
+.hint { color: var(--text-dim); font-size: 0.85rem; margin: 0.25rem 0 0.75rem; }
+
+/* --- Formulare --- */
+label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; }
+label small { color: var(--text-dim); }
+
+input, textarea, select {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text);
+  font: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.form-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+button {
+  font: inherit;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  background: var(--bg-input);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button.primary { background: var(--accent); color: #fff; }
+button.primary:hover { background: var(--accent-dark); }
+button.danger { color: var(--danger); }
+
+/* --- Tagebuch --- */
+.journal-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.journal-toolbar input { margin-top: 0; flex: 1; }
+.journal-toolbar button { white-space: nowrap; }
+
+.dream-entry { cursor: default; }
+
+.dream-entry .entry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.dream-entry h3 { margin: 0; font-size: 1rem; }
+.dream-entry .entry-date { color: var(--text-dim); font-size: 0.8rem; white-space: nowrap; }
+.dream-entry p { margin: 0.5rem 0; white-space: pre-wrap; }
+
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--bg-input);
+  color: var(--text-dim);
+  margin: 0.15rem 0.25rem 0.15rem 0;
+}
+
+.badge.sign { background: #3a3357; color: #c9bfff; }
+.badge.lucid { background: #4a3d1f; color: var(--lucid); }
+
+.entry-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+.entry-actions button { padding: 0.3rem 0.8rem; font-size: 0.85rem; }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 2rem 1rem;
+}
+
+/* --- Analyse --- */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.stat-card .value { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+.stat-card .value.gold { color: var(--lucid); }
+.stat-card .label { font-size: 0.8rem; color: var(--text-dim); }
+
+.chart-card canvas { max-height: 260px; }
+
+/* --- Lernen --- */
+details.guide {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+
+details.guide summary {
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+details.guide summary::before { content: "▸ "; color: var(--accent); }
+details.guide[open] summary::before { content: "▾ "; }
+
+details.guide .guide-body { padding: 0 1rem 1rem; color: var(--text); }
+details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; }
+
+/* --- Toast --- */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}

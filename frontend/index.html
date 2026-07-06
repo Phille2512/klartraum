@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1b2e">
+  <title>Klartraum</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🌙 Klartraum</h1>
+    <nav>
+      <button class="tab-btn active" data-tab="journal">Tagebuch</button>
+      <button class="tab-btn" data-tab="stats">Analyse</button>
+      <button class="tab-btn" data-tab="learn">Lernen</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== Tagebuch ===== -->
+    <section id="tab-journal" class="tab active">
+      <div class="journal-toolbar">
+        <input type="search" id="search-input" placeholder="Träume durchsuchen …">
+        <button id="new-dream-btn" class="primary">+ Neuer Traum</button>
+      </div>
+
+      <form id="dream-form" class="card hidden">
+        <h2 id="form-title">Neuer Traum</h2>
+        <input type="hidden" id="dream-id">
+        <label>Was hast du geträumt?
+          <textarea id="dream-content" rows="6"
+            placeholder="Schreibe alles auf, woran du dich erinnerst – auch Fragmente."></textarea>
+        </label>
+        <label>Titel
+          <input type="text" id="dream-title" required placeholder="Kurzer Titel">
+        </label>
+        <div class="form-row">
+          <label>Datum
+            <input type="date" id="dream-date" required>
+          </label>
+          <label>Erinnerung / Luzidität
+            <select id="dream-lucidity">
+              <option value="0">0 – keine Erinnerung</option>
+              <option value="1">1 – Fragment</option>
+              <option value="2" selected>2 – normaler Traum</option>
+              <option value="3">3 – kurz luzide</option>
+              <option value="4">4 – voll luzide</option>
+            </select>
+          </label>
+          <label>Schlafqualität
+            <select id="dream-sleep">
+              <option value="">–</option>
+              <option value="1">1 – sehr schlecht</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5 – sehr gut</option>
+            </select>
+          </label>
+        </div>
+        <label>Traumzeichen <small>(wiederkehrende Muster, kommagetrennt)</small>
+          <input type="text" id="dream-signs" list="signs-list" placeholder="z. B. fliegen, verstorbene Person, Zähne">
+          <datalist id="signs-list"></datalist>
+        </label>
+        <label>Tags <small>(kommagetrennt)</small>
+          <input type="text" id="dream-tags" list="tags-list" placeholder="z. B. albtraum, arbeit">
+          <datalist id="tags-list"></datalist>
+        </label>
+        <label>Eigene Analyse / Notizen
+          <textarea id="dream-notes" rows="2" placeholder="Deutung, Auffälligkeiten … (optional)"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary">Speichern</button>
+          <button type="button" id="cancel-btn">Abbrechen</button>
+        </div>
+      </form>
+
+      <div id="dream-list"></div>
+    </section>
+
+    <!-- ===== Analyse ===== -->
+    <section id="tab-stats" class="tab">
+      <div id="stat-cards" class="stat-cards"></div>
+      <div class="card chart-card">
+        <h2>Klarträume pro Woche</h2>
+        <canvas id="chart-weeks"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h2>Deine häufigsten Traumzeichen</h2>
+        <p class="hint">Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.</p>
+        <canvas id="chart-signs"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h2>Verteilung der Traumerinnerung</h2>
+        <canvas id="chart-lucidity"></canvas>
+      </div>
+    </section>
+
+    <!-- ===== Lernen ===== -->
+    <section id="tab-learn" class="tab">
+      <div class="card">
+        <h2>⏰ Reality-Check-Erinnerung</h2>
+        <p class="hint">Erinnert dich in festen Abständen an einen Reality Check – solange die App geöffnet ist.</p>
+        <div class="form-row">
+          <label>Intervall
+            <select id="reminder-interval">
+              <option value="0">Aus</option>
+              <option value="30">alle 30 Minuten</option>
+              <option value="60">jede Stunde</option>
+              <option value="120">alle 2 Stunden</option>
+            </select>
+          </label>
+        </div>
+        <p id="reminder-status" class="hint"></p>
+      </div>
+      <div id="guides"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/journal.js"></script>
+  <script src="/js/stats.js"></script>
+  <script src="/js/learn.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
