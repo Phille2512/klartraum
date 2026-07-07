@@ -179,7 +179,7 @@ def list_dreams(
 
 @router.post("/dreams", response_model=DreamOut, status_code=201)
 def create_dream(payload: DreamIn, session: Session = Depends(get_session)):
-    dream = Dream(**payload.model_dump(exclude={"tags", "dream_signs"}))
+    dream = Dream(**payload.model_dump(exclude={"tags", "dream_signs", "places", "persons"}))
     apply_tags(session, dream, payload)
     session.add(dream)
     session.commit()
@@ -200,7 +200,7 @@ def update_dream(dream_id: int, payload: DreamIn, session: Session = Depends(get
     dream = session.get(Dream, dream_id)
     if not dream:
         raise HTTPException(404, "Traum nicht gefunden")
-    for key, value in payload.model_dump(exclude={"tags", "dream_signs"}).items():
+    for key, value in payload.model_dump(exclude={"tags", "dream_signs", "places", "persons"}).items():
         setattr(dream, key, value)
     apply_tags(session, dream, payload)
     session.add(dream)
