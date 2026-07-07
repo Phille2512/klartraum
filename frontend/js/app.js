@@ -7,6 +7,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
     if (btn.dataset.tab === "stats") stats.load();
     if (btn.dataset.tab === "journal") journal.load();
+    if (btn.dataset.tab === "atlas") atlas.load();
   });
 });
 

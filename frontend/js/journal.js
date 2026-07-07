@@ -48,6 +48,8 @@ const journal = {
     };
     fill("tags-list", "tag");
     fill("signs-list", "dream_sign");
+    fill("places-list", "place");
+    fill("persons-list", "person");
   },
 
   openForm(dream = null) {
@@ -62,6 +64,8 @@ const journal = {
     document.getElementById("dream-beifuss").checked = dream ? dream.beifuss : false;
     document.getElementById("dream-tags").value = dream ? dream.tags.join(", ") : "";
     document.getElementById("dream-signs").value = dream ? dream.dream_signs.join(", ") : "";
+    document.getElementById("dream-places").value = dream ? dream.places.join(", ") : "";
+    document.getElementById("dream-persons").value = dream ? dream.persons.join(", ") : "";
     document.getElementById("dream-notes").value = dream?.notes_analysis ?? "";
     this.refreshDatalists();
     this.form.scrollIntoView({ behavior: "smooth" });
@@ -87,6 +91,8 @@ const journal = {
       notes_analysis: document.getElementById("dream-notes").value.trim() || null,
       tags: splitList(document.getElementById("dream-tags").value),
       dream_signs: splitList(document.getElementById("dream-signs").value),
+      places: splitList(document.getElementById("dream-places").value),
+      persons: splitList(document.getElementById("dream-persons").value),
     };
     try {
       if (id) {
@@ -164,6 +170,8 @@ const journal = {
           <div>
             <span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${lucidityLabels[d.lucidity]}</span>
             ${d.dream_signs.map((s) => `<span class="badge sign">🔮 ${escapeHtml(s)}</span>`).join("")}
+            ${d.places.map((p) => `<span class="badge place">📍 ${escapeHtml(p)}</span>`).join("")}
+            ${d.persons.map((p) => `<span class="badge person">👤 ${escapeHtml(p)}</span>`).join("")}
             ${d.tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join("")}
             ${d.beifuss ? `<span class="badge herb">🌿 Beifuß</span>` : ""}
           </div>

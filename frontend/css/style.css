@@ -158,6 +158,24 @@ button.danger { color: var(--danger); }
 .badge.lucid { background: #4a3d1f; color: var(--lucid); }
 .badge.pending { background: #4a3d1f; color: var(--lucid); }
 .badge.herb { background: #23402a; color: #8fd49a; }
+.badge.place { background: #23402a; color: #8fd49a; }
+.badge.person { background: #4a3d1f; color: var(--lucid); }
+
+/* --- Traumatlas --- */
+.atlas-legend { margin-bottom: 0.5rem; }
+
+#atlas-graph svg { display: block; }
+
+.atlas-node { cursor: pointer; }
+.atlas-node:hover circle { stroke: #fff; stroke-width: 2; }
+
+.series-entry {
+  border-top: 1px solid var(--bg-input);
+  padding: 0.75rem 0;
+}
+
+.series-entry h3 { margin: 0; font-size: 0.95rem; }
+.series-entry p { margin: 0.4rem 0; font-size: 0.9rem; color: var(--text-dim); }
 
 .checkbox-label {
   display: flex;

@@ -86,6 +86,8 @@ class DreamIn(BaseModel):
     notes_analysis: str | None = None
     tags: list[str] = []
     dream_signs: list[str] = []
+    places: list[str] = []
+    persons: list[str] = []
 
 
 class DreamOut(BaseModel):
@@ -99,6 +101,8 @@ class DreamOut(BaseModel):
     notes_analysis: str | None
     tags: list[str]
     dream_signs: list[str]
+    places: list[str]
+    persons: list[str]
 
 
 def to_out(dream: Dream) -> DreamOut:
@@ -113,6 +117,8 @@ def to_out(dream: Dream) -> DreamOut:
         notes_analysis=dream.notes_analysis,
         tags=sorted(t.name for t in dream.tags if t.kind == "tag"),
         dream_signs=sorted(t.name for t in dream.tags if t.kind == "dream_sign"),
+        places=sorted(t.name for t in dream.tags if t.kind == "place"),
+        persons=sorted(t.name for t in dream.tags if t.kind == "person"),
     )
 
 
@@ -129,9 +135,18 @@ def get_or_create_tag(session: Session, name: str, kind: str) -> Tag:
 
 
 def apply_tags(session: Session, dream: Dream, payload: DreamIn) -> None:
-    tags = [get_or_create_tag(session, n, "tag") for n in payload.tags if n.strip()]
-    signs = [get_or_create_tag(session, n, "dream_sign") for n in payload.dream_signs if n.strip()]
-    dream.tags = tags + signs
+    groups = [
+        ("tag", payload.tags),
+        ("dream_sign", payload.dream_signs),
+        ("place", payload.places),
+        ("person", payload.persons),
+    ]
+    dream.tags = [
+        get_or_create_tag(session, name, kind)
+        for kind, names in groups
+        for name in names
+        if name.strip()
+    ]
 
 
 # ---------- Träume ----------
@@ -330,6 +345,39 @@ def stats(session: Session = Depends(get_session)):
     }
 
 
+# ---------- Traumatlas ----------
+
+ATLAS_KINDS = {"place", "person", "dream_sign"}
+
+
+@router.get("/atlas")
+def atlas(session: Session = Depends(get_session)):
+    """Knoten = wiederkehrende Orte/Personen/Traumzeichen,
+    Verbindungen = gemeinsames Auftreten im selben Traum."""
+    dreams = session.exec(select(Dream)).all()
+    node_counter: Counter[tuple[str, str]] = Counter()
+    link_counter: Counter[tuple[tuple[str, str], tuple[str, str]]] = Counter()
+
+    for d in dreams:
+        elements = sorted({(t.name, t.kind) for t in d.tags if t.kind in ATLAS_KINDS})
+        for e in elements:
+            node_counter[e] += 1
+        for i in range(len(elements)):
+            for j in range(i + 1, len(elements)):
+                link_counter[(elements[i], elements[j])] += 1
+
+    return {
+        "nodes": [
+            {"id": f"{kind}:{name}", "name": name, "kind": kind, "count": count}
+            for (name, kind), count in node_counter.items()
+        ],
+        "links": [
+            {"source": f"{k1}:{n1}", "target": f"{k2}:{n2}", "weight": weight}
+            for ((n1, k1), (n2, k2)), weight in link_counter.items()
+        ],
+    }
+
+
 # ---------- Export ----------
 
 @router.get("/export")
@@ -343,13 +391,14 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
         writer = csv.writer(buf)
         writer.writerow([
             "id", "date", "title", "content", "lucidity", "sleep_quality",
-            "beifuss", "tags", "dream_signs", "notes_analysis",
+            "beifuss", "tags", "dream_signs", "places", "persons", "notes_analysis",
         ])
         for r in rows:
             writer.writerow([
                 r["id"], r["date"], r["title"], r["content"], r["lucidity"],
                 r["sleep_quality"], int(r["beifuss"]),
                 "|".join(r["tags"]), "|".join(r["dream_signs"]),
+                "|".join(r["places"]), "|".join(r["persons"]),
                 r["notes_analysis"] or "",
             ])
         return Response(

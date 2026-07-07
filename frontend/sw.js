@@ -1,6 +1,6 @@
 // Service Worker: App-Shell cachen, damit die PWA schnell startet.
 // API-Anfragen gehen immer ans Netz (Traumdaten sollen aktuell sein).
-const CACHE = "klartraum-v6";
+const CACHE = "klartraum-v7";
 const SHELL = [
   "/",
   "/index.html",
@@ -10,6 +10,7 @@ const SHELL = [
   "/js/offline.js",
   "/js/journal.js",
   "/js/stats.js",
+  "/js/atlas.js",
   "/js/learn.js",
   "/js/app.js",
   "/manifest.json",

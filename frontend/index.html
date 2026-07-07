@@ -16,6 +16,7 @@
     <nav>
       <button class="tab-btn active" data-tab="journal">Tagebuch</button>
       <button class="tab-btn" data-tab="stats">Analyse</button>
+      <button class="tab-btn" data-tab="atlas">Atlas</button>
       <button class="tab-btn" data-tab="learn">Lernen</button>
     </nav>
   </header>
@@ -69,6 +70,16 @@
           <input type="text" id="dream-signs" list="signs-list" placeholder="z. B. fliegen, verstorbene Person, Zähne">
           <datalist id="signs-list"></datalist>
         </label>
+        <div class="form-row">
+          <label>📍 Orte <small>(kommagetrennt)</small>
+            <input type="text" id="dream-places" list="places-list" placeholder="z. B. alte schule, meer">
+            <datalist id="places-list"></datalist>
+          </label>
+          <label>👤 Personen <small>(kommagetrennt)</small>
+            <input type="text" id="dream-persons" list="persons-list" placeholder="z. B. papa, freundin">
+            <datalist id="persons-list"></datalist>
+          </label>
+        </div>
         <label>Tags <small>(kommagetrennt)</small>
           <input type="text" id="dream-tags" list="tags-list" placeholder="z. B. albtraum, arbeit">
           <datalist id="tags-list"></datalist>
@@ -129,6 +140,23 @@
       </div>
     </section>
 
+    <!-- ===== Atlas ===== -->
+    <section id="tab-atlas" class="tab">
+      <div class="card">
+        <h2>🗺️ Dein Traumatlas</h2>
+        <p class="hint">Die Landkarte deiner Traumwelt: Orte, Personen und Traumzeichen –
+          verbunden, wenn sie im selben Traum auftauchen. Je größer, desto öfter geträumt.
+          Tippe einen Knoten an, um die ganze Traumserie zu sehen.</p>
+        <div class="atlas-legend">
+          <span class="badge place">📍 Ort</span>
+          <span class="badge person">👤 Person</span>
+          <span class="badge sign">🔮 Traumzeichen</span>
+        </div>
+        <div id="atlas-graph"></div>
+      </div>
+      <div id="atlas-series"></div>
+    </section>
+
     <!-- ===== Lernen ===== -->
     <section id="tab-learn" class="tab">
       <div class="card">
@@ -184,6 +212,7 @@
   <script src="/js/offline.js"></script>
   <script src="/js/journal.js"></script>
   <script src="/js/stats.js"></script>
+  <script src="/js/atlas.js"></script>
   <script src="/js/learn.js"></script>
   <script src="/js/app.js"></script>
 </body>
