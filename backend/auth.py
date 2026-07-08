@@ -4,9 +4,10 @@ pro angemeldetem Gerät ein zufälliges Token. Alles liegt in auth.json
 import hashlib
 import json
 import secrets
-from pathlib import Path
 
-AUTH_PATH = Path(__file__).parent / "auth.json"
+from paths import DATA_DIR
+
+AUTH_PATH = DATA_DIR / "auth.json"
 ITERATIONS = 200_000
 MAX_TOKENS = 10  # ältestes Gerät fliegt raus, wenn mehr angemeldet werden
 

@@ -1,8 +1,8 @@
-from pathlib import Path
-
 from sqlmodel import Session, SQLModel, create_engine
 
-DB_PATH = Path(__file__).parent / "dreams.db"
+from paths import DATA_DIR, migrate_legacy_data
+
+DB_PATH = DATA_DIR / "dreams.db"
 
 engine = create_engine(
     f"sqlite:///{DB_PATH}",
@@ -11,6 +11,7 @@ engine = create_engine(
 
 
 def init_db() -> None:
+    migrate_legacy_data()
     SQLModel.metadata.create_all(engine)
     _migrate()
 
@@ -24,9 +25,17 @@ def _migrate() -> None:
             conn.exec_driver_sql(
                 "ALTER TABLE dream ADD COLUMN beifuss INTEGER NOT NULL DEFAULT 0"
             )
+        if "emotions" not in dream_cols:
+            conn.exec_driver_sql("ALTER TABLE dream ADD COLUMN emotions VARCHAR")
+        if "big_dream" not in dream_cols:
+            conn.exec_driver_sql(
+                "ALTER TABLE dream ADD COLUMN big_dream INTEGER NOT NULL DEFAULT 0"
+            )
         tag_cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(tag)")}
         if "category" not in tag_cols:
             conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN category VARCHAR")
+        if "archetype" not in tag_cols:
+            conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN archetype VARCHAR")
         conn.commit()
 
 

@@ -4,7 +4,6 @@ import io
 import json
 from collections import Counter
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import Response
@@ -14,9 +13,8 @@ from sqlmodel import Session, col, select
 
 import auth
 from database import get_session, init_db
-from models import Dream, DreamTag, Tag
-
-FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+from models import Dream, DreamAnalysis, DreamTag, Goal, Imagination, Intention, JourneyStep, MapNode, MapPath, Reflection, SymbolNote, SyncEvent, Tag
+from paths import DATA_DIR, FRONTEND_DIR
 
 
 @asynccontextmanager
@@ -83,6 +81,8 @@ class DreamIn(BaseModel):
     lucidity: int = PField(default=2, ge=0, le=4)
     sleep_quality: int | None = PField(default=None, ge=1, le=5)
     beifuss: bool = False
+    big_dream: bool = False
+    emotions: list[str] = []
     notes_analysis: str | None = None
     tags: list[str] = []
     dream_signs: list[str] = []
@@ -98,6 +98,8 @@ class DreamOut(BaseModel):
     lucidity: int
     sleep_quality: int | None
     beifuss: bool
+    big_dream: bool
+    emotions: list[str]
     notes_analysis: str | None
     tags: list[str]
     dream_signs: list[str]
@@ -114,6 +116,8 @@ def to_out(dream: Dream) -> DreamOut:
         lucidity=dream.lucidity,
         sleep_quality=dream.sleep_quality,
         beifuss=dream.beifuss,
+        big_dream=dream.big_dream,
+        emotions=[e.strip() for e in (dream.emotions or "").split(",") if e.strip()],
         notes_analysis=dream.notes_analysis,
         tags=sorted(t.name for t in dream.tags if t.kind == "tag"),
         dream_signs=sorted(t.name for t in dream.tags if t.kind == "dream_sign"),
@@ -179,7 +183,9 @@ def list_dreams(
 
 @router.post("/dreams", response_model=DreamOut, status_code=201)
 def create_dream(payload: DreamIn, session: Session = Depends(get_session)):
-    dream = Dream(**payload.model_dump(exclude={"tags", "dream_signs", "places", "persons"}))
+    data = payload.model_dump(exclude={"tags", "dream_signs", "places", "persons", "emotions"})
+    data["emotions"] = ",".join(payload.emotions) if payload.emotions else None
+    dream = Dream(**data)
     apply_tags(session, dream, payload)
     session.add(dream)
     session.commit()
@@ -200,8 +206,9 @@ def update_dream(dream_id: int, payload: DreamIn, session: Session = Depends(get
     dream = session.get(Dream, dream_id)
     if not dream:
         raise HTTPException(404, "Traum nicht gefunden")
-    for key, value in payload.model_dump(exclude={"tags", "dream_signs", "places", "persons"}).items():
+    for key, value in payload.model_dump(exclude={"tags", "dream_signs", "places", "persons", "emotions"}).items():
         setattr(dream, key, value)
+    dream.emotions = ",".join(payload.emotions) if payload.emotions else None
     apply_tags(session, dream, payload)
     session.add(dream)
     session.commit()
@@ -225,7 +232,7 @@ def delete_dream(dream_id: int, session: Session = Depends(get_session)):
 def list_tags(session: Session = Depends(get_session)):
     tags = session.exec(select(Tag)).all()
     return [
-        {"id": t.id, "name": t.name, "kind": t.kind, "category": t.category, "count": len(t.dreams)}
+        {"id": t.id, "name": t.name, "kind": t.kind, "category": t.category, "archetype": t.archetype, "count": len(t.dreams)}
         for t in sorted(tags, key=lambda t: (-len(t.dreams), t.name))
     ]
 
@@ -245,6 +252,118 @@ def set_tag_category(tag_id: int, payload: CategoryIn, session: Session = Depend
     session.add(tag)
     session.commit()
     return {"id": tag.id, "name": tag.name, "category": tag.category}
+
+
+# ---------- Klartraum-Bucket-List ----------
+
+class GoalIn(BaseModel):
+    text: str = PField(min_length=1)
+
+
+class GoalToggle(BaseModel):
+    done: bool
+
+
+@router.get("/goals")
+def list_goals(session: Session = Depends(get_session)):
+    goals = session.exec(select(Goal)).all()
+    open_goals = sorted([g for g in goals if not g.done], key=lambda g: g.created_at)
+    done_goals = sorted([g for g in goals if g.done], key=lambda g: g.done_at or g.created_at, reverse=True)
+    return [
+        {"id": g.id, "text": g.text, "done": g.done, "done_at": g.done_at.isoformat() if g.done_at else None}
+        for g in open_goals + done_goals
+    ]
+
+
+@router.post("/goals", status_code=201)
+def create_goal(payload: GoalIn, session: Session = Depends(get_session)):
+    goal = Goal(text=payload.text.strip())
+    session.add(goal)
+    session.commit()
+    session.refresh(goal)
+    return {"id": goal.id, "text": goal.text, "done": goal.done, "done_at": None}
+
+
+@router.patch("/goals/{goal_id}")
+def update_goal(goal_id: int, payload: GoalToggle, session: Session = Depends(get_session)):
+    goal = session.get(Goal, goal_id)
+    if not goal:
+        raise HTTPException(404, "Ziel nicht gefunden")
+    goal.done = payload.done
+    goal.done_at = dt.datetime.utcnow() if payload.done else None
+    session.add(goal)
+    session.commit()
+    return {"id": goal.id, "text": goal.text, "done": goal.done, "done_at": goal.done_at.isoformat() if goal.done_at else None}
+
+
+@router.delete("/goals/{goal_id}", status_code=204)
+def delete_goal(goal_id: int, session: Session = Depends(get_session)):
+    goal = session.get(Goal, goal_id)
+    if not goal:
+        raise HTTPException(404, "Ziel nicht gefunden")
+    session.delete(goal)
+    session.commit()
+
+
+# ---------- Intentionen (Abendritual) ----------
+
+class IntentionIn(BaseModel):
+    text: str = PField(min_length=1)
+
+
+class IntentionFulfill(BaseModel):
+    fulfilled: bool
+
+
+@router.get("/intentions/current")
+def current_intention(session: Session = Depends(get_session)):
+    stmt = select(Intention).where(Intention.fulfilled == None).order_by(col(Intention.id).desc())  # noqa: E711
+    intention = session.exec(stmt).first()
+    if not intention:
+        return None
+    return {
+        "id": intention.id,
+        "date": intention.date.isoformat(),
+        "text": intention.text,
+        "fulfilled": intention.fulfilled,
+        "is_today": intention.date == dt.date.today(),
+    }
+
+
+@router.post("/intentions", status_code=201)
+def create_intention(payload: IntentionIn, session: Session = Depends(get_session)):
+    today = dt.date.today()
+    existing = session.exec(
+        select(Intention).where(Intention.date == today, Intention.fulfilled == None)  # noqa: E711
+    ).first()
+    if existing:
+        existing.text = payload.text.strip()
+        session.add(existing)
+        session.commit()
+        session.refresh(existing)
+        intention = existing
+    else:
+        intention = Intention(date=today, text=payload.text.strip())
+        session.add(intention)
+        session.commit()
+        session.refresh(intention)
+    return {
+        "id": intention.id,
+        "date": intention.date.isoformat(),
+        "text": intention.text,
+        "fulfilled": intention.fulfilled,
+    }
+
+
+@router.patch("/intentions/{intention_id}")
+def update_intention(intention_id: int, payload: IntentionFulfill, session: Session = Depends(get_session)):
+    intention = session.get(Intention, intention_id)
+    if not intention:
+        raise HTTPException(404, "Intention nicht gefunden")
+    intention.fulfilled = payload.fulfilled
+    session.add(intention)
+    session.commit()
+    return {"id": intention.id, "fulfilled": intention.fulfilled}
 
 
 # ---------- Statistik ----------
@@ -325,6 +444,71 @@ def stats(session: Session = Depends(get_session)):
         streak += 1
         cursor -= dt.timedelta(days=1)
 
+    # Emotionen
+    emotion_counter: Counter[str] = Counter()
+    emotion_lucid: Counter[str] = Counter()
+    emotion_place: dict[str, Counter[str]] = {}
+    emotion_person: dict[str, Counter[str]] = {}
+    weekday_counter: dict[int, dict[str, int]] = {i: {"total": 0, "lucid": 0} for i in range(7)}
+    sq_lucid: dict[int, dict[str, int]] = {i: {"total": 0, "lucid": 0} for i in range(1, 6)}
+    for d in dreams:
+        emos = [e.strip() for e in (d.emotions or "").split(",") if e.strip()]
+        for e in emos:
+            emotion_counter[e] += 1
+            if d.lucidity >= 3:
+                emotion_lucid[e] += 1
+            for t in d.tags:
+                if t.kind == "place":
+                    emotion_place.setdefault(e, Counter())[t.name] += 1
+                if t.kind == "person":
+                    emotion_person.setdefault(e, Counter())[t.name] += 1
+        wd = d.date.weekday()
+        weekday_counter[wd]["total"] += 1
+        if d.lucidity >= 3:
+            weekday_counter[wd]["lucid"] += 1
+        if d.sleep_quality:
+            sq_lucid[d.sleep_quality]["total"] += 1
+            if d.lucidity >= 3:
+                sq_lucid[d.sleep_quality]["lucid"] += 1
+
+    emotions_data = {
+        "distribution": [{"emotion": e, "count": c} for e, c in emotion_counter.most_common()],
+        "lucid_correlation": [
+            {"emotion": e, "total": emotion_counter[e], "lucid": emotion_lucid[e]}
+            for e in emotion_counter
+        ],
+        "place_matrix": {
+            e: [{"place": p, "count": c} for p, c in places.most_common(5)]
+            for e, places in emotion_place.items()
+        },
+        "person_matrix": {
+            e: [{"person": p, "count": c} for p, c in persons.most_common(5)]
+            for e, persons in emotion_person.items()
+        },
+    }
+
+    weekday_names = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+    correlations = {
+        "weekday": [
+            {"day": weekday_names[i], "total": weekday_counter[i]["total"], "lucid": weekday_counter[i]["lucid"]}
+            for i in range(7)
+        ],
+        "sleep_quality": [
+            {"quality": q, "total": sq_lucid[q]["total"], "lucid": sq_lucid[q]["lucid"]}
+            for q in range(1, 6)
+        ],
+    }
+
+    # Inkubations-Quote
+    all_intentions = session.exec(select(Intention)).all()
+    closed = [i for i in all_intentions if i.fulfilled is not None]
+    fulfilled_count = sum(1 for i in closed if i.fulfilled)
+    incubation = {
+        "total": len(closed),
+        "fulfilled": fulfilled_count,
+        "rate": round(fulfilled_count / len(closed) * 100, 1) if closed else 0.0,
+    }
+
     return {
         "total": total,
         "remembered": len(remembered),
@@ -342,6 +526,9 @@ def stats(session: Session = Depends(get_session)):
             "with": {"count": len(with_beifuss), "lucid_rate": lucid_rate(with_beifuss)},
             "without": {"count": len(without_beifuss), "lucid_rate": lucid_rate(without_beifuss)},
         },
+        "incubation": incubation,
+        "emotions": emotions_data,
+        "correlations": correlations,
     }
 
 
@@ -375,6 +562,516 @@ def atlas(session: Session = Depends(get_session)):
             {"source": f"{k1}:{n1}", "target": f"{k2}:{n2}", "weight": weight}
             for ((n1, k1), (n2, k2)), weight in link_counter.items()
         ],
+    }
+
+
+# ---------- Traum-Echos ----------
+
+@router.get("/dreams/echoes")
+def dream_echoes(text: str = Query(min_length=10), exclude_id: int | None = None, session: Session = Depends(get_session)):
+    if not text.strip():
+        return []
+    words = set(text.lower().split())
+    dreams = session.exec(select(Dream)).all()
+    scored = []
+    for d in dreams:
+        if d.id == exclude_id:
+            continue
+        dream_words = set(d.content.lower().split()) | set(d.title.lower().split())
+        overlap = len(words & dream_words)
+        if overlap >= 3:
+            scored.append((overlap / max(len(words), 1), d))
+    scored.sort(key=lambda x: -x[0])
+    return [
+        {"id": d.id, "title": d.title, "date": d.date.isoformat(), "score": round(s, 2),
+         "lucidity": d.lucidity}
+        for s, d in scored[:3]
+    ]
+
+
+# ---------- Traumweltkarte ----------
+
+class MapNodeIn(BaseModel):
+    x: float = PField(ge=0, le=1)
+    y: float = PField(ge=0, le=1)
+
+
+class MapPathIn(BaseModel):
+    from_tag_id: int
+    to_tag_id: int
+    note: str | None = None
+
+
+@router.get("/map")
+def get_map(session: Session = Depends(get_session)):
+    dreams = session.exec(select(Dream)).all()
+    place_tags = session.exec(select(Tag).where(Tag.kind == "place")).all()
+    nodes = session.exec(select(MapNode)).all()
+    paths = session.exec(select(MapPath)).all()
+
+    tag_dream_count: Counter[int] = Counter()
+    tag_lucid_count: Counter[int] = Counter()
+    for d in dreams:
+        for t in d.tags:
+            if t.kind == "place":
+                tag_dream_count[t.id] += 1
+                if d.lucidity >= 3:
+                    tag_lucid_count[t.id] += 1
+
+    node_ids = {n.tag_id for n in nodes}
+    node_map = {n.tag_id: n for n in nodes}
+    tag_map = {t.id: t for t in place_tags}
+
+    placed = []
+    for n in nodes:
+        tag = tag_map.get(n.tag_id)
+        if tag:
+            placed.append({
+                "tag_id": n.tag_id, "name": tag.name, "x": n.x, "y": n.y,
+                "dream_count": tag_dream_count[n.tag_id],
+                "lucid_count": tag_lucid_count[n.tag_id],
+            })
+
+    unplaced = [
+        {"tag_id": t.id, "name": t.name, "dream_count": tag_dream_count[t.id]}
+        for t in place_tags
+        if t.id not in node_ids and tag_dream_count[t.id] > 0
+    ]
+
+    path_list = [
+        {"id": p.id, "from_tag_id": p.from_tag_id, "to_tag_id": p.to_tag_id, "note": p.note}
+        for p in paths
+    ]
+
+    return {"placed": placed, "unplaced": unplaced, "paths": path_list}
+
+
+@router.put("/map/nodes/{tag_id}")
+def upsert_map_node(tag_id: int, payload: MapNodeIn, session: Session = Depends(get_session)):
+    tag = session.get(Tag, tag_id)
+    if not tag or tag.kind != "place":
+        raise HTTPException(400, "Nur Orte können auf der Karte platziert werden")
+    node = session.get(MapNode, tag_id)
+    if node:
+        node.x = payload.x
+        node.y = payload.y
+    else:
+        node = MapNode(tag_id=tag_id, x=payload.x, y=payload.y)
+    session.add(node)
+    session.commit()
+    return {"tag_id": tag_id, "x": node.x, "y": node.y}
+
+
+@router.delete("/map/nodes/{tag_id}", status_code=204)
+def delete_map_node(tag_id: int, session: Session = Depends(get_session)):
+    node = session.get(MapNode, tag_id)
+    if not node:
+        raise HTTPException(404, "Knoten nicht gefunden")
+    paths = session.exec(
+        select(MapPath).where((MapPath.from_tag_id == tag_id) | (MapPath.to_tag_id == tag_id))
+    ).all()
+    for p in paths:
+        session.delete(p)
+    session.delete(node)
+    session.commit()
+
+
+@router.post("/map/paths", status_code=201)
+def create_map_path(payload: MapPathIn, session: Session = Depends(get_session)):
+    if not session.get(MapNode, payload.from_tag_id) or not session.get(MapNode, payload.to_tag_id):
+        raise HTTPException(400, "Beide Orte müssen platziert sein")
+    existing = session.exec(
+        select(MapPath).where(
+            ((MapPath.from_tag_id == payload.from_tag_id) & (MapPath.to_tag_id == payload.to_tag_id)) |
+            ((MapPath.from_tag_id == payload.to_tag_id) & (MapPath.to_tag_id == payload.from_tag_id))
+        )
+    ).first()
+    if existing:
+        raise HTTPException(409, "Dieser Weg existiert bereits")
+    path = MapPath(from_tag_id=payload.from_tag_id, to_tag_id=payload.to_tag_id, note=payload.note)
+    session.add(path)
+    session.commit()
+    session.refresh(path)
+    return {"id": path.id, "from_tag_id": path.from_tag_id, "to_tag_id": path.to_tag_id, "note": path.note}
+
+
+@router.delete("/map/paths/{path_id}", status_code=204)
+def delete_map_path(path_id: int, session: Session = Depends(get_session)):
+    path = session.get(MapPath, path_id)
+    if not path:
+        raise HTTPException(404, "Weg nicht gefunden")
+    session.delete(path)
+    session.commit()
+
+
+# ---------- Archetypen ----------
+
+VALID_ARCHETYPES = {"schatten", "anima_animus", "weiser", "kind", "trickster", "held", "grosse_mutter", "persona"}
+
+
+class ArchetypeIn(BaseModel):
+    archetype: str | None = None
+
+
+@router.put("/tags/{tag_id}/archetype")
+def set_tag_archetype(tag_id: int, payload: ArchetypeIn, session: Session = Depends(get_session)):
+    tag = session.get(Tag, tag_id)
+    if not tag:
+        raise HTTPException(404, "Tag nicht gefunden")
+    if tag.kind != "person":
+        raise HTTPException(400, "Nur Personen können einen Archetyp bekommen")
+    if payload.archetype and payload.archetype not in VALID_ARCHETYPES:
+        raise HTTPException(422, f"Unbekannter Archetyp: {payload.archetype}")
+    tag.archetype = payload.archetype
+    session.add(tag)
+    session.commit()
+    return {"id": tag.id, "name": tag.name, "archetype": tag.archetype}
+
+
+# ---------- Reflexionen ----------
+
+class ReflectionIn(BaseModel):
+    question: str
+    answer: str = PField(min_length=1)
+
+
+@router.get("/dreams/{dream_id}/reflections")
+def list_reflections(dream_id: int, session: Session = Depends(get_session)):
+    dream = session.get(Dream, dream_id)
+    if not dream:
+        raise HTTPException(404, "Traum nicht gefunden")
+    refs = session.exec(
+        select(Reflection).where(Reflection.dream_id == dream_id).order_by(Reflection.created_at)
+    ).all()
+    return [{"id": r.id, "question": r.question, "answer": r.answer, "created_at": r.created_at.isoformat()} for r in refs]
+
+
+@router.post("/dreams/{dream_id}/reflections", status_code=201)
+def create_reflection(dream_id: int, payload: ReflectionIn, session: Session = Depends(get_session)):
+    dream = session.get(Dream, dream_id)
+    if not dream:
+        raise HTTPException(404, "Traum nicht gefunden")
+    ref = Reflection(dream_id=dream_id, question=payload.question, answer=payload.answer)
+    session.add(ref)
+    session.commit()
+    session.refresh(ref)
+    return {"id": ref.id, "question": ref.question, "answer": ref.answer, "created_at": ref.created_at.isoformat()}
+
+
+@router.delete("/reflections/{ref_id}", status_code=204)
+def delete_reflection(ref_id: int, session: Session = Depends(get_session)):
+    ref = session.get(Reflection, ref_id)
+    if not ref:
+        raise HTTPException(404, "Reflexion nicht gefunden")
+    session.delete(ref)
+    session.commit()
+
+
+# ---------- Symbol-Notizen (Amplifikation) ----------
+
+class SymbolNoteIn(BaseModel):
+    text: str = PField(min_length=1)
+
+
+@router.get("/tags/{tag_id}/notes")
+def list_symbol_notes(tag_id: int, session: Session = Depends(get_session)):
+    tag = session.get(Tag, tag_id)
+    if not tag:
+        raise HTTPException(404, "Tag nicht gefunden")
+    notes = session.exec(
+        select(SymbolNote).where(SymbolNote.tag_id == tag_id).order_by(SymbolNote.created_at)
+    ).all()
+    return [{"id": n.id, "text": n.text, "created_at": n.created_at.isoformat()} for n in notes]
+
+
+@router.post("/tags/{tag_id}/notes", status_code=201)
+def create_symbol_note(tag_id: int, payload: SymbolNoteIn, session: Session = Depends(get_session)):
+    tag = session.get(Tag, tag_id)
+    if not tag:
+        raise HTTPException(404, "Tag nicht gefunden")
+    if tag.kind not in ("dream_sign", "place", "person"):
+        raise HTTPException(400, "Nur Traumzeichen, Orte und Personen können Assoziationen haben")
+    note = SymbolNote(tag_id=tag_id, text=payload.text.strip())
+    session.add(note)
+    session.commit()
+    session.refresh(note)
+    return {"id": note.id, "text": note.text, "created_at": note.created_at.isoformat()}
+
+
+@router.delete("/symbol-notes/{note_id}", status_code=204)
+def delete_symbol_note(note_id: int, session: Session = Depends(get_session)):
+    note = session.get(SymbolNote, note_id)
+    if not note:
+        raise HTTPException(404, "Notiz nicht gefunden")
+    session.delete(note)
+    session.commit()
+
+
+# ---------- Aktive Imagination ----------
+
+class ImaginationIn(BaseModel):
+    text: str = PField(min_length=1)
+
+
+@router.get("/dreams/{dream_id}/imaginations")
+def list_imaginations(dream_id: int, session: Session = Depends(get_session)):
+    dream = session.get(Dream, dream_id)
+    if not dream:
+        raise HTTPException(404, "Traum nicht gefunden")
+    imgs = session.exec(
+        select(Imagination).where(Imagination.dream_id == dream_id).order_by(Imagination.created_at)
+    ).all()
+    return [{"id": i.id, "text": i.text, "created_at": i.created_at.isoformat()} for i in imgs]
+
+
+@router.post("/dreams/{dream_id}/imaginations", status_code=201)
+def create_imagination(dream_id: int, payload: ImaginationIn, session: Session = Depends(get_session)):
+    dream = session.get(Dream, dream_id)
+    if not dream:
+        raise HTTPException(404, "Traum nicht gefunden")
+    img = Imagination(dream_id=dream_id, text=payload.text.strip())
+    session.add(img)
+    session.commit()
+    session.refresh(img)
+    return {"id": img.id, "text": img.text, "created_at": img.created_at.isoformat()}
+
+
+@router.delete("/imaginations/{img_id}", status_code=204)
+def delete_imagination(img_id: int, session: Session = Depends(get_session)):
+    img = session.get(Imagination, img_id)
+    if not img:
+        raise HTTPException(404, "Imagination nicht gefunden")
+    session.delete(img)
+    session.commit()
+
+
+# ---------- Innenwelt (J.3) ----------
+
+@router.get("/innenwelt")
+def innenwelt(session: Session = Depends(get_session)):
+    dreams = session.exec(select(Dream)).all()
+    person_tags = session.exec(select(Tag).where(Tag.kind == "person")).all()
+
+    result = []
+    for tag in person_tags:
+        tag_dreams = [d for d in dreams if tag in d.tags]
+        if not tag_dreams:
+            continue
+        emo_counts: Counter[str] = Counter()
+        for d in tag_dreams:
+            for e in (e.strip() for e in (d.emotions or "").split(",") if e.strip()):
+                emo_counts[e] += 1
+        has_imgs = any(
+            session.exec(select(Imagination).where(Imagination.dream_id == d.id)).first()
+            for d in tag_dreams
+        )
+        result.append({
+            "tag_id": tag.id,
+            "name": tag.name,
+            "archetype": tag.archetype,
+            "count": len(tag_dreams),
+            "last_date": max(d.date for d in tag_dreams).isoformat(),
+            "emotions": dict(emo_counts),
+            "has_imaginations": has_imgs,
+        })
+    return result
+
+
+# ---------- Mandala (J.4) ----------
+
+@router.get("/mandala")
+def mandala(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream).order_by(Dream.date)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
+
+    emotion_totals: Counter[str] = Counter()
+    element_counter: Counter[tuple[str, str]] = Counter()
+    dream_data = []
+    for d in dreams:
+        emos = [e.strip() for e in (d.emotions or "").split(",") if e.strip()]
+        for e in emos:
+            emotion_totals[e] += 1
+        for t in d.tags:
+            if t.kind in ("place", "person", "dream_sign"):
+                element_counter[(t.name, t.kind)] += 1
+        dream_data.append({
+            "date": d.date.isoformat(),
+            "lucidity": d.lucidity,
+            "big_dream": d.big_dream,
+            "emotions": emos,
+        })
+
+    top_elements = [
+        {"name": name, "kind": kind, "count": count}
+        for (name, kind), count in element_counter.most_common(12)
+    ]
+
+    return {
+        "days": len({d.date for d in dreams}),
+        "dreams": dream_data,
+        "top_elements": top_elements,
+        "emotion_totals": dict(emotion_totals),
+    }
+
+
+# ---------- Individuationsreise (J.5) ----------
+
+JOURNEY_STATIONS = ["landkarte", "persona", "schatten", "anima", "symbole", "selbst"]
+
+
+@router.get("/journey")
+def get_journey(session: Session = Depends(get_session)):
+    steps = session.exec(select(JourneyStep)).all()
+    step_map = {s.station: s for s in steps}
+    return [
+        {
+            "station": st,
+            "completed": step_map[st].completed_at.isoformat() if st in step_map and step_map[st].completed_at else None,
+            "note": step_map[st].note if st in step_map else None,
+        }
+        for st in JOURNEY_STATIONS
+    ]
+
+
+class JourneyCompleteIn(BaseModel):
+    note: str | None = None
+
+
+@router.post("/journey/{station}")
+def complete_journey_station(station: str, payload: JourneyCompleteIn, session: Session = Depends(get_session)):
+    if station not in JOURNEY_STATIONS:
+        raise HTTPException(400, f"Unbekannte Station: {station}")
+    existing = session.exec(select(JourneyStep).where(JourneyStep.station == station)).first()
+    if existing:
+        existing.note = payload.note
+        existing.completed_at = dt.datetime.utcnow()
+        session.add(existing)
+    else:
+        step = JourneyStep(station=station, note=payload.note, completed_at=dt.datetime.utcnow())
+        session.add(step)
+    session.commit()
+    return {"station": station, "completed": True}
+
+
+# ---------- Traum-Analyse (Jung pro Traum) ----------
+
+ANALYSIS_STATIONS = {"persona", "schatten", "gegenstimme", "kompensation", "symbole", "ganzheit"}
+
+
+class DreamAnalysisIn(BaseModel):
+    station: str
+    answer: str = PField(min_length=1)
+
+
+@router.get("/dreams/{dream_id}/analysis")
+def list_dream_analysis(dream_id: int, session: Session = Depends(get_session)):
+    dream = session.get(Dream, dream_id)
+    if not dream:
+        raise HTTPException(404, "Traum nicht gefunden")
+    entries = session.exec(
+        select(DreamAnalysis).where(DreamAnalysis.dream_id == dream_id).order_by(DreamAnalysis.created_at)
+    ).all()
+    return [{"id": e.id, "station": e.station, "answer": e.answer, "created_at": e.created_at.isoformat()} for e in entries]
+
+
+@router.post("/dreams/{dream_id}/analysis", status_code=201)
+def create_dream_analysis(dream_id: int, payload: DreamAnalysisIn, session: Session = Depends(get_session)):
+    dream = session.get(Dream, dream_id)
+    if not dream:
+        raise HTTPException(404, "Traum nicht gefunden")
+    if payload.station not in ANALYSIS_STATIONS:
+        raise HTTPException(422, f"Unbekannte Station: {payload.station}")
+    existing = session.exec(
+        select(DreamAnalysis).where(DreamAnalysis.dream_id == dream_id, DreamAnalysis.station == payload.station)
+    ).first()
+    if existing:
+        existing.answer = payload.answer
+        existing.created_at = dt.datetime.utcnow()
+        session.add(existing)
+        session.commit()
+        return {"id": existing.id, "station": existing.station, "answer": existing.answer, "created_at": existing.created_at.isoformat()}
+    entry = DreamAnalysis(dream_id=dream_id, station=payload.station, answer=payload.answer)
+    session.add(entry)
+    session.commit()
+    session.refresh(entry)
+    return {"id": entry.id, "station": entry.station, "answer": entry.answer, "created_at": entry.created_at.isoformat()}
+
+
+@router.delete("/dream-analysis/{entry_id}", status_code=204)
+def delete_dream_analysis(entry_id: int, session: Session = Depends(get_session)):
+    entry = session.get(DreamAnalysis, entry_id)
+    if not entry:
+        raise HTTPException(404, "Analyse nicht gefunden")
+    session.delete(entry)
+    session.commit()
+
+
+# ---------- Synchronizitäts-Journal (J.6) ----------
+
+class SyncEventIn(BaseModel):
+    dream_id: int | None = None
+    date: dt.date
+    text: str = PField(min_length=1)
+
+
+@router.get("/sync-events")
+def list_sync_events(session: Session = Depends(get_session)):
+    events = session.exec(select(SyncEvent).order_by(col(SyncEvent.date).desc())).all()
+    return [
+        {
+            "id": e.id,
+            "dream_id": e.dream_id,
+            "date": e.date.isoformat(),
+            "text": e.text,
+            "created_at": e.created_at.isoformat(),
+        }
+        for e in events
+    ]
+
+
+@router.post("/sync-events", status_code=201)
+def create_sync_event(payload: SyncEventIn, session: Session = Depends(get_session)):
+    if payload.dream_id:
+        dream = session.get(Dream, payload.dream_id)
+        if not dream:
+            raise HTTPException(404, "Traum nicht gefunden")
+    event = SyncEvent(dream_id=payload.dream_id, date=payload.date, text=payload.text.strip())
+    session.add(event)
+    session.commit()
+    session.refresh(event)
+    return {"id": event.id, "dream_id": event.dream_id, "date": event.date.isoformat(), "text": event.text, "created_at": event.created_at.isoformat()}
+
+
+@router.delete("/sync-events/{event_id}", status_code=204)
+def delete_sync_event(event_id: int, session: Session = Depends(get_session)):
+    event = session.get(SyncEvent, event_id)
+    if not event:
+        raise HTTPException(404, "Ereignis nicht gefunden")
+    session.delete(event)
+    session.commit()
+
+
+# ---------- Daten-Info ----------
+
+@router.get("/datainfo")
+def data_info(session: Session = Depends(get_session)):
+    import os
+    db_file = DATA_DIR / "dreams.db"
+    db_size = os.path.getsize(db_file) if db_file.exists() else 0
+    dream_count = len(session.exec(select(Dream)).all())
+    return {
+        "data_dir": str(DATA_DIR),
+        "db_file": str(db_file),
+        "db_size_bytes": db_size,
+        "dream_count": dream_count,
     }
 
 

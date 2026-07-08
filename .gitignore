@@ -2,6 +2,11 @@
 __pycache__/
 *.pyc
 backend/dreams.db
+backend/dreams.db.backup-*
 backend/auth.json
+backend/auth.json.backup-*
 .DS_Store
 certs/
+dist/
+build/
+*.spec.bak

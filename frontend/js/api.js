@@ -51,6 +51,113 @@ const api = {
   stats() {
     return this.request("/api/stats");
   },
+  currentIntention() {
+    return this.request("/api/intentions/current");
+  },
+  createIntention(text) {
+    return this.request("/api/intentions", { method: "POST", body: JSON.stringify({ text }) });
+  },
+  fulfillIntention(id, fulfilled) {
+    return this.request(`/api/intentions/${id}`, { method: "PATCH", body: JSON.stringify({ fulfilled }) });
+  },
+  listGoals() {
+    return this.request("/api/goals");
+  },
+  createGoal(text) {
+    return this.request("/api/goals", { method: "POST", body: JSON.stringify({ text }) });
+  },
+  toggleGoal(id, done) {
+    return this.request(`/api/goals/${id}`, { method: "PATCH", body: JSON.stringify({ done }) });
+  },
+  deleteGoal(id) {
+    return this.request(`/api/goals/${id}`, { method: "DELETE" });
+  },
+  getMap() {
+    return this.request("/api/map");
+  },
+  placeNode(tagId, x, y) {
+    return this.request(`/api/map/nodes/${tagId}`, { method: "PUT", body: JSON.stringify({ x, y }) });
+  },
+  removeNode(tagId) {
+    return this.request(`/api/map/nodes/${tagId}`, { method: "DELETE" });
+  },
+  createPath(fromTagId, toTagId, note) {
+    return this.request("/api/map/paths", { method: "POST", body: JSON.stringify({ from_tag_id: fromTagId, to_tag_id: toTagId, note }) });
+  },
+  deletePath(id) {
+    return this.request(`/api/map/paths/${id}`, { method: "DELETE" });
+  },
+  setArchetype(tagId, archetype) {
+    return this.request(`/api/tags/${tagId}/archetype`, { method: "PUT", body: JSON.stringify({ archetype }) });
+  },
+  listReflections(dreamId) {
+    return this.request(`/api/dreams/${dreamId}/reflections`);
+  },
+  createReflection(dreamId, question, answer) {
+    return this.request(`/api/dreams/${dreamId}/reflections`, { method: "POST", body: JSON.stringify({ question, answer }) });
+  },
+  deleteReflection(id) {
+    return this.request(`/api/reflections/${id}`, { method: "DELETE" });
+  },
+  listSymbolNotes(tagId) {
+    return this.request(`/api/tags/${tagId}/notes`);
+  },
+  createSymbolNote(tagId, text) {
+    return this.request(`/api/tags/${tagId}/notes`, { method: "POST", body: JSON.stringify({ text }) });
+  },
+  deleteSymbolNote(id) {
+    return this.request(`/api/symbol-notes/${id}`, { method: "DELETE" });
+  },
+  listImaginations(dreamId) {
+    return this.request(`/api/dreams/${dreamId}/imaginations`);
+  },
+  createImagination(dreamId, text) {
+    return this.request(`/api/dreams/${dreamId}/imaginations`, { method: "POST", body: JSON.stringify({ text }) });
+  },
+  deleteImagination(id) {
+    return this.request(`/api/imaginations/${id}`, { method: "DELETE" });
+  },
+  dreamEchoes(text, excludeId) {
+    const params = new URLSearchParams({ text });
+    if (excludeId) params.set("exclude_id", excludeId);
+    return this.request(`/api/dreams/echoes?${params}`);
+  },
+  getInnenwelt() {
+    return this.request("/api/innenwelt");
+  },
+  getMandala(from, to) {
+    const params = new URLSearchParams();
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    return this.request(`/api/mandala?${params}`);
+  },
+  getJourney() {
+    return this.request("/api/journey");
+  },
+  completeJourneyStation(station, note) {
+    return this.request(`/api/journey/${station}`, { method: "POST", body: JSON.stringify({ note }) });
+  },
+  listSyncEvents() {
+    return this.request("/api/sync-events");
+  },
+  createSyncEvent(dreamId, date, text) {
+    return this.request("/api/sync-events", { method: "POST", body: JSON.stringify({ dream_id: dreamId, date, text }) });
+  },
+  deleteSyncEvent(id) {
+    return this.request(`/api/sync-events/${id}`, { method: "DELETE" });
+  },
+  listDreamAnalysis(dreamId) {
+    return this.request(`/api/dreams/${dreamId}/analysis`);
+  },
+  createDreamAnalysis(dreamId, station, answer) {
+    return this.request(`/api/dreams/${dreamId}/analysis`, { method: "POST", body: JSON.stringify({ station, answer }) });
+  },
+  deleteDreamAnalysis(id) {
+    return this.request(`/api/dream-analysis/${id}`, { method: "DELETE" });
+  },
+  dataInfo() {
+    return this.request("/api/datainfo");
+  },
 };
 
 function showToast(message) {

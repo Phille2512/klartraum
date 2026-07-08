@@ -12,6 +12,36 @@
   --radius: 12px;
 }
 
+[data-theme="night"] {
+  --bg: #0d0505;
+  --bg-card: #1a0e0e;
+  --bg-input: #2a1515;
+  --text: #e0a080;
+  --text-dim: #8a5f50;
+  --accent: #c96a4a;
+  --accent-dark: #a5523a;
+  --lucid: #d4a050;
+  --danger: #c96a4a;
+}
+
+[data-theme="night"] header { background: #140a0a; }
+
+[data-theme="night"] .badge.sign { background: #2a1a1a; color: #d4a080; }
+[data-theme="night"] .badge.lucid { background: #2a1a0e; color: #d4a050; }
+[data-theme="night"] .badge.herb { background: #1a1a0e; color: #a08050; }
+[data-theme="night"] .badge.place { background: #1a1a0e; color: #a08050; }
+[data-theme="night"] .badge.person { background: #2a1a0e; color: #d4a050; }
+
+[data-theme="night"] .mission-card {
+  background: linear-gradient(135deg, #1a0e0e, #140a0a);
+  border-color: var(--accent);
+}
+
+[data-theme="night"] .intention-prompt {
+  border-color: var(--lucid);
+  background: linear-gradient(135deg, #1a0e0e, #140a0a);
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -310,6 +340,719 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 .login-card button { width: 100%; margin-top: 0.5rem; }
 .login-error { color: var(--danger); }
 
+/* --- Abendritual --- */
+.theme-btn {
+  position: absolute;
+  right: 3.5rem;
+  top: 0.65rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 8px;
+}
+
+.theme-btn:hover { background: var(--bg-input); }
+
+.ritual-btn {
+  position: absolute;
+  right: 1rem;
+  top: 0.65rem;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 8px;
+}
+
+.ritual-btn:hover { background: var(--bg-input); }
+
+
+.ritual-card {
+  position: relative;
+  text-align: center;
+}
+
+.ritual-card h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+.ritual-card label { text-align: left; }
+
+.ritual-close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  width: auto;
+}
+
+.ritual-goals-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0.75rem;
+  text-align: left;
+}
+
+.ritual-goals-list li {
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+  color: var(--lucid);
+}
+
+.ritual-goals-list li::before { content: "→ "; color: var(--text-dim); }
+
+.ritual-confirm {
+  font-size: 1.1rem;
+  color: var(--lucid);
+  padding: 1.5rem 0;
+}
+
+/* --- Morgen-Rückfrage --- */
+.intention-prompt {
+  border: 1px solid var(--lucid);
+  background: linear-gradient(135deg, #2a2450, #1e2032);
+}
+
+.intention-prompt p { margin: 0 0 0.75rem; font-size: 0.95rem; }
+
+/* --- Bucket-List --- */
+.goal-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.goal-input-row input { flex: 1; margin-top: 0; }
+.goal-input-row button { padding: 0.6rem 1rem; }
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--bg-input);
+}
+
+.goal-item:last-child { border-bottom: none; }
+
+.goal-item .checkbox-label { flex: 1; }
+.goal-item .goal-text { font-size: 0.95rem; }
+
+.goal-done .goal-text {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+.goal-delete {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.goal-delete:hover { opacity: 1; }
+
+/* --- Morgen-Flow --- */
+.morning-flow-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.morning-flow-text {
+  font-size: 1.2rem;
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+
+.morning-flow-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.morning-flow-ring svg { width: 100%; height: 100%; }
+
+.morning-flow-ring span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+#flow-skip { padding: 0.8rem 2rem; }
+
+/* --- Atlas Toggle --- */
+.atlas-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--bg-input);
+}
+
+.atlas-toggle-btn {
+  flex: 1;
+  background: var(--bg-card);
+  border: none;
+  padding: 0.6rem;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.atlas-toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* --- Traumweltkarte --- */
+.wm-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.wm-mode-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+}
+
+.wm-mode-btn.active { border-color: var(--accent); background: var(--bg-input); }
+
+.wm-node { cursor: grab; }
+.wm-node:hover circle { stroke: #fff; stroke-width: 2; }
+.wm-path { cursor: pointer; }
+
+.wm-unplaced { margin-top: 0.75rem; }
+
+.wm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.wm-chip { cursor: pointer; }
+.wm-chip-selected { outline: 2px solid var(--lucid); outline-offset: 1px; }
+
+.wm-detail-card { margin-top: 1rem; }
+.wm-detail-card h3 { margin: 0 0 0.5rem; }
+.wm-detail-card .stat-cards { margin-bottom: 0.5rem; }
+
+/* --- Emotion Picker --- */
+.emotion-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.emotion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 2px solid var(--bg-input);
+  background: var(--bg-input);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.emotion-chip.selected {
+  border-color: var(--emotion-color, var(--accent));
+  background: color-mix(in srgb, var(--emotion-color, var(--accent)) 20%, var(--bg-card));
+  color: var(--text);
+}
+
+.emotion-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  margin-right: 0.15rem;
+}
+
+/* --- Dream Echoes --- */
+.dream-echoes {
+  margin: 0.5rem 0;
+  padding: 0.6rem;
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+.dream-echoes h4 { margin: 0 0 0.4rem; font-size: 0.85rem; color: var(--text-dim); }
+
+.echo-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.echo-item:last-child { border-bottom: none; }
+.echo-score { color: var(--accent); font-size: 0.75rem; min-width: 2rem; }
+.echo-title { color: var(--text); }
+.echo-date { color: var(--text-dim); font-size: 0.75rem; margin-left: auto; }
+
+/* --- Reflection Overlay --- */
+.reflection-card { text-align: center; max-width: 380px; }
+
+.reflection-question {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--lucid);
+  margin: 1rem 0;
+  font-style: italic;
+}
+
+.reflection-card textarea {
+  text-align: left;
+}
+
+/* --- Emotion Bars (Stats) --- */
+.emotion-bars { margin-top: 0.75rem; }
+
+.emotion-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.emotion-bar-label {
+  min-width: 6.5rem;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.emotion-bar-track {
+  flex: 1;
+  height: 0.6rem;
+  background: var(--bg-input);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.emotion-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.emotion-bar-count {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  min-width: 2rem;
+  text-align: right;
+}
+
+/* --- Emotion Matrix --- */
+.emotion-matrix-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.emotion-matrix-row:last-child { border-bottom: none; }
+
+/* --- Correlations (Stats) --- */
+.corr-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+  margin: 0.75rem 0 0.25rem;
+  height: 120px;
+  align-items: end;
+}
+
+.corr-grid.corr-5 { grid-template-columns: repeat(5, 1fr); }
+
+.corr-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.corr-bar {
+  width: 60%;
+  min-height: 4px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.corr-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 0.2rem;
+}
+
+.corr-value {
+  font-size: 0.7rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- Expand details (Reflexionen/Imaginationen) --- */
+.expand-detail { margin-top: 0.5rem; }
+.expand-detail summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.ref-entry {
+  position: relative;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.85rem;
+}
+
+.ref-entry:last-child { border-bottom: none; }
+
+.ref-q {
+  font-style: italic;
+  color: var(--lucid);
+  margin-bottom: 0.2rem;
+}
+
+.ref-del {
+  position: absolute;
+  top: 0.3rem;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  padding: 0.2rem;
+}
+
+/* --- Symbol-Lexikon & Archetypen --- */
+.symbol-section {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  background: var(--bg-input);
+  border-radius: var(--radius);
+}
+
+.symbol-section h3 { margin: 0 0 0.25rem; font-size: 0.95rem; }
+
+.symbol-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.85rem;
+}
+
+.symbol-note:last-child { border-bottom: none; }
+.symbol-note .ref-del { position: static; margin-left: auto; }
+
+.symbol-input-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.symbol-input-row input { flex: 1; }
+.symbol-input-row button { flex-shrink: 0; }
+
+.archetype-current {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.archetype-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.arch-btn {
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--bg-card);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.arch-btn.selected {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* --- Imagination Overlay --- */
+.imagination-card {
+  max-width: 420px;
+  text-align: center;
+}
+
+.imagination-card textarea { text-align: left; }
+.imagination-card p { text-align: left; line-height: 1.5; }
+
+/* --- Wissens-Momente --- */
+.wissen-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0.3rem;
+  vertical-align: middle;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.wissen-btn:hover { opacity: 1; }
+
+.wissen-card {
+  position: absolute;
+  z-index: 50;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.3rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  animation: wissenIn 0.2s ease;
+}
+
+@keyframes wissenIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wissen-card p { margin: 0 0 0.4rem; }
+
+.wissen-link {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.wissen-close {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+/* --- Innenwelt-Buhne (J.3) --- */
+.innenwelt-svg { display: block; margin: 0 auto; }
+
+.imag-quote {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  font-size: 0.85rem;
+  font-style: italic;
+  background: rgba(255,255,255,0.02);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.imag-quote cite {
+  display: block;
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+}
+
+.imag-continue-btn {
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+/* --- Traum-Mandala (J.4) --- */
+.mandala-svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 400px;
+}
+
+.mandala-svg-wrap { min-height: 100px; }
+
+/* --- Individuationsreise (J.5) --- */
+.journey-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
+.journey-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: 50px;
+}
+
+.journey-dot-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.journey-dot.done .journey-dot-icon {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.journey-dot.next .journey-dot-icon {
+  border-color: var(--lucid);
+  box-shadow: 0 0 8px rgba(245, 198, 106, 0.3);
+}
+
+.journey-dot-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-top: 0.2rem;
+  text-align: center;
+  max-width: 60px;
+}
+
+.journey-line {
+  flex: 1;
+  height: 2px;
+  min-width: 12px;
+  background: var(--border);
+  margin-top: -1.2rem;
+}
+
+.journey-line.done { background: var(--accent); }
+
+.journey-station h3 { margin: 0 0 0.3rem; }
+
+.journey-complete-form {
+  margin-top: 0.5rem;
+}
+
+.journey-complete-form textarea {
+  margin-bottom: 0.5rem;
+}
+
+/* --- Synchronizitat (J.6) --- */
+.sync-form label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.sync-form textarea { width: 100%; }
+
+/* --- Jung-Analyse (pro Traum) --- */
+.analysis-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.analysis-content {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.analysis-stations {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1rem 0;
+  font-size: 1.3rem;
+}
+
+.analysis-dot {
+  opacity: 0.35;
+  transition: opacity 0.2s;
+}
+
+.analysis-dot.active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.analysis-dot.done {
+  opacity: 0.7;
+}
+
+.analysis-question {
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0.5rem 0 1rem;
+}
+
+.analysis-answer {
+  width: 100%;
+  min-height: 80px;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 1px solid var(--accent-dark);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.analysis-entry .ref-q {
+  font-weight: 600;
+  color: var(--accent);
+}
+
 /* --- Toast --- */
 .toast {
   position: fixed;
@@ -322,4 +1065,30 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   border-radius: 999px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   z-index: 100;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.data-info-text {
+  margin-top: 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }

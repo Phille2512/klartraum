@@ -68,8 +68,17 @@ backend/    FastAPI: main.py (API), models.py (SQLModel), database.py (SQLite)
 frontend/   Single-Page-App: index.html, css/, js/, manifest.json, sw.js
 ```
 
+## Für Freunde: Desktop-App herunterladen
+
+→ Siehe [ANLEITUNG-FUER-FREUNDE.md](ANLEITUNG-FUER-FREUNDE.md) — Download,
+Installation und Backup in 3 Minuten erklärt.
+
+Die Desktop-App bündelt Server + Frontend in eine ausführbare Datei. Deine
+Träume liegen als echte Datei in `~/Klartraum/dreams.db` — keine Cloud, keine
+Registrierung. Verteilung über GitHub Releases (0 €).
+
 ## Geplant für später
 
 - KI-Traumanalyse per Claude API (Feld `notes_analysis` ist vorbereitet)
-- Cloud-Deployment (z. B. Fly.io) für Zugriff von unterwegs
+- Local-First-PWA (Stufe 2): gesamte Logik im Frontend, statisch gehostet
 - Offline-Erfassung mit Synchronisation

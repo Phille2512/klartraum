@@ -1,0 +1,72 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: Klartraum-mac
+          - os: windows-latest
+            artifact: Klartraum-windows
+          - os: ubuntu-latest
+            artifact: Klartraum-linux
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable
+        run: pyinstaller klartraum.spec
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          zip -r ../${{ matrix.artifact }}.zip Klartraum
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path dist/Klartraum.exe -DestinationPath ${{ matrix.artifact }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: '*.zip'
+          body: |
+            ## Klartraum herunterladen
+
+            Lade das Paket für dein System herunter und folge der [Anleitung für Freunde](../blob/main/ANLEITUNG-FUER-FREUNDE.md).
+
+            - **Mac:** `Klartraum-mac.zip`
+            - **Windows:** `Klartraum-windows.zip`
+            - **Linux:** `Klartraum-linux.zip`
