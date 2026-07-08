@@ -3,6 +3,17 @@
 *Ziel: Handy + Browser, kein App Store, keine Kosten, minimale Verantwortung —
 aber Freunde sollen sie nutzen können.*
 
+> **Entscheidung (Juli 2026), zweistufig:**
+> **Stufe 1 — Desktop-Paket (PyInstaller):** bestehender Python-Server +
+> Frontend als Doppelklick-App, Daten als echte Datei in `~/Klartraum/`,
+> Verteilung über GitHub Releases. → Spezifikation: `UMSETZUNGSPLAN-DESKTOP.md`
+> **Stufe 2 — Local-First-PWA (Endausbau):** gesamte Logik ins Frontend,
+> SQLite-WASM/OPFS im Browser, statisch auf GitHub Pages gehostet (HTTPS →
+> volle Handy-PWA per Link). Datensicherheit über `navigator.storage.persist()`
+> + automatische Datei-Backups (File System Access API) + Export.
+> Tauri/Electron verworfen (Python-Backend, Rewrite lohnt erst für Stufe 2);
+> Google-Drive-Backup verworfen (OAuth-Aufwand, Träume ⇏ Google).
+
 > **Kein Rechtsrat.** Grundsatz aber: Je privater der Kreis und je weniger
 > fremde Daten du selbst speicherst, desto kleiner deine Verantwortung.
 > Rein private Nutzung im Freundeskreis ohne Öffentlichkeit, Werbung oder
