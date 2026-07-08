@@ -3,7 +3,7 @@ const COMPASS = {
   awareness: {
     icon: "💭", label: "Inneres Erleben",
     hint: "Ungewöhnliche Gedanken oder Gefühle im Traum",
-    mission: "Halte heute 5× inne und frag dich: „Fühlt sich dieser Moment wach an – oder wie ein Traum?“",
+    mission: 'Halte heute 5× inne und frag dich: „Fühlt sich dieser Moment wach an – oder wie ein Traum?“',
   },
   action: {
     icon: "⚡", label: "Handlung",
@@ -18,7 +18,7 @@ const COMPASS = {
   context: {
     icon: "🗺️", label: "Kontext",
     hint: "Falscher Ort, falsche Zeit, absurde Situation",
-    mission: "Frag dich bei jedem Ortswechsel: „Wie genau bin ich hierhergekommen?“",
+    mission: 'Frag dich bei jedem Ortswechsel: „Wie genau bin ich hierhergekommen?"',
   },
 };
 
@@ -34,6 +34,7 @@ const stats = {
       return;
     }
     this.renderCards(data);
+    this.renderIncubation(data.incubation);
     this.renderCompass(data.compass);
     this.renderMission(data);
     this.renderSorter();
@@ -42,6 +43,10 @@ const stats = {
     this.renderSigns(data.top_dream_signs);
     this.renderLucidity(data.lucidity_distribution);
     this.renderRecall(data.per_week);
+    this.renderEmotions(data.emotions);
+    this.renderCorrelations(data.correlations);
+    const mc = document.getElementById("mandala-card");
+    if (mc) await mandala.render(mc);
   },
 
   renderRecall(perWeek) {
@@ -104,7 +109,7 @@ const stats = {
     const dominant = keys.reduce((a, b) => (data.compass[a] >= data.compass[b] ? a : b));
     const c = COMPASS[dominant];
     const focus = data.focus_sign
-      ? `<p>🎯 <strong>Fokus-Zeichen der Woche:</strong> „${escapeHtml(data.focus_sign.name)}“
+      ? `<p>🎯 <strong>Fokus-Zeichen der Woche:</strong> "${escapeHtml(data.focus_sign.name)}"
          (${data.focus_sign.count}×) – mach jedes Mal einen Reality Check, wenn es dir tagsüber
          begegnet oder in den Sinn kommt.</p>`
       : "";
@@ -142,7 +147,7 @@ const stats = {
     const picker = document.getElementById("sorter-picker");
     picker.classList.remove("hidden");
     picker.innerHTML = `
-      <p>„<strong>${name}</strong>“ ist am ehesten …</p>
+      <p>"<strong>${name}</strong>" ist am ehesten …</p>
       <div class="picker-grid">
         ${Object.entries(COMPASS).map(([key, c]) => `
           <button class="picker-btn" data-cat="${key}">
@@ -155,7 +160,7 @@ const stats = {
       btn.addEventListener("click", async () => {
         try {
           await api.setTagCategory(tagId, btn.dataset.cat);
-          showToast(`${COMPASS[btn.dataset.cat].icon} „${name}“ einsortiert`);
+          showToast(`${COMPASS[btn.dataset.cat].icon} "${name}" einsortiert`);
           this.load();
         } catch (err) {
           showToast(err.message);
@@ -168,7 +173,7 @@ const stats = {
     const el = document.getElementById("beifuss-compare");
     if (!beifuss.with.count) {
       el.innerHTML = `<p class="hint">Noch keine Einträge mit Beifuß. Hake beim Eintragen
-        „🌿 Beifuß getrunken“ an – hier entsteht dann dein persönliches Experiment:
+        "🌿 Beifuß getrunken" an – hier entsteht dann dein persönliches Experiment:
         Klartraum-Quote mit vs. ohne.</p>`;
       return;
     }
@@ -189,6 +194,19 @@ const stats = {
       <div class="stat-card"><div class="value gold">${data.lucid}</div><div class="label">Klarträume</div></div>
       <div class="stat-card"><div class="value">${data.lucid_rate}%</div><div class="label">Klartraum-Quote</div></div>
       <div class="stat-card"><div class="value">${data.streak} 🔥</div><div class="label">Tage-Streak</div></div>`;
+  },
+
+  renderIncubation(incubation) {
+    const card = document.getElementById("incubation-card");
+    if (!incubation || incubation.total === 0) {
+      card.classList.add("hidden");
+      return;
+    }
+    card.classList.remove("hidden");
+    document.getElementById("incubation-stats").innerHTML = `
+      <div class="stat-card"><div class="value">${incubation.total}</div><div class="label">Absichten bewertet</div></div>
+      <div class="stat-card"><div class="value gold">${incubation.fulfilled}</div><div class="label">davon erfüllt</div></div>
+      <div class="stat-card"><div class="value">${incubation.rate}%</div><div class="label">Erfolgsquote</div></div>`;
   },
 
   makeChart(id, config) {
@@ -234,6 +252,94 @@ const stats = {
       },
       options: { plugins: { legend: { position: "bottom", labels: { color: "#9d9ab5" } } } },
     });
+  },
+
+  renderEmotions(emotions) {
+    const section = document.getElementById("emotion-section");
+    if (!emotions || !emotions.distribution.length) {
+      section.classList.add("hidden");
+      return;
+    }
+    section.classList.remove("hidden");
+
+    // Distribution
+    const dist = emotions.distribution;
+    const el = document.getElementById("emotion-distribution");
+    el.innerHTML = `<div class="emotion-bars">
+      ${dist.map((d) => {
+        const e = EMOTIONS[d.emotion] || { icon: "?", label: d.emotion, color: "#888" };
+        const maxCount = dist[0].count;
+        const pct = Math.round(d.count / maxCount * 100);
+        return `<div class="emotion-bar-row">
+          <span class="emotion-bar-label">${e.icon} ${e.label}</span>
+          <div class="emotion-bar-track">
+            <div class="emotion-bar-fill" style="width:${pct}%;background:${e.color}"></div>
+          </div>
+          <span class="emotion-bar-count">${d.count}×</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+
+    // Place matrix
+    const matrix = document.getElementById("emotion-place-matrix");
+    const entries = Object.entries(emotions.place_matrix).filter(([, places]) => places.length > 0);
+    if (entries.length) {
+      matrix.innerHTML = `<h3 style="margin-top:1rem">Gefühle × Orte</h3>
+        <p class="hint">Welche Emotionen tauchen an welchen Orten auf?</p>
+        ${entries.map(([emo, places]) => {
+          const e = EMOTIONS[emo] || { icon: "?", label: emo };
+          return `<div class="emotion-matrix-row">
+            <span>${e.icon} ${e.label}</span>
+            <span class="hint">→ ${places.map((p) => `${escapeHtml(p.place)} (${p.count}×)`).join(", ")}</span>
+          </div>`;
+        }).join("")}`;
+    } else {
+      matrix.innerHTML = "";
+    }
+  },
+
+  renderCorrelations(corr) {
+    const section = document.getElementById("correlation-section");
+    if (!corr) { section.classList.add("hidden"); return; }
+
+    const hasWeekday = corr.weekday.some((d) => d.total > 0);
+    const hasSleep = corr.sleep_quality.some((d) => d.total > 0);
+    if (!hasWeekday && !hasSleep) { section.classList.add("hidden"); return; }
+    section.classList.remove("hidden");
+
+    // Weekday
+    const wdEl = document.getElementById("correlation-weekday");
+    if (hasWeekday) {
+      wdEl.innerHTML = `<h3>Wochentag × Luzidität</h3>
+        <div class="corr-grid">
+          ${corr.weekday.map((d) => {
+            const rate = d.total ? Math.round(d.lucid / d.total * 100) : 0;
+            return `<div class="corr-cell">
+              <div class="corr-bar" style="height:${Math.max(rate, 4)}%;background:${rate > 0 ? "var(--lucid)" : "var(--bg-input)"}"></div>
+              <span class="corr-label">${d.day}</span>
+              <span class="corr-value">${rate}%</span>
+            </div>`;
+          }).join("")}
+        </div>
+        <p class="hint">Klartraum-Quote nach Wochentag (${corr.weekday.reduce((s, d) => s + d.total, 0)} Einträge)</p>`;
+    }
+
+    // Sleep quality
+    const sqEl = document.getElementById("correlation-sleep");
+    if (hasSleep) {
+      sqEl.innerHTML = `<h3>Schlafqualität × Luzidität</h3>
+        <div class="corr-grid corr-5">
+          ${corr.sleep_quality.map((d) => {
+            const rate = d.total ? Math.round(d.lucid / d.total * 100) : 0;
+            return `<div class="corr-cell">
+              <div class="corr-bar" style="height:${Math.max(rate, 4)}%;background:${rate > 0 ? "var(--accent)" : "var(--bg-input)"}"></div>
+              <span class="corr-label">Q${d.quality}</span>
+              <span class="corr-value">${rate}%</span>
+            </div>`;
+          }).join("")}
+        </div>
+        <p class="hint">Klartraum-Quote nach Schlafqualität (1=schlecht, 5=sehr gut)</p>`;
+    }
   },
 
   async downloadExport(format) {

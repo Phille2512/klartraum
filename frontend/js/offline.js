@@ -61,7 +61,7 @@ const offline = {
           if (err.isNetworkError || err.isAuthError) break;
           // Server hat den Eintrag abgelehnt (z. B. ungültige Daten): nicht endlos wiederholen
           await this.remove(item.queueId);
-          showToast(`Offline-Eintrag „${item.payload.title}" wurde abgelehnt: ${err.message}`);
+          showToast(`Offline-Eintrag "${item.payload.title}" wurde abgelehnt: ${err.message}`);
         }
       }
       if (synced) {

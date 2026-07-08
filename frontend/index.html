@@ -13,6 +13,8 @@
 <body>
   <header>
     <h1>🌙 Klartraum</h1>
+    <button id="theme-btn" class="theme-btn" title="Rotlicht-Modus">🔴</button>
+    <button id="ritual-btn" class="ritual-btn" title="Abendritual">🌙</button>
     <nav>
       <button class="tab-btn active" data-tab="journal">Tagebuch</button>
       <button class="tab-btn" data-tab="stats">Analyse</button>
@@ -29,6 +31,8 @@
         <button id="new-dream-btn" class="primary">+ Neuer Traum</button>
       </div>
 
+      <div id="intention-prompt" class="card intention-prompt hidden"></div>
+
       <form id="dream-form" class="card hidden">
         <h2 id="form-title">Neuer Traum</h2>
         <input type="hidden" id="dream-id">
@@ -36,6 +40,7 @@
           <textarea id="dream-content" rows="6"
             placeholder="Schreibe alles auf, woran du dich erinnerst – auch Fragmente."></textarea>
         </label>
+        <div id="dream-echoes" class="dream-echoes hidden"></div>
         <label>Titel
           <input type="text" id="dream-title" required placeholder="Kurzer Titel">
         </label>
@@ -66,6 +71,11 @@
         <label class="checkbox-label">
           <input type="checkbox" id="dream-beifuss"> 🌿 Beifuß getrunken
         </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="dream-bigdream"> ⭐ Großer Traum <small>(numinos, aufwühlend, bleibt im Gedächtnis — nach C. G. Jung)</small>
+        </label>
+        <label>Emotionen <small>(was hast du im Traum gefühlt?)</small></label>
+        <div id="emotion-picker" class="emotion-picker"></div>
         <label>Traumzeichen <small>(wiederkehrende Muster, kommagetrennt)</small>
           <input type="text" id="dream-signs" list="signs-list" placeholder="z. B. fliegen, verstorbene Person, Zähne">
           <datalist id="signs-list"></datalist>
@@ -99,6 +109,10 @@
     <!-- ===== Analyse ===== -->
     <section id="tab-stats" class="tab">
       <div id="stat-cards" class="stat-cards"></div>
+      <div id="incubation-card" class="card hidden">
+        <h2>🎯 Inkubations-Quote</h2>
+        <div id="incubation-stats" class="stat-cards"></div>
+      </div>
       <div class="card chart-card">
         <h2>🧭 Traumkompass <small>nach Stephen LaBerge</small></h2>
         <p class="hint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
@@ -130,6 +144,33 @@
           deine Einträge – diese Kurve sollte mit der Übung steigen.</p>
         <canvas id="chart-recall"></canvas>
       </div>
+      <div id="emotion-section" class="card hidden">
+        <h2>💛 Emotionale Landschaft</h2>
+        <p class="hint">Was du im Traum fühlst — und wie sich deine Gefühle verteilen.</p>
+        <div id="emotion-distribution"></div>
+        <div id="emotion-place-matrix"></div>
+      </div>
+      <div id="correlation-section" class="card hidden">
+        <h2>📊 Korrelationen</h2>
+        <p class="hint">Welche Faktoren beeinflussen deine Klarträume?</p>
+        <div id="correlation-weekday"></div>
+        <div id="correlation-sleep"></div>
+      </div>
+      <div class="card" id="mandala-card">
+        <h2>🌗 Dein Traum-Mandala <small><em>nach C. G. Jung</em></small></h2>
+        <p class="hint">Deine Traumdaten als Momentaufnahme — gleiche Daten ergeben immer dasselbe Bild.</p>
+        <div class="form-row" style="margin-bottom:0.75rem">
+          <label>Zeitraum
+            <select class="mandala-range">
+              <option value="month">Letzter Monat</option>
+              <option value="quarter">Letztes Quartal</option>
+              <option value="year">Letztes Jahr</option>
+            </select>
+          </label>
+        </div>
+        <div class="mandala-svg-wrap"></div>
+        <button class="mandala-export primary" style="margin-top:0.5rem">Als Bild sichern</button>
+      </div>
       <div class="card">
         <h2>📤 Datenexport</h2>
         <p class="hint">Alle Träume als Datei – für eigene Auswertungen (Pandas!) oder als Backup.</p>
@@ -142,26 +183,60 @@
 
     <!-- ===== Atlas ===== -->
     <section id="tab-atlas" class="tab">
-      <div class="card">
-        <h2>🗺️ Dein Traumatlas</h2>
-        <p class="hint">Die Landkarte deiner Traumwelt: Orte, Personen und Traumzeichen –
-          verbunden, wenn sie im selben Traum auftauchen. Je größer, desto öfter geträumt.
-          Tippe einen Knoten an, um die ganze Traumserie zu sehen.</p>
-        <div class="atlas-legend">
-          <span class="badge place">📍 Ort</span>
-          <span class="badge person">👤 Person</span>
-          <span class="badge sign">🔮 Traumzeichen</span>
-        </div>
-        <div id="atlas-graph"></div>
+      <div class="atlas-toggle">
+        <button class="atlas-toggle-btn active" data-view="net">🕸️ Netz</button>
+        <button class="atlas-toggle-btn" data-view="map">🗺️ Karte</button>
+        <button class="atlas-toggle-btn" data-view="innenwelt">🌗 Innenwelt</button>
       </div>
-      <div id="atlas-series"></div>
+      <div id="atlas-net-view">
+        <div class="card">
+          <h2>🗺️ Dein Traumatlas</h2>
+          <p class="hint">Die Landkarte deiner Traumwelt: Orte, Personen und Traumzeichen –
+            verbunden, wenn sie im selben Traum auftauchen. Je größer, desto öfter geträumt.
+            Tippe einen Knoten an, um die ganze Traumserie zu sehen.</p>
+          <div class="atlas-legend">
+            <span class="badge place">📍 Ort</span>
+            <span class="badge person">👤 Person</span>
+            <span class="badge sign">🔮 Traumzeichen</span>
+          </div>
+          <div id="atlas-graph"></div>
+        </div>
+        <div id="atlas-series"></div>
+      </div>
+      <div id="atlas-map-view" class="hidden">
+        <div class="card">
+          <h2>🗺️ Deine Traumweltkarte</h2>
+          <p class="hint">Platziere Orte aus deinen Träumen auf der Karte und verbinde sie mit Wegen.
+            Der Nebel lichtet sich, wo du geträumt hast.</p>
+          <div id="worldmap-container"></div>
+        </div>
+      </div>
+      <div id="innenwelt-view" class="hidden"></div>
     </section>
 
     <!-- ===== Lernen ===== -->
     <section id="tab-learn" class="tab">
+      <div class="card" id="journey-card">
+        <h2>🧭 Deine Individuationsreise <small><em>nach C. G. Jung</em></small></h2>
+        <p class="hint">Sechs Stationen, jede mit einer echten Übung an deinen eigenen Träumen. Kein Quiz — eine Reise.</p>
+        <div id="journey-path"></div>
+        <div id="journey-content"></div>
+      </div>
+      <div class="card">
+        <h2>🏆 Klartraum-Bucket-List</h2>
+        <p class="hint">Was willst du im Klartraum erleben? Sammle Ziele und hake sie nach Erfolg ab.</p>
+        <div class="goal-input-row">
+          <input type="text" id="goal-input" placeholder="Neues Ziel …">
+          <button id="goal-add-btn" class="primary">+</button>
+        </div>
+        <div id="goal-list"></div>
+      </div>
       <div class="card">
         <h2>⏰ Reality-Check-Erinnerung</h2>
         <p class="hint">Erinnert dich in festen Abständen an einen Reality Check – solange die App geöffnet ist.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" id="morning-flow-toggle"> 🧘 Morgen-Flow vor dem Eintragen
+        </label>
         <div class="form-row">
           <label>Intervall
             <select id="reminder-interval">
@@ -206,13 +281,101 @@
     </form>
   </div>
 
+  <!-- Abendritual-Overlay -->
+  <div id="ritual-overlay" class="login-overlay hidden">
+    <div class="card login-card ritual-card">
+      <h2>🌙 Abendritual</h2>
+      <div id="ritual-focus"></div>
+      <div id="ritual-goals"></div>
+      <div id="ritual-content">
+        <label>Was willst du heute Nacht träumen?
+          <textarea id="ritual-text" rows="3" placeholder="Formuliere deine Traumabsicht …"></textarea>
+        </label>
+        <button id="ritual-save" class="primary">Absicht setzen</button>
+      </div>
+      <div id="ritual-done" class="hidden">
+        <p class="ritual-confirm">Absicht gesetzt. Guten Flug. 🌙</p>
+      </div>
+      <p class="hint"><a href="#" id="ritual-nightmode">🔴 Rotlicht an</a></p>
+      <button id="ritual-close" class="ritual-close-btn">✕</button>
+    </div>
+  </div>
+
+  <!-- Reflexions-Overlay -->
+  <div id="reflection-overlay" class="login-overlay hidden">
+    <div class="card login-card reflection-card">
+      <h2>🪞 Einen Moment noch …</h2>
+      <p id="reflection-question" class="reflection-question"></p>
+      <textarea id="reflection-answer" rows="3" placeholder="Deine Gedanken …"></textarea>
+      <div class="form-actions">
+        <button id="reflection-save" class="primary">Speichern</button>
+        <button id="reflection-skip">Überspringen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Morgen-Flow-Overlay -->
+  <div id="morning-flow" class="login-overlay hidden">
+    <div class="morning-flow-content">
+      <p class="morning-flow-text">Bleib still.<br>Geh den Traum rückwärts durch.</p>
+      <div class="morning-flow-ring">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="var(--bg-input)" stroke-width="6"/>
+          <circle id="flow-progress" cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="6"
+            stroke-dasharray="339.29" stroke-dashoffset="0" stroke-linecap="round"
+            transform="rotate(-90 60 60)"/>
+        </svg>
+        <span id="flow-seconds">60</span>
+      </div>
+      <button id="flow-skip" class="primary">Ich bin bereit →</button>
+    </div>
+  </div>
+
+  <!-- Aktive-Imagination-Overlay -->
+  <div id="imagination-overlay" class="login-overlay hidden">
+    <div class="card login-card imagination-card">
+      <button class="imag-close ritual-close-btn">✕</button>
+      <div class="imag-step">
+        <h2>🔮 Ankommen</h2>
+        <p>Schließe kurz die Augen. Hol die lebendigste Szene des Traums zurück. Lass sie da sein, ohne sie zu ändern.</p>
+        <div class="morning-flow-ring" style="margin:1rem auto">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--bg-input)" stroke-width="6"/>
+            <circle id="imag-progress" cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="6"
+              stroke-dasharray="339.29" stroke-dashoffset="0" stroke-linecap="round"
+              transform="rotate(-90 60 60)"/>
+          </svg>
+          <span id="imag-seconds">30</span>
+        </div>
+        <button id="imag-skip-1" class="primary">Ich bin da →</button>
+      </div>
+      <div class="imag-step hidden">
+        <h2>🔮 Begegnen</h2>
+        <p>Wende dich einer Figur oder einem Ding zu. Stelle eine Frage — und lass die Antwort kommen, ohne sie zu erfinden.</p>
+        <button id="imag-next-2" class="primary">Weiter →</button>
+      </div>
+      <div class="imag-step hidden">
+        <h2>🔮 Festhalten</h2>
+        <p>Schreibe den Dialog oder was geschah …</p>
+        <textarea id="imag-text" rows="6" placeholder="Was ist passiert? Was wurde gesagt?"></textarea>
+        <div class="form-actions">
+          <button id="imag-save" class="primary">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/offline.js"></script>
   <script src="/js/journal.js"></script>
   <script src="/js/stats.js"></script>
+  <script src="/js/wissen.js"></script>
   <script src="/js/atlas.js"></script>
+  <script src="/js/innenwelt.js"></script>
+  <script src="/js/worldmap.js"></script>
+  <script src="/js/mandala.js"></script>
   <script src="/js/learn.js"></script>
   <script src="/js/app.js"></script>
 </body>
