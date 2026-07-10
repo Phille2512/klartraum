@@ -34,22 +34,48 @@ const atlas = {
   async load() {
     this.bindControls();
     const graphEl = document.getElementById("atlas-graph");
-    const to = this.timelapseDate || undefined;
     const params = new URLSearchParams({ min_count: String(this.minCount) });
     const from = this.computeFrom();
     if (from) params.set("from", from);
-    if (to) params.set("to", to);
-    let data;
-    try {
-      data = await api.request(`/api/atlas?${params}`);
-    } catch (err) {
-      showToast(err.message);
-      return;
+
+    // Kanonisches Layout: einmal für den Endstand (heute) berechnen und
+    // einfrieren, damit der Zeitraffer nicht "zappelt" (B.5).
+    const canonicalKey = `${from || ""}|${this.minCount}`;
+    if (this.canonicalKey !== canonicalKey) {
+      let canonicalData;
+      try {
+        canonicalData = await api.request(`/api/atlas?${params}`);
+      } catch (err) {
+        showToast(err.message);
+        return;
+      }
+      this.canonicalKey = canonicalKey;
+      this.canonicalNodes = canonicalData.nodes;
+      this.canonicalLinks = canonicalData.links;
+      const clone = canonicalData.nodes.map((n) => ({ ...n }));
+      const height = Math.max(300, Math.min(60 * clone.length + 160, 460));
+      this.layout(clone, canonicalData.links, 680, height);
+      this.canonicalPositions = Object.fromEntries(clone.map((n) => [n.id, { x: n.x, y: n.y }]));
     }
+
+    let data;
+    if (this.timelapseDate) {
+      const pastParams = new URLSearchParams(params);
+      pastParams.set("to", this.timelapseDate);
+      try {
+        data = await api.request(`/api/atlas?${pastParams}`);
+      } catch (err) {
+        showToast(err.message);
+        return;
+      }
+    } else {
+      data = { nodes: this.canonicalNodes, links: this.canonicalLinks };
+    }
+
     this.allNodes = data.nodes;
     this.allLinks = data.links;
     document.getElementById("atlas-series").innerHTML = "";
-    if (!this.allNodes.length) {
+    if (!this.canonicalNodes.length) {
       graphEl.innerHTML = `<div class="empty-state">Noch keine Karte: Gib deinen Träumen
         📍 Orte, 👤 Personen und 🔮 Traumzeichen – hier entsteht daraus deine Traumwelt.</div>`;
       return;
@@ -192,8 +218,17 @@ const atlas = {
 
   render(el, { nodes, links }) {
     const width = Math.min(el.clientWidth || 680, 680);
-    const height = Math.max(300, Math.min(60 * nodes.length + 160, 460));
-    this.layout(nodes, links, width, height);
+    const height = Math.max(300, Math.min(60 * (this.canonicalNodes?.length || nodes.length) + 160, 460));
+    if (!this.focus && this.canonicalPositions) {
+      // Eingefrorenes Layout wiederverwenden (Zeitraffer-Stabilität, B.5)
+      nodes.forEach((n) => {
+        const pos = this.canonicalPositions[n.id];
+        n.x = pos ? pos.x : width / 2;
+        n.y = pos ? pos.y : height / 2;
+      });
+    } else {
+      this.layout(nodes, links, width, height);
+    }
 
     const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
     const radius = (n) => 10 + Math.min(n.count, 8) * 4;
