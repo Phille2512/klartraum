@@ -237,6 +237,46 @@ Bühne lesbar und flüssig; Sektor-Ansicht rein/raus; Aktiv/Archiv- und
 Mindest-Vorkommen-Filter kombinierbar; Liste sortiert korrekt; Erstkontakt-Flow
 aus B.3 funktioniert weiterhin.
 
+### B.5 Atlas-Zeitraffer: der Traumwelt beim Wachsen zusehen
+
+**Idee:** Ein Zeit-Schieberegler unter dem Atlas-Netz — „Stand vom …“ — zeigt
+den Graphen, wie er zu einem früheren Zeitpunkt aussah. Mit ▶-Taste läuft die
+Entwicklung als Zeitraffer ab: Elemente tauchen auf, wachsen, verbinden sich.
+
+**Umsetzung:**
+- Backend: nutzt den `to`-Parameter aus B.1 (`GET /api/atlas?to=…`) — es zählt
+  nur, was bis zu diesem Datum geträumt wurde. Kein neuer Endpunkt.
+- Frontend (Netz-Ansicht): Range-Slider vom ersten Traumdatum bis heute
+  (Monatsschritte), Datumsanzeige daneben, ▶/⏸-Taste: alle 800 ms ein Monat
+  vorwärts. Während des Zeitraffers Filter aus B.1 beibehalten.
+- **Stabilität statt Zappeln:** Damit Knoten beim Scrubben nicht wild
+  umherspringen, wird das Layout EINMAL für den Endstand (heute) berechnet und
+  die Positionen eingefroren; frühere Stände blenden Knoten/Kanten nur ein/aus
+  und skalieren die Radien. (Wichtigstes Implementierungsdetail!)
+- Slider ganz rechts (= heute) verhält sich exakt wie bisher.
+
+**Akzeptanz:** Scrubben zeigt monotone Entwicklung (nie verschwindet etwas
+beim Vorwärtsgehen); Play-Modus läuft ruckelfrei mit ~30 Knoten; Positionen
+bleiben stabil; mobil bedienbar.
+
+### B.6 „Ort der Woche“ im Abendritual  *(optional, klein)*
+
+**Idee:** Das Abendritual schlägt einen kartierten Ort als Inkubations-Ziel
+vor: *„Heute Nacht: Besuch das 📍 Elternhaus?“*
+
+- Auswahl deterministisch pro Kalenderwoche (`ISO-Woche % Anzahl platzierter
+  Orte` über die nach Name sortierte Liste) — die ganze Woche derselbe Ort,
+  kein Zufalls-Flackern.
+- Darstellung im Ritual-Overlay unter dem Fokus-Zeichen, mit Button
+  **„Als Absicht übernehmen“** (füllt das Absichts-Textfeld mit „Ich besuche
+  heute Nacht …“ — Nutzer kann editieren) und „Anderer Vorschlag“ (nächster
+  Ort der Liste, nur für heute).
+- Nur zeigen, wenn mindestens 3 Orte auf der Traumweltkarte platziert sind;
+  abschaltbar über ein kleines „nicht mehr vorschlagen“ (localStorage).
+
+**Akzeptanz:** Vorschlag bleibt innerhalb einer Woche stabil; Übernehmen füllt
+das Feld; Abschalten wirkt dauerhaft; ohne kartierte Orte erscheint nichts.
+
 ---
 
 ## Reihenfolge & Abschluss
@@ -245,9 +285,11 @@ aus B.3 funktioniert weiterhin.
 A.1 Zeitraum/Granularität → A.2 Gliederung → A.3 Schreiben → A.4 Aufriss
    → A.5 Emotionen → B.1 Atlas → B.3 Innenwelt verstehen (klein!)
    → B.4 Innenwelt skalieren → B.2 Traumwelt (größte Stufe)
+   → B.5 Zeitraffer → B.6 Ort der Woche (optional)
 ```
 (B.3 vor B.2 ziehen — es ist ein Nachmittag und beseitigt echte Verwirrung.
-B.4 direkt danach, solange die Innenwelt-Codebasis frisch im Kopf ist.)
+B.4 direkt danach, solange die Innenwelt-Codebasis frisch im Kopf ist.
+B.5 setzt B.1 voraus; B.6 ist Kür und darf entfallen, wenn die Zeit fehlt.)
 
 Pro Stufe: Testdaten-Skript nutzen und restlos aufräumen, Desktop + 412 px +
 Rotlicht prüfen, `sw.js`-Cache bumpen, ein Commit. Die pytest-Suite (falls
