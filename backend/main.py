@@ -616,6 +616,8 @@ def stats(
             "per_bucket_b": build_per_bucket(group_b, granularity),
             "writing_a": build_writing(group_a, granularity),
             "writing_b": build_writing(group_b, granularity),
+            "emotions_analysis_a": build_emotions_analysis(group_a, granularity),
+            "emotions_analysis_b": build_emotions_analysis(group_b, granularity),
         }
 
     writing = build_writing(dreams, granularity)

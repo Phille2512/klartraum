@@ -48,8 +48,11 @@ const api = {
       body: JSON.stringify({ category }),
     });
   },
-  stats() {
-    return this.request("/api/stats");
+  stats(params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== "" && v != null)
+    ).toString();
+    return this.request(`/api/stats${query ? "?" + query : ""}`);
   },
   currentIntention() {
     return this.request("/api/intentions/current");
@@ -122,8 +125,11 @@ const api = {
     if (excludeId) params.set("exclude_id", excludeId);
     return this.request(`/api/dreams/echoes?${params}`);
   },
-  getInnenwelt() {
-    return this.request("/api/innenwelt");
+  getInnenwelt(params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== "" && v != null)
+    ).toString();
+    return this.request(`/api/innenwelt${query ? "?" + query : ""}`);
   },
   getMandala(from, to) {
     const params = new URLSearchParams();

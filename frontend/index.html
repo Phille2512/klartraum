@@ -108,69 +108,150 @@
 
     <!-- ===== Analyse ===== -->
     <section id="tab-stats" class="tab">
-      <div id="stat-cards" class="stat-cards"></div>
-      <div id="incubation-card" class="card hidden">
-        <h2>🎯 Inkubations-Quote</h2>
-        <div id="incubation-stats" class="stat-cards"></div>
-      </div>
-      <div class="card chart-card">
-        <h2>🧭 Traumkompass <small>nach Stephen LaBerge</small></h2>
-        <p class="hint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
-          verrät, worauf sich deine Reality Checks lohnen.</p>
-        <canvas id="chart-compass"></canvas>
-        <div id="compass-sorter"></div>
-        <div id="mission"></div>
-      </div>
-      <div class="card">
-        <h2>🌿 Wirkt Beifuß bei dir?</h2>
-        <div id="beifuss-compare"></div>
-      </div>
-      <div class="card chart-card">
-        <h2>Klarträume pro Woche</h2>
-        <canvas id="chart-weeks"></canvas>
-      </div>
-      <div class="card chart-card">
-        <h2>Deine häufigsten Traumzeichen</h2>
-        <p class="hint">Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.</p>
-        <canvas id="chart-signs"></canvas>
-      </div>
-      <div class="card chart-card">
-        <h2>Verteilung der Traumerinnerung</h2>
-        <canvas id="chart-lucidity"></canvas>
-      </div>
-      <div class="card chart-card">
-        <h2>📈 Erinnerungs-Training</h2>
-        <p class="hint">Ø Wörter pro Eintrag: Je mehr Details du erinnerst, desto länger werden
-          deine Einträge – diese Kurve sollte mit der Übung steigen.</p>
-        <canvas id="chart-recall"></canvas>
-      </div>
-      <div id="emotion-section" class="card hidden">
-        <h2>💛 Emotionale Landschaft</h2>
-        <p class="hint">Was du im Traum fühlst — und wie sich deine Gefühle verteilen.</p>
-        <div id="emotion-distribution"></div>
-        <div id="emotion-place-matrix"></div>
-      </div>
-      <div id="correlation-section" class="card hidden">
-        <h2>📊 Korrelationen</h2>
-        <p class="hint">Welche Faktoren beeinflussen deine Klarträume?</p>
-        <div id="correlation-weekday"></div>
-        <div id="correlation-sleep"></div>
-      </div>
-      <div class="card" id="mandala-card">
-        <h2>🌗 Dein Traum-Mandala <small><em>nach C. G. Jung</em></small></h2>
-        <p class="hint">Deine Traumdaten als Momentaufnahme — gleiche Daten ergeben immer dasselbe Bild.</p>
-        <div class="form-row" style="margin-bottom:0.75rem">
-          <label>Zeitraum
-            <select class="mandala-range">
-              <option value="month">Letzter Monat</option>
-              <option value="quarter">Letztes Quartal</option>
-              <option value="year">Letztes Jahr</option>
-            </select>
-          </label>
+      <div class="stats-controlbar">
+        <div class="chip-row" id="stats-range-chips">
+          <button class="chip" data-range="30">30 Tage</button>
+          <button class="chip" data-range="90">90 Tage</button>
+          <button class="chip" data-range="365">Jahr</button>
+          <button class="chip active" data-range="all">Alles</button>
+          <button class="chip" data-range="custom">…</button>
         </div>
-        <div class="mandala-svg-wrap"></div>
-        <button class="mandala-export primary" style="margin-top:0.5rem">Als Bild sichern</button>
+        <div class="stats-custom-range hidden" id="stats-custom-range">
+          <label>von <input type="date" id="stats-from"></label>
+          <label>bis <input type="date" id="stats-to"></label>
+        </div>
+        <div class="chip-row" id="stats-gran-chips">
+          <button class="chip" data-gran="day">Tag</button>
+          <button class="chip active" data-gran="week">Woche</button>
+          <button class="chip" data-gran="month">Monat</button>
+        </div>
+        <p class="hint hidden" id="stats-gran-hint">Bei diesem Zeitraum zu viele Punkte für „Tag" – automatisch auf „Woche" umgeschaltet.</p>
       </div>
+
+      <div id="stat-cards" class="stat-cards"></div>
+
+      <div class="chip-row" id="stats-section-nav">
+        <button class="chip active" data-section="write">✍️ Schreiben</button>
+        <button class="chip" data-section="lucidity">✨ Luzidität</button>
+        <button class="chip" data-section="emotions">💛 Gefühle</button>
+        <button class="chip" data-section="experiments">🔬 Experimente</button>
+        <button class="chip" data-section="compass">🧭 Kompass</button>
+        <button class="chip" data-section="review">🌗 Rückblick</button>
+      </div>
+
+      <div id="stats-sections">
+        <div class="stats-section" data-section="write">
+          <div class="card">
+            <h2>✍️ Dein Traumbuch in Wörtern</h2>
+            <div class="split-control" data-target="write"></div>
+            <div id="writing-headline-cards" class="stat-cards"></div>
+          </div>
+          <div class="card chart-card">
+            <h2>📈 Wörter pro Eintrag über Zeit</h2>
+            <p class="hint">Dünne Linie = Bucket-Werte, dicke Linie = gleitender Durchschnitt über 5 Buckets.</p>
+            <canvas id="chart-recall"></canvas>
+          </div>
+          <div class="card">
+            <h2>🔥 Schreib-Kalender</h2>
+            <p class="hint">Letzte 6 Monate – Farbintensität = Wortzahl, leere Tage bleiben sichtbar. Tippen für Details.</p>
+            <div id="writing-heatmap" class="heatmap-grid"></div>
+          </div>
+          <div class="card chart-card">
+            <h2>📊 Wortzahl-Verteilung</h2>
+            <canvas id="chart-histogram"></canvas>
+          </div>
+          <div class="card chart-card">
+            <h2>🔍 Detailtiefe</h2>
+            <p class="hint">Ø Anzahl erinnerter Zeichen, Orte und Personen pro Traum – erinnerst du mehr Substanz, nicht nur mehr Text?</p>
+            <canvas id="chart-detail"></canvas>
+          </div>
+          <div class="card chart-card">
+            <h2>🧮 Erinnerungs-Score</h2>
+            <small class="hint">Formel: 40 % Wortzahl-Perzentil + 30 % Detailtiefe-Perzentil + 30 % Erinnerungsquote (lucidity ≥ 1) je Bucket</small>
+            <canvas id="chart-score"></canvas>
+          </div>
+        </div>
+
+        <div class="stats-section hidden" data-section="lucidity">
+          <div class="split-control" data-target="lucidity"></div>
+          <div class="card chart-card">
+            <h2>Klarträume pro Zeitraum</h2>
+            <canvas id="chart-weeks"></canvas>
+          </div>
+          <div class="card chart-card">
+            <h2>Verteilung der Traumerinnerung</h2>
+            <canvas id="chart-lucidity"></canvas>
+          </div>
+          <div id="incubation-card" class="card hidden">
+            <h2>🎯 Inkubations-Quote</h2>
+            <div id="incubation-stats" class="stat-cards"></div>
+          </div>
+        </div>
+
+        <div class="stats-section hidden" data-section="emotions">
+          <div class="split-control" data-target="emotions"></div>
+          <div id="emotion-section" class="card hidden">
+            <h2>💛 Emotionale Landschaft</h2>
+            <p class="hint">Was du im Traum fühlst — und wie sich deine Gefühle verteilen.</p>
+            <div id="emotion-distribution"></div>
+            <h3 style="margin-top:1rem">Emotionen über Zeit</h3>
+            <canvas id="chart-emotions-time"></canvas>
+            <div id="emotion-valence"></div>
+            <div id="emotion-lucid-quote"></div>
+            <div id="emotion-pairs"></div>
+            <div id="emotion-place-matrix"></div>
+            <div id="emotion-combos"></div>
+          </div>
+        </div>
+
+        <div class="stats-section hidden" data-section="experiments">
+          <div class="card">
+            <h2>🌿 Wirkt Beifuß bei dir?</h2>
+            <div id="beifuss-compare"></div>
+          </div>
+          <div id="correlation-section" class="card hidden">
+            <h2>📊 Korrelationen</h2>
+            <p class="hint">Welche Faktoren beeinflussen deine Klarträume?</p>
+            <div id="correlation-weekday"></div>
+            <div id="correlation-sleep"></div>
+          </div>
+        </div>
+
+        <div class="stats-section hidden" data-section="compass">
+          <div class="card chart-card">
+            <h2>🧭 Traumkompass <small>nach Stephen LaBerge</small></h2>
+            <p class="hint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
+              verrät, worauf sich deine Reality Checks lohnen.</p>
+            <canvas id="chart-compass"></canvas>
+            <div id="compass-sorter"></div>
+            <div id="mission"></div>
+          </div>
+          <div class="card chart-card">
+            <h2>Deine häufigsten Traumzeichen</h2>
+            <p class="hint">Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.</p>
+            <canvas id="chart-signs"></canvas>
+          </div>
+        </div>
+
+        <div class="stats-section hidden" data-section="review">
+          <div class="card" id="mandala-card">
+            <h2>🌗 Dein Traum-Mandala <small><em>nach C. G. Jung</em></small></h2>
+            <p class="hint">Deine Traumdaten als Momentaufnahme — gleiche Daten ergeben immer dasselbe Bild.</p>
+            <div class="form-row" style="margin-bottom:0.75rem">
+              <label>Zeitraum
+                <select class="mandala-range">
+                  <option value="month">Letzter Monat</option>
+                  <option value="quarter">Letztes Quartal</option>
+                  <option value="year">Letztes Jahr</option>
+                </select>
+              </label>
+            </div>
+            <div class="mandala-svg-wrap"></div>
+            <button class="mandala-export primary" style="margin-top:0.5rem">Als Bild sichern</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <h2>📤 Datenexport</h2>
         <p class="hint">Alle Träume als Datei – für eigene Auswertungen (Pandas!) oder als Backup.</p>
