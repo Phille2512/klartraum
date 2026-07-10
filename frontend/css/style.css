@@ -347,6 +347,50 @@ button.danger { color: var(--danger); }
 }
 #atlas-focus-bar.hidden { display: none; }
 
+/* --- Innenwelt: Verständlichkeit & Skalierung (B.3/B.4) --- */
+.innenwelt-intro {
+  border: 1px solid var(--accent);
+}
+.innenwelt-intro p { margin: 0.5rem 0; }
+
+.innenwelt-info-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 0.4rem;
+}
+
+.innenwelt-guided {
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  border: 1px dashed var(--accent);
+}
+
+.innenwelt-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.innenwelt-table th { text-align: left; color: var(--text-dim); font-weight: 400; padding: 0.4rem; border-bottom: 1px solid var(--bg-input); }
+.innenwelt-table td { padding: 0.4rem; border-bottom: 1px solid var(--bg-input); }
+.innenwelt-row { cursor: pointer; }
+.innenwelt-row:hover { background: var(--bg-input); }
+
+.innenwelt-sector-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.innenwelt-back-link {
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
 .picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

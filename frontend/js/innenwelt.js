@@ -10,6 +10,34 @@ const innenwelt = {
     persona:       315,
   },
 
+  SECTOR_SUBTITLES: {
+    schatten: "das Abgelehnte",
+    anima_animus: "die Gegenstimme",
+    weiser: "der Rat",
+    kind: "Anfang, Spiel",
+    trickster: "bricht Regeln",
+    held: "kämpft, überwindet",
+    grosse_mutter: "nährt, hält",
+    persona: "die Maske",
+  },
+
+  MAX_PER_SECTOR: 4,
+  MAX_OUTER: 6,
+
+  allFigures: [],
+  bound: false,
+  sectorFocus: null,
+
+  // ---- Filter-Zustand (B.4) ----
+  get activeOnly() { return localStorage.getItem("innenwelt-active-only") !== "false"; },
+  set activeOnly(v) { localStorage.setItem("innenwelt-active-only", String(v)); },
+  get minCount() { return parseInt(localStorage.getItem("innenwelt-min-count") || "1", 10); },
+  set minCount(v) { localStorage.setItem("innenwelt-min-count", String(v)); },
+  get view() { return localStorage.getItem("innenwelt-view") || "stage"; },
+  set view(v) { localStorage.setItem("innenwelt-view", v); },
+  get introSeen() { return localStorage.getItem("innenwelt-intro-seen") === "true"; },
+  set introSeen(v) { localStorage.setItem("innenwelt-intro-seen", String(v)); },
+
   async load() {
     const el = document.getElementById("innenwelt-view");
     let figures;
@@ -19,13 +47,152 @@ const innenwelt = {
       showToast(err.message);
       return;
     }
+    this.allFigures = figures;
 
     if (!figures.length) {
       el.innerHTML = `<div class="card">
-        <h2>🌗 Deine Innenwelt-Bühne</h2>
+        <h2>🌗 Deine Innenwelt-Bühne <small>Deine Traumfiguren und ihre Rollen</small></h2>
         <div class="empty-state">Deine Bühne ist noch leer. Gib den Menschen in deinen Träumen
           eine Linse — im Atlas oder hier.</div>
       </div>`;
+      return;
+    }
+
+    el.innerHTML = `
+      ${this.introSeen ? "" : this.introCard()}
+      <div class="card">
+        <h2>🌗 Deine Innenwelt-Bühne <small>Deine Traumfiguren und ihre Rollen</small>
+          ${this.introSeen ? `<button class="hint innenwelt-info-btn" id="innenwelt-info-btn">💡</button>` : ""}</h2>
+        <p class="hint">Wer spielt in deinen Träumen — und in welcher Rolle? Innen: Figuren mit Archetyp-Linse. Außen: noch ohne Linse.</p>
+        <div class="chip-row">
+          <button class="chip iw-view-chip ${this.view === "stage" ? "active" : ""}" data-view="stage">🎭 Bühne</button>
+          <button class="chip iw-view-chip ${this.view === "list" ? "active" : ""}" data-view="list">☰ Liste</button>
+        </div>
+        <div class="chip-row">
+          <button class="chip iw-active-chip ${this.activeOnly ? "active" : ""}" data-active="true">Letzte 12 Monate</button>
+          <button class="chip iw-active-chip ${!this.activeOnly ? "active" : ""}" data-active="false">Alle Zeiten</button>
+          <button class="chip iw-min-chip ${this.minCount === 1 ? "active" : ""}" data-min="1">alle</button>
+          <button class="chip iw-min-chip ${this.minCount === 2 ? "active" : ""}" data-min="2">≥2×</button>
+          <button class="chip iw-min-chip ${this.minCount === 3 ? "active" : ""}" data-min="3">≥3×</button>
+        </div>
+        <div class="atlas-search-row">
+          <input type="text" id="innenwelt-search" placeholder="Figur finden …">
+          <button id="innenwelt-search-btn">🔍</button>
+        </div>
+        <div id="innenwelt-stage-wrap"></div>
+      </div>
+      <div id="innenwelt-dossier"></div>`;
+
+    this.bindControls();
+    this.renderBody();
+  },
+
+  introCard() {
+    return `<div class="card innenwelt-intro">
+      <h2>🌗 Was ist die Innenwelt-Bühne?</h2>
+      <p><strong>Was du hier siehst:</strong> die Menschen aus deinen Träumen, angeordnet um
+        dein „Selbst" in der Mitte. Jede Figur steht in dem Feld, das ihrer
+        <strong>Rolle in deinem Innenleben</strong> entspricht (nach C. G. Jung) — der
+        Schatten, der Weise, der Trickster …</p>
+      <p><strong>Was du hier tust:</strong> ① Figur antippen → ihre Geschichte lesen.
+        ② Ihr eine Rolle geben, wenn sie noch außen steht. ③ Über
+        „Gespräch fortsetzen" mit ihr in Dialog gehen (Aktive Imagination).</p>
+      <p><strong>Warum:</strong> Wer seine inneren Figuren kennt, erkennt sie im Traum wieder —
+        und Wiedererkennen macht luzide.</p>
+      <button class="primary" id="innenwelt-intro-close">Verstanden</button>
+    </div>`;
+  },
+
+  bindControls() {
+    document.getElementById("innenwelt-intro-close")?.addEventListener("click", () => {
+      this.introSeen = true;
+      this.load();
+    });
+    document.getElementById("innenwelt-info-btn")?.addEventListener("click", () => {
+      this.introSeen = false;
+      this.load();
+    });
+    document.querySelectorAll(".iw-view-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        this.view = chip.dataset.view;
+        this.sectorFocus = null;
+        this.load();
+      });
+    });
+    document.querySelectorAll(".iw-active-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        this.activeOnly = chip.dataset.active === "true";
+        this.renderBody();
+      });
+    });
+    document.querySelectorAll(".iw-min-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        this.minCount = parseInt(chip.dataset.min, 10);
+        this.renderBody();
+      });
+    });
+    const searchInput = document.getElementById("innenwelt-search");
+    const doSearch = () => {
+      const term = searchInput.value.trim().toLowerCase();
+      if (!term) return;
+      const hit = this.allFigures.find((f) => f.name.toLowerCase().includes(term));
+      if (!hit) { showToast(`„${term}" nicht gefunden`); return; }
+      this.showDossier(hit);
+    };
+    searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+    document.getElementById("innenwelt-search-btn").addEventListener("click", doSearch);
+  },
+
+  filteredFigures() {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 12);
+    return this.allFigures.filter((f) => {
+      if (this.activeOnly && new Date(f.last_date) < cutoff) return false;
+      if (f.count < this.minCount) return false;
+      return true;
+    });
+  },
+
+  renderBody() {
+    const wrap = document.getElementById("innenwelt-stage-wrap");
+    const figures = this.filteredFigures();
+    if (this.view === "list") {
+      this.renderList(wrap, figures);
+    } else {
+      this.renderStage(wrap, figures);
+    }
+  },
+
+  // ---- ☰ Liste (B.4) ----
+  renderList(wrap, figures) {
+    const rows = [...figures].sort((a, b) => b.count - a.count);
+    wrap.innerHTML = `<table class="innenwelt-table">
+      <thead><tr><th>Name</th><th>Rolle</th><th>Vorkommen</th><th>Zuletzt</th><th>Gespräch</th></tr></thead>
+      <tbody>
+        ${rows.map((f) => {
+          const a = f.archetype ? atlas.ARCHETYPES[f.archetype] : null;
+          return `<tr class="innenwelt-row" data-name="${escapeHtml(f.name)}">
+            <td>${escapeHtml(f.name)}</td>
+            <td>${a ? `${a.icon} ${a.label}` : "<span class=\"hint\">– ohne Rolle –</span>"}</td>
+            <td>${f.count}×</td>
+            <td>${formatDate(f.last_date)}</td>
+            <td>${f.has_imaginations ? "✅" : "–"}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+    wrap.querySelectorAll(".innenwelt-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        const fig = this.allFigures.find((f) => f.name === row.dataset.name);
+        if (fig) this.showDossier(fig);
+      });
+    });
+  },
+
+  // ---- 🎭 Bühne (B.3/B.4) ----
+  renderStage(wrap, figures) {
+    if (this.sectorFocus) {
+      this.renderSectorView(wrap, figures, this.sectorFocus);
       return;
     }
 
@@ -36,74 +203,153 @@ const innenwelt = {
     const innerR = 100, outerR = 155;
 
     let svgContent = "";
-
-    // Center: Selbst
     svgContent += `<circle cx="${cx}" cy="${cy}" r="28" fill="var(--accent)" fill-opacity="0.2" stroke="var(--accent)" stroke-width="1.5"/>`;
     svgContent += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="var(--accent)" font-size="16">&#x2B55; Selbst</text>`;
 
-    // Sector labels
     for (const [arch, angle] of Object.entries(this.SECTOR_ANGLES)) {
       const a = atlas.ARCHETYPES[arch];
       if (!a) continue;
       const rad = (angle - 90) * Math.PI / 180;
       const lx = cx + Math.cos(rad) * (innerR + 45);
       const ly = cy + Math.sin(rad) * (innerR + 45);
-      svgContent += `<text x="${lx}" y="${ly}" text-anchor="middle" fill="var(--text-dim)" font-size="10" opacity="0.6">${a.icon}</text>`;
+      svgContent += `<g class="innenwelt-sector-label" data-arch="${arch}" style="cursor:pointer">
+        <text x="${lx}" y="${ly}" text-anchor="middle" fill="var(--text-dim)" font-size="10" opacity="0.8">${a.icon} ${a.label}</text>
+        <text x="${lx}" y="${ly + 11}" text-anchor="middle" fill="var(--text-dim)" font-size="8" opacity="0.55">${this.SECTOR_SUBTITLES[arch] || ""}</text>
+      </g>`;
     }
 
-    // Inner ring: figures with archetype
+    // Hauptbesetzung: max. 4 Figuren pro Sektor, Rest als Sammel-Chip (B.4)
     const archGroups = {};
-    withArch.forEach((f) => {
-      (archGroups[f.archetype] = archGroups[f.archetype] || []).push(f);
-    });
+    withArch.forEach((f) => { (archGroups[f.archetype] = archGroups[f.archetype] || []).push(f); });
 
-    for (const [arch, figs] of Object.entries(archGroups)) {
+    for (const [arch, allFigs] of Object.entries(archGroups)) {
+      const figs = [...allFigs].sort((a, b) => b.count - a.count);
+      const shown = figs.slice(0, this.MAX_PER_SECTOR);
+      const rest = figs.length - shown.length;
       const baseAngle = this.SECTOR_ANGLES[arch] || 0;
-      figs.forEach((f, i) => {
-        const spread = figs.length > 1 ? 30 : 0;
-        const angle = baseAngle - spread / 2 + (figs.length > 1 ? i * spread / (figs.length - 1) : 0);
+      shown.forEach((f, i) => {
+        const spread = shown.length > 1 ? 30 : 0;
+        const angle = baseAngle - spread / 2 + (shown.length > 1 ? i * spread / (shown.length - 1) : 0);
         const rad = (angle - 90) * Math.PI / 180;
         const r = 8 + Math.min(f.count, 6) * 3;
         const fx = cx + Math.cos(rad) * innerR;
         const fy = cy + Math.sin(rad) * innerR;
         const color = this.dominantColor(f.emotions);
+        const showLabel = f.count >= 2 || r > 15;
         svgContent += `<g class="innenwelt-figure" data-name="${escapeHtml(f.name)}" style="cursor:pointer">
           <circle cx="${fx}" cy="${fy}" r="${r}" fill="${color}" fill-opacity="0.8" stroke="var(--border)" stroke-width="1"/>
-          <text x="${fx}" y="${fy - r - 4}" text-anchor="middle" fill="var(--text)" font-size="10">${escapeHtml(f.name)}</text>
+          <title>${escapeHtml(f.name)} (${f.count}×)</title>
+          ${showLabel ? `<text x="${fx}" y="${fy - r - 4}" text-anchor="middle" fill="var(--text)" font-size="10">${escapeHtml(f.name)}</text>` : ""}
         </g>`;
       });
+      if (rest > 0) {
+        const rad = (baseAngle - 90) * Math.PI / 180;
+        const fx = cx + Math.cos(rad) * (innerR + 22);
+        const fy = cy + Math.sin(rad) * (innerR + 22);
+        svgContent += `<g class="innenwelt-more-chip" data-arch="${arch}" style="cursor:pointer">
+          <circle cx="${fx}" cy="${fy}" r="12" fill="var(--bg-input)" stroke="var(--accent)" stroke-width="1"/>
+          <text x="${fx}" y="${fy + 4}" text-anchor="middle" fill="var(--accent)" font-size="10">+${rest}</text>
+        </g>`;
+      }
     }
 
-    // Outer ring: figures without archetype
-    withoutArch.forEach((f, i) => {
-      const angle = (i / withoutArch.length) * 360;
+    // Äußerer Ring: max. 6 ohne Rolle, Rest als Sammel-Chip
+    const sortedOuter = [...withoutArch].sort((a, b) => b.count - a.count);
+    const shownOuter = sortedOuter.slice(0, this.MAX_OUTER);
+    const restOuter = sortedOuter.length - shownOuter.length;
+    shownOuter.forEach((f, i) => {
+      const angle = (i / Math.max(shownOuter.length, 1)) * 360;
       const rad = (angle - 90) * Math.PI / 180;
       const r = 7 + Math.min(f.count, 6) * 2;
       const fx = cx + Math.cos(rad) * outerR;
       const fy = cy + Math.sin(rad) * outerR;
+      const showLabel = f.count >= 2 || r > 15;
       svgContent += `<g class="innenwelt-figure" data-name="${escapeHtml(f.name)}" style="cursor:pointer">
         <circle cx="${fx}" cy="${fy}" r="${r}" fill="var(--bg-input)" fill-opacity="0.5" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
-        <text x="${fx}" y="${fy - r - 4}" text-anchor="middle" fill="var(--text-dim)" font-size="10">${escapeHtml(f.name)}</text>
+        <title>${escapeHtml(f.name)} (${f.count}×)</title>
+        ${showLabel ? `<text x="${fx}" y="${fy - r - 4}" text-anchor="middle" fill="var(--text-dim)" font-size="10">${escapeHtml(f.name)}</text>` : ""}
       </g>`;
     });
+    if (restOuter > 0) {
+      svgContent += `<g class="innenwelt-more-outer" style="cursor:pointer">
+        <circle cx="${cx}" cy="${cy + outerR + 12}" r="14" fill="var(--bg-input)" stroke="var(--text-dim)" stroke-width="1"/>
+        <text x="${cx}" y="${cy + outerR + 16}" text-anchor="middle" fill="var(--text-dim)" font-size="10">+${restOuter}</text>
+      </g>`;
+    }
 
-    el.innerHTML = `<div class="card">
-      <h2>🌗 Deine Innenwelt-Bühne <small><em>nach C. G. Jung</em></small></h2>
-      <p class="hint">Wer spielt in deinen Träumen — und in welcher Rolle? Innen: Figuren mit Archetyp-Linse. Außen: noch ohne Linse.</p>
+    wrap.innerHTML = `
+      <p class="hint" style="opacity:.7">Äußerer Ring: Noch ohne Rolle — antippen zum Einsortieren.</p>
       <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" class="innenwelt-svg">
         ${svgContent}
-      </svg>
-    </div>
-    <div id="innenwelt-dossier"></div>`;
+      </svg>`;
 
-    // Wissen-Moment
-    const h2 = el.querySelector("h2");
-    if (h2) wissen.attach(h2, "mandala");
-
-    el.querySelectorAll(".innenwelt-figure").forEach((g) => {
+    wrap.querySelectorAll(".innenwelt-figure").forEach((g) => {
       g.addEventListener("click", () => {
-        const name = g.dataset.name;
-        const fig = figures.find((f) => f.name === name);
+        const fig = figures.find((f) => f.name === g.dataset.name);
+        if (fig) this.showDossier(fig);
+      });
+    });
+    wrap.querySelectorAll(".innenwelt-sector-label, .innenwelt-more-chip").forEach((g) => {
+      g.addEventListener("click", () => {
+        this.sectorFocus = g.dataset.arch;
+        this.renderBody();
+      });
+    });
+    wrap.querySelector(".innenwelt-more-outer")?.addEventListener("click", () => {
+      this.sectorFocus = "__outer__";
+      this.renderBody();
+    });
+
+    this.renderGuidedFirstContact(wrap, figures, withArch);
+  },
+
+  renderGuidedFirstContact(wrap, figures, withArch) {
+    if (withArch.length > 0) return;
+    const top = [...figures].sort((a, b) => b.count - a.count)[0];
+    if (!top) return;
+    const banner = document.createElement("div");
+    banner.className = "innenwelt-guided";
+    banner.innerHTML = `👉 Beginne mit „${escapeHtml(top.name)}" – welche Rolle spielt sie/er in deinen Träumen?`;
+    banner.addEventListener("click", () => this.showDossier(top));
+    wrap.prepend(banner);
+  },
+
+  renderSectorView(wrap, figures, arch) {
+    const isOuter = arch === "__outer__";
+    const figs = isOuter
+      ? figures.filter((f) => !f.archetype)
+      : figures.filter((f) => f.archetype === arch);
+    const label = isOuter ? "Noch ohne Rolle" : `${atlas.ARCHETYPES[arch]?.icon || ""} ${atlas.ARCHETYPES[arch]?.label || arch}`;
+
+    const width = 380, cols = 4;
+    const rows = Math.ceil(figs.length / cols) || 1;
+    const height = Math.max(200, rows * 90 + 40);
+
+    const cells = figs.map((f, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const fx = 60 + col * 85, fy = 60 + row * 85;
+      const r = 10 + Math.min(f.count, 6) * 3;
+      const color = isOuter ? "var(--bg-input)" : this.dominantColor(f.emotions);
+      return `<g class="innenwelt-figure" data-name="${escapeHtml(f.name)}" style="cursor:pointer">
+        <circle cx="${fx}" cy="${fy}" r="${r}" fill="${color}" fill-opacity="0.8" stroke="var(--border)" stroke-width="1"/>
+        <text x="${fx}" y="${fy - r - 4}" text-anchor="middle" fill="var(--text)" font-size="10">${escapeHtml(f.name)}</text>
+      </g>`;
+    }).join("");
+
+    wrap.innerHTML = `
+      <div class="innenwelt-sector-header">
+        <button class="chip" id="innenwelt-back-btn">‹ zurück zur Bühne</button>
+        <strong>${label}</strong> <span class="hint">(${figs.length})</span>
+      </div>
+      <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">${cells}</svg>`;
+
+    document.getElementById("innenwelt-back-btn").addEventListener("click", () => {
+      this.sectorFocus = null;
+      this.renderBody();
+    });
+    wrap.querySelectorAll(".innenwelt-figure").forEach((g) => {
+      g.addEventListener("click", () => {
+        const fig = figures.find((f) => f.name === g.dataset.name);
         if (fig) this.showDossier(fig);
       });
     });
@@ -145,6 +391,7 @@ const innenwelt = {
     }
 
     el.innerHTML = `<div class="card">
+      <button class="hint innenwelt-back-link" id="innenwelt-dossier-back">‹ zurück zur Bühne</button>
       <h3>${currentA ? currentA.icon : "👤"} ${escapeHtml(fig.name)}</h3>
       <div class="stat-cards" style="margin-bottom:0.75rem">
         <div class="stat-card"><span class="stat-value">${fig.count}</span><span class="stat-label">${fig.count === 1 ? "Traum" : "Träume"}</span></div>
@@ -194,6 +441,11 @@ const innenwelt = {
         </div>`).join("")}
       </div>
     </div>`;
+
+    document.getElementById("innenwelt-dossier-back").addEventListener("click", () => {
+      el.innerHTML = "";
+      document.getElementById("innenwelt-stage-wrap").scrollIntoView({ behavior: "smooth" });
+    });
 
     // Wire archetype picker
     if (tagId) {
