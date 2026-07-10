@@ -90,6 +90,15 @@ const api = {
   deletePath(id) {
     return this.request(`/api/map/paths/${id}`, { method: "DELETE" });
   },
+  createRegion(name, color, tagIds) {
+    return this.request("/api/map/regions", { method: "POST", body: JSON.stringify({ name, color, tag_ids: tagIds }) });
+  },
+  deleteRegion(id) {
+    return this.request(`/api/map/regions/${id}`, { method: "DELETE" });
+  },
+  setTagRegion(tagId, regionId) {
+    return this.request(`/api/tags/${tagId}/region`, { method: "PUT", body: JSON.stringify({ region_id: regionId }) });
+  },
   setArchetype(tagId, archetype) {
     return this.request(`/api/tags/${tagId}/archetype`, { method: "PUT", body: JSON.stringify({ archetype }) });
   },

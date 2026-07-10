@@ -648,17 +648,26 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 /* --- Traumweltkarte --- */
 .wm-toolbar {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.4rem;
   margin-bottom: 0.5rem;
 }
 
 .wm-mode-btn {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
-  border: 1px solid transparent;
 }
 
-.wm-mode-btn.active { border-color: var(--accent); background: var(--bg-input); }
+.wm-mode-hint { margin: 0; }
+
+.wm-region-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+}
 
 .wm-node { cursor: grab; }
 .wm-node:hover circle { stroke: #fff; stroke-width: 2; }
