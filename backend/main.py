@@ -368,33 +368,257 @@ def update_intention(intention_id: int, payload: IntentionFulfill, session: Sess
 
 # ---------- Statistik ----------
 
-@router.get("/stats")
-def stats(session: Session = Depends(get_session)):
-    dreams = session.exec(select(Dream)).all()
-    total = len(dreams)
-    remembered = [d for d in dreams if d.lucidity >= 1]
-    lucid = [d for d in dreams if d.lucidity >= 3]
+def bucket_key(d: dt.date, granularity: str) -> str:
+    if granularity == "day":
+        return d.isoformat()
+    if granularity == "month":
+        return f"{d.year}-{d.month:02d}"
+    iso = d.isocalendar()
+    return f"{iso.year}-KW{iso.week:02d}"
 
-    # Klartraum-Quote pro Kalenderwoche (letzte 12 Wochen mit Einträgen)
-    weeks: dict[str, dict[str, int]] = {}
+
+def build_per_bucket(dreams: list[Dream], granularity: str) -> list[dict]:
+    buckets: dict[str, dict[str, int]] = {}
     for d in dreams:
-        iso = d.date.isocalendar()
-        key = f"{iso.year}-KW{iso.week:02d}"
-        entry = weeks.setdefault(key, {"total": 0, "lucid": 0, "words": 0})
+        key = bucket_key(d.date, granularity)
+        entry = buckets.setdefault(key, {"total": 0, "lucid": 0, "words": 0})
         entry["total"] += 1
         entry["words"] += len(d.content.split())
         if d.lucidity >= 3:
             entry["lucid"] += 1
-    per_week = [
+    return [
         {
-            "week": k,
+            "bucket": k,
             "total": v["total"],
             "lucid": v["lucid"],
+            "words": v["words"],
             # Ø Wörter pro Eintrag: Maß fürs Erinnerungs-Training
             "avg_words": round(v["words"] / v["total"]),
         }
-        for k, v in sorted(weeks.items())
-    ][-12:]
+        for k, v in sorted(buckets.items())
+    ]
+
+
+def split_groups(dreams: list[Dream], split: str | None) -> tuple[str, str, list[Dream], list[Dream]] | None:
+    if split == "beifuss":
+        return "🌿 Mit Beifuß", "Ohne Beifuß", [d for d in dreams if d.beifuss], [d for d in dreams if not d.beifuss]
+    if split == "weekend":
+        return "Wochenende", "Werktag", [d for d in dreams if d.date.weekday() >= 5], [d for d in dreams if d.date.weekday() < 5]
+    if split == "big_dream":
+        return "⭐ Große Träume", "Andere Träume", [d for d in dreams if d.big_dream], [d for d in dreams if not d.big_dream]
+    return None
+
+
+def n_tagged(d: Dream) -> int:
+    return sum(1 for t in d.tags if t.kind in ("dream_sign", "place", "person"))
+
+
+def build_writing(dreams: list[Dream], granularity: str = "week") -> dict:
+    if not dreams:
+        return {
+            "total_words": 0, "avg_words": 0, "median_words": 0, "longest": None,
+            "trend": {"last7": 0, "prev7": 0, "delta_pct": None},
+            "heatmap": [], "histogram": [], "detail_depth_per_bucket": [], "score_per_bucket": [],
+        }
+    word_counts = [len(d.content.split()) for d in dreams]
+    total_words = sum(word_counts)
+    avg_words = round(total_words / len(dreams), 1)
+    sorted_wc = sorted(word_counts)
+    n = len(sorted_wc)
+    median_words = sorted_wc[n // 2] if n % 2 else round((sorted_wc[n // 2 - 1] + sorted_wc[n // 2]) / 2, 1)
+    longest_dream = max(dreams, key=lambda d: len(d.content.split()))
+    longest = {"id": longest_dream.id, "title": longest_dream.title, "words": len(longest_dream.content.split())}
+
+    today = dt.date.today()
+    last7 = [d for d in dreams if d.date > today - dt.timedelta(days=7)]
+    prev7 = [d for d in dreams if today - dt.timedelta(days=14) < d.date <= today - dt.timedelta(days=7)]
+    last7_words = sum(len(d.content.split()) for d in last7)
+    prev7_words = sum(len(d.content.split()) for d in prev7)
+    delta_pct = round((last7_words - prev7_words) / prev7_words * 100, 1) if prev7_words else None
+
+    heatmap = [
+        {"date": d.date.isoformat(), "words": len(d.content.split()), "title": d.title}
+        for d in sorted(dreams, key=lambda d: d.date)
+        if d.date >= today - dt.timedelta(days=182)
+    ]
+
+    hist_bounds = [(0, 0), (1, 25), (26, 50), (51, 100), (101, 200), (201, None)]
+    hist_labels = ["0", "1–25", "26–50", "51–100", "101–200", "200+"]
+    histogram = []
+    for (lo, hi), label in zip(hist_bounds, hist_labels):
+        count = sum(1 for w in word_counts if w >= lo) if hi is None else sum(1 for w in word_counts if lo <= w <= hi)
+        histogram.append({"bucket": label, "count": count})
+
+    # Detailtiefe: Ø Anzahl getaggter Elemente (Zeichen+Orte+Personen) pro Traum je Bucket
+    detail_buckets: dict[str, list[int]] = {}
+    for d in dreams:
+        detail_buckets.setdefault(bucket_key(d.date, granularity), []).append(n_tagged(d))
+    detail_depth_per_bucket = [
+        {"bucket": k, "avg_detail": round(sum(v) / len(v), 2)}
+        for k, v in sorted(detail_buckets.items())
+    ]
+
+    # Erinnerungs-Score je Bucket: 40% Wortzahl-Perzentil + 30% Detailtiefe-Perzentil + 30% Erinnerungsquote
+    def percentile_rank(value: int, all_values: list[int]) -> float:
+        if len(all_values) < 2:
+            return 100.0
+        return sum(1 for v in all_values if v <= value) / len(all_values) * 100
+
+    score_buckets: dict[str, list[Dream]] = {}
+    for d in dreams:
+        score_buckets.setdefault(bucket_key(d.date, granularity), []).append(d)
+    all_details = [n_tagged(d) for d in dreams]
+    score_per_bucket = []
+    for k, group in sorted(score_buckets.items()):
+        w_pct = sum(percentile_rank(len(d.content.split()), word_counts) for d in group) / len(group)
+        det_pct = sum(percentile_rank(n_tagged(d), all_details) for d in group) / len(group)
+        recall_rate = sum(1 for d in group if d.lucidity >= 1) / len(group) * 100
+        score_per_bucket.append({"bucket": k, "score": round(0.4 * w_pct + 0.3 * det_pct + 0.3 * recall_rate, 1)})
+
+    return {
+        "total_words": total_words,
+        "avg_words": avg_words,
+        "median_words": median_words,
+        "longest": longest,
+        "trend": {"last7": last7_words, "prev7": prev7_words, "delta_pct": delta_pct},
+        "heatmap": heatmap,
+        "histogram": histogram,
+        "detail_depth_per_bucket": detail_depth_per_bucket,
+        "score_per_bucket": score_per_bucket,
+    }
+
+
+# Valenz-Konstante für die Emotions-Analyse (A.5) — im Frontend per 💡 offengelegt
+EMOTION_VALENCE = {
+    "freude": "positiv", "liebe": "positiv", "frieden": "positiv",
+    "staunen": "positiv", "neugier": "positiv", "sehnsucht": "positiv",
+    "angst": "negativ", "trauer": "negativ", "wut": "negativ",
+    "ekel": "negativ", "scham": "negativ",
+    "verwirrung": "neutral",
+}
+
+
+def build_emotions_analysis(dreams: list[Dream], granularity: str) -> dict:
+    emotion_counter: Counter[str] = Counter()
+    emotion_lucid: Counter[str] = Counter()
+    emotion_place: dict[str, Counter[str]] = {}
+    emotion_person: dict[str, Counter[str]] = {}
+    emotion_time: dict[str, Counter[str]] = {}
+    pair_counter: Counter[tuple[str, str]] = Counter()
+
+    for d in dreams:
+        emos = sorted({e.strip() for e in (d.emotions or "").split(",") if e.strip()})
+        key = bucket_key(d.date, granularity)
+        time_bucket = emotion_time.setdefault(key, Counter())
+        for e in emos:
+            emotion_counter[e] += 1
+            time_bucket[e] += 1
+            if d.lucidity >= 3:
+                emotion_lucid[e] += 1
+            for t in d.tags:
+                if t.kind == "place":
+                    emotion_place.setdefault(e, Counter())[t.name] += 1
+                if t.kind == "person":
+                    emotion_person.setdefault(e, Counter())[t.name] += 1
+        for i in range(len(emos)):
+            for j in range(i + 1, len(emos)):
+                pair_counter[(emos[i], emos[j])] += 1
+
+    top6 = [e for e, _ in emotion_counter.most_common(6)]
+    over_time = []
+    for k in sorted(emotion_time):
+        ctr = emotion_time[k]
+        row = {"bucket": k, **{e: ctr.get(e, 0) for e in top6}}
+        row["andere"] = sum(c for e, c in ctr.items() if e not in top6)
+        over_time.append(row)
+
+    valence_over_time = []
+    for k in sorted(emotion_time):
+        ctr = emotion_time[k]
+        n = sum(ctr.values())
+        pos = sum(c for e, c in ctr.items() if EMOTION_VALENCE.get(e) == "positiv")
+        valence_over_time.append({"bucket": k, "positive_share": round(pos / n * 100, 1) if n else None})
+
+    today = dt.date.today()
+    month_start = today.replace(day=1)
+    cur = Counter()
+    for d in dreams:
+        if d.date >= month_start:
+            for e in (e.strip() for e in (d.emotions or "").split(",") if e.strip()):
+                cur[e] += 1
+    cur_total = sum(cur.values())
+    cur_pos = sum(c for e, c in cur.items() if EMOTION_VALENCE.get(e) == "positiv")
+
+    combo_list_place = sorted(
+        ({"emotion": e, "place": p, "count": c} for e, places in emotion_place.items() for p, c in places.items()),
+        key=lambda x: -x["count"],
+    )[:5]
+    combo_list_person = sorted(
+        ({"emotion": e, "person": p, "count": c} for e, persons in emotion_person.items() for p, c in persons.items()),
+        key=lambda x: -x["count"],
+    )[:5]
+
+    return {
+        "distribution": [{"emotion": e, "count": c} for e, c in emotion_counter.most_common()],
+        "lucid_correlation": [
+            {"emotion": e, "total": emotion_counter[e], "lucid": emotion_lucid[e]} for e in emotion_counter
+        ],
+        "lucid_quote": [
+            {"emotion": e, "rate": round(emotion_lucid[e] / emotion_counter[e] * 100, 1)}
+            for e in emotion_counter if emotion_counter[e] >= 3
+        ],
+        "over_time": over_time,
+        "top_emotions": top6,
+        "valence": {
+            "legend": EMOTION_VALENCE,
+            "over_time": valence_over_time,
+            "current_month_positive_share": round(cur_pos / cur_total * 100, 1) if cur_total else None,
+        },
+        "top_pairs": [{"a": a, "b": b, "count": c} for (a, b), c in pair_counter.most_common(5)],
+        "place_matrix": {e: [{"place": p, "count": c} for p, c in places.most_common(5)] for e, places in emotion_place.items()},
+        "person_matrix": {e: [{"person": p, "count": c} for p, c in persons.most_common(5)] for e, persons in emotion_person.items()},
+        "top_place_combos": combo_list_place,
+        "top_person_combos": combo_list_person,
+    }
+
+
+@router.get("/stats")
+def stats(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    granularity: str = Query(default="week", pattern="^(day|week|month)$"),
+    split: str | None = Query(default=None, pattern="^(beifuss|weekend|big_dream)$"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
+    total = len(dreams)
+    remembered = [d for d in dreams if d.lucidity >= 1]
+    lucid = [d for d in dreams if d.lucidity >= 3]
+
+    per_bucket = build_per_bucket(dreams, granularity)
+
+    split_data = None
+    groups = split_groups(dreams, split)
+    if groups:
+        label_a, label_b, group_a, group_b = groups
+        split_data = {
+            "kind": split,
+            "label_a": label_a,
+            "label_b": label_b,
+            "n_a": len(group_a),
+            "n_b": len(group_b),
+            "per_bucket_a": build_per_bucket(group_a, granularity),
+            "per_bucket_b": build_per_bucket(group_b, granularity),
+            "writing_a": build_writing(group_a, granularity),
+            "writing_b": build_writing(group_b, granularity),
+        }
+
+    writing = build_writing(dreams, granularity)
 
     # Top-Traumzeichen
     sign_counter: Counter[str] = Counter()
@@ -444,24 +668,13 @@ def stats(session: Session = Depends(get_session)):
         streak += 1
         cursor -= dt.timedelta(days=1)
 
-    # Emotionen
-    emotion_counter: Counter[str] = Counter()
-    emotion_lucid: Counter[str] = Counter()
-    emotion_place: dict[str, Counter[str]] = {}
-    emotion_person: dict[str, Counter[str]] = {}
+    # Emotionen (A.5)
+    emotions_analysis = build_emotions_analysis(dreams, granularity)
+
+    # Wochentag/Schlafqualität-Korrelationen
     weekday_counter: dict[int, dict[str, int]] = {i: {"total": 0, "lucid": 0} for i in range(7)}
     sq_lucid: dict[int, dict[str, int]] = {i: {"total": 0, "lucid": 0} for i in range(1, 6)}
     for d in dreams:
-        emos = [e.strip() for e in (d.emotions or "").split(",") if e.strip()]
-        for e in emos:
-            emotion_counter[e] += 1
-            if d.lucidity >= 3:
-                emotion_lucid[e] += 1
-            for t in d.tags:
-                if t.kind == "place":
-                    emotion_place.setdefault(e, Counter())[t.name] += 1
-                if t.kind == "person":
-                    emotion_person.setdefault(e, Counter())[t.name] += 1
         wd = d.date.weekday()
         weekday_counter[wd]["total"] += 1
         if d.lucidity >= 3:
@@ -470,22 +683,6 @@ def stats(session: Session = Depends(get_session)):
             sq_lucid[d.sleep_quality]["total"] += 1
             if d.lucidity >= 3:
                 sq_lucid[d.sleep_quality]["lucid"] += 1
-
-    emotions_data = {
-        "distribution": [{"emotion": e, "count": c} for e, c in emotion_counter.most_common()],
-        "lucid_correlation": [
-            {"emotion": e, "total": emotion_counter[e], "lucid": emotion_lucid[e]}
-            for e in emotion_counter
-        ],
-        "place_matrix": {
-            e: [{"place": p, "count": c} for p, c in places.most_common(5)]
-            for e, places in emotion_place.items()
-        },
-        "person_matrix": {
-            e: [{"person": p, "count": c} for p, c in persons.most_common(5)]
-            for e, persons in emotion_person.items()
-        },
-    }
 
     weekday_names = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
     correlations = {
@@ -515,7 +712,10 @@ def stats(session: Session = Depends(get_session)):
         "lucid": len(lucid),
         "lucid_rate": round(len(lucid) / total * 100, 1) if total else 0.0,
         "streak": streak,
-        "per_week": per_week,
+        "granularity": granularity,
+        "per_bucket": per_bucket,
+        "split": split_data,
+        "writing": writing,
         "top_dream_signs": top_signs,
         "lucidity_distribution": [
             sum(1 for d in dreams if d.lucidity == level) for level in range(5)
@@ -527,7 +727,7 @@ def stats(session: Session = Depends(get_session)):
             "without": {"count": len(without_beifuss), "lucid_rate": lucid_rate(without_beifuss)},
         },
         "incubation": incubation,
-        "emotions": emotions_data,
+        "emotions_analysis": emotions_analysis,
         "correlations": correlations,
     }
 
@@ -538,10 +738,21 @@ ATLAS_KINDS = {"place", "person", "dream_sign"}
 
 
 @router.get("/atlas")
-def atlas(session: Session = Depends(get_session)):
+def atlas(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    min_count: int = Query(default=1, ge=1),
+    session: Session = Depends(get_session),
+):
     """Knoten = wiederkehrende Orte/Personen/Traumzeichen,
-    Verbindungen = gemeinsames Auftreten im selben Traum."""
-    dreams = session.exec(select(Dream)).all()
+    Verbindungen = gemeinsames Auftreten im selben Traum.
+    `to` erlaubt den Atlas-Zeitraffer (B.5): zählt nur, was bis dahin geträumt wurde."""
+    stmt = select(Dream)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
     node_counter: Counter[tuple[str, str]] = Counter()
     link_counter: Counter[tuple[tuple[str, str], tuple[str, str]]] = Counter()
 
@@ -553,6 +764,9 @@ def atlas(session: Session = Depends(get_session)):
             for j in range(i + 1, len(elements)):
                 link_counter[(elements[i], elements[j])] += 1
 
+    node_counter = Counter({k: v for k, v in node_counter.items() if v >= min_count})
+    kept = set(node_counter)
+
     return {
         "nodes": [
             {"id": f"{kind}:{name}", "name": name, "kind": kind, "count": count}
@@ -561,6 +775,7 @@ def atlas(session: Session = Depends(get_session)):
         "links": [
             {"source": f"{k1}:{n1}", "target": f"{k2}:{n2}", "weight": weight}
             for ((n1, k1), (n2, k2)), weight in link_counter.items()
+            if (n1, k1) in kept and (n2, k2) in kept
         ],
     }
 
@@ -848,8 +1063,17 @@ def delete_imagination(img_id: int, session: Session = Depends(get_session)):
 # ---------- Innenwelt (J.3) ----------
 
 @router.get("/innenwelt")
-def innenwelt(session: Session = Depends(get_session)):
-    dreams = session.exec(select(Dream)).all()
+def innenwelt(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
     person_tags = session.exec(select(Tag).where(Tag.kind == "person")).all()
 
     result = []
