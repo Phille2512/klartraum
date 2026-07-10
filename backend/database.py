@@ -36,6 +36,8 @@ def _migrate() -> None:
             conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN category VARCHAR")
         if "archetype" not in tag_cols:
             conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN archetype VARCHAR")
+        if "region_id" not in tag_cols:
+            conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN region_id INTEGER")
         conn.commit()
 
 

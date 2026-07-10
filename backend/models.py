@@ -17,6 +17,8 @@ class Tag(SQLModel, table=True):
     category: str | None = Field(default=None, index=True)
     # Jung-Archetyp für Personen: schatten | anima_animus | weiser | kind | trickster | held | grosse_mutter | persona
     archetype: str | None = None
+    # Gruppierung auf der Traumweltkarte (B.2)
+    region_id: int | None = Field(default=None, foreign_key="mapregion.id")
 
     dreams: list["Dream"] = Relationship(back_populates="tags", link_model=DreamTag)
 
@@ -50,6 +52,12 @@ class MapPath(SQLModel, table=True):
     from_tag_id: int = Field(foreign_key="tag.id", index=True)
     to_tag_id: int = Field(foreign_key="tag.id", index=True)
     note: str | None = None
+
+
+class MapRegion(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    color: str = "#8b7ff5"
 
 
 class Goal(SQLModel, table=True):

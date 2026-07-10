@@ -13,7 +13,7 @@ from sqlmodel import Session, col, select
 
 import auth
 from database import get_session, init_db
-from models import Dream, DreamAnalysis, DreamTag, Goal, Imagination, Intention, JourneyStep, MapNode, MapPath, Reflection, SymbolNote, SyncEvent, Tag
+from models import Dream, DreamAnalysis, DreamTag, Goal, Imagination, Intention, JourneyStep, MapNode, MapPath, MapRegion, Reflection, SymbolNote, SyncEvent, Tag
 from paths import DATA_DIR, FRONTEND_DIR
 
 
@@ -847,6 +847,7 @@ def get_map(session: Session = Depends(get_session)):
                 "tag_id": n.tag_id, "name": tag.name, "x": n.x, "y": n.y,
                 "dream_count": tag_dream_count[n.tag_id],
                 "lucid_count": tag_lucid_count[n.tag_id],
+                "region_id": tag.region_id,
             })
 
     unplaced = [
@@ -860,7 +861,61 @@ def get_map(session: Session = Depends(get_session)):
         for p in paths
     ]
 
-    return {"placed": placed, "unplaced": unplaced, "paths": path_list}
+    regions = session.exec(select(MapRegion)).all()
+    region_list = [{"id": r.id, "name": r.name, "color": r.color} for r in regions]
+
+    return {"placed": placed, "unplaced": unplaced, "paths": path_list, "regions": region_list}
+
+
+class MapRegionIn(BaseModel):
+    name: str = PField(min_length=1)
+    color: str = PField(default="#8b7ff5")
+    tag_ids: list[int] = []
+
+
+@router.post("/map/regions", status_code=201)
+def create_map_region(payload: MapRegionIn, session: Session = Depends(get_session)):
+    region = MapRegion(name=payload.name.strip(), color=payload.color)
+    session.add(region)
+    session.commit()
+    session.refresh(region)
+    for tag_id in payload.tag_ids:
+        tag = session.get(Tag, tag_id)
+        if tag and tag.kind == "place":
+            tag.region_id = region.id
+            session.add(tag)
+    session.commit()
+    return {"id": region.id, "name": region.name, "color": region.color}
+
+
+@router.delete("/map/regions/{region_id}", status_code=204)
+def delete_map_region(region_id: int, session: Session = Depends(get_session)):
+    region = session.get(MapRegion, region_id)
+    if not region:
+        raise HTTPException(404, "Region nicht gefunden")
+    members = session.exec(select(Tag).where(Tag.region_id == region_id)).all()
+    for tag in members:
+        tag.region_id = None
+        session.add(tag)
+    session.delete(region)
+    session.commit()
+
+
+class TagRegionIn(BaseModel):
+    region_id: int | None = None
+
+
+@router.put("/tags/{tag_id}/region")
+def set_tag_region(tag_id: int, payload: TagRegionIn, session: Session = Depends(get_session)):
+    tag = session.get(Tag, tag_id)
+    if not tag:
+        raise HTTPException(404, "Tag nicht gefunden")
+    if payload.region_id is not None and not session.get(MapRegion, payload.region_id):
+        raise HTTPException(404, "Region nicht gefunden")
+    tag.region_id = payload.region_id
+    session.add(tag)
+    session.commit()
+    return {"id": tag.id, "region_id": tag.region_id}
 
 
 @router.put("/map/nodes/{tag_id}")
