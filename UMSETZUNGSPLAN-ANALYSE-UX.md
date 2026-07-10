@@ -203,15 +203,51 @@ Kein Umbau der Mechanik — ein Verständnis-Problem. Maßnahmen:
 60 Sekunden erklären, was die Ansicht zeigt; Erstkontakt-Flow führt zur ersten
 Einsortierung; Intro erscheint genau einmal.
 
+### B.4 Innenwelt: skalieren, wenn die Figuren mehr werden
+
+Die Bühne funktioniert mit 8 Figuren — bei 40+ wird sie so unlesbar wie der
+Atlas. Maßnahmen (gleiche Philosophie wie B.1: Standard zeigt wenig, alles
+bleibt erreichbar):
+
+1. **Hauptbesetzung zuerst:** Pro Archetyp-Sektor maximal **4 Figuren**
+   (nach Vorkommen), der Rest wird pro Sektor zu einem kleinen Sammel-Chip
+   „+3“ am Sektorrand — Antippen öffnet die Sektor-Ansicht (Punkt 2).
+   Äußerer Ring (ohne Rolle): maximal 6, sortiert nach Vorkommen, Rest als
+   „+ N weitere ohne Rolle“.
+2. **Sektor-Ansicht:** Tipp auf Sektor-Beschriftung oder Sammel-Chip →
+   die Bühne zeigt nur diesen Archetyp: alle seine Figuren großzügig
+   angeordnet, mit „‹ zurück zur Bühne“. (Analog zum Fokus-Modus des Atlas —
+   gleiche Interaktionssprache, ein Lernaufwand.)
+3. **Aktiv vs. Archiv:** Standardmäßig nur Figuren, die in den **letzten
+   12 Monaten** geträumt wurden; Umschalter „alle Zeiten“. Wer jahrelang
+   Tagebuch führt, sieht sonst jede Zufallsbekanntschaft von vor drei Jahren.
+   (Backend: `GET /api/innenwelt?from=&to=` — `last_date` wird ohnehin geliefert.)
+4. **Mindest-Vorkommen:** Chips `alle · ≥2× · ≥3×` (localStorage) — einmalige
+   Statisten-Figuren sind selten Archetyp-Material.
+5. **Listen-Alternative:** Umschalter „🎭 Bühne | ☰ Liste“ — sortierbare
+   Tabelle (Name, Rolle, Vorkommen, zuletzt geträumt, Gespräche ja/nein),
+   Zeile antippen → Dossier. Für schnelles Arbeiten und als barrierefreier
+   Zugang der bessere Weg; die Bühne bleibt der emotionale.
+6. **Suche:** Feld „Figur finden …“ → direkt ins Dossier.
+7. **Label-Hygiene wie im Atlas:** Namen nur an Figuren mit count ≥ 2 oder
+   im Fokus; kleine Figuren zeigen den Namen beim Antippen.
+
+**Akzeptanz:** Mit 50 Skript-generierten Personen (danach löschen!) bleibt die
+Bühne lesbar und flüssig; Sektor-Ansicht rein/raus; Aktiv/Archiv- und
+Mindest-Vorkommen-Filter kombinierbar; Liste sortiert korrekt; Erstkontakt-Flow
+aus B.3 funktioniert weiterhin.
+
 ---
 
 ## Reihenfolge & Abschluss
 
 ```
 A.1 Zeitraum/Granularität → A.2 Gliederung → A.3 Schreiben → A.4 Aufriss
-   → A.5 Emotionen → B.1 Atlas → B.3 Innenwelt (klein!) → B.2 Traumwelt (größte Stufe)
+   → A.5 Emotionen → B.1 Atlas → B.3 Innenwelt verstehen (klein!)
+   → B.4 Innenwelt skalieren → B.2 Traumwelt (größte Stufe)
 ```
-(B.3 vor B.2 ziehen — es ist ein Nachmittag und beseitigt echte Verwirrung.)
+(B.3 vor B.2 ziehen — es ist ein Nachmittag und beseitigt echte Verwirrung.
+B.4 direkt danach, solange die Innenwelt-Codebasis frisch im Kopf ist.)
 
 Pro Stufe: Testdaten-Skript nutzen und restlos aufräumen, Desktop + 412 px +
 Rotlicht prüfen, `sw.js`-Cache bumpen, ein Commit. Die pytest-Suite (falls
