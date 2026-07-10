@@ -4,22 +4,190 @@ const atlas = {
   COLORS: { place: "#8fd49a", person: "#f5c66a", dream_sign: "#c9bfff" },
   ICONS: { place: "📍", person: "👤", dream_sign: "🔮" },
 
+  allNodes: [],
+  allLinks: [],
+  bound: false,
+  limit: 20,
+  focus: null, // { id, name, kind }
+
+  // ---- Filter-Zustand (B.1) ----
+  get activeKinds() {
+    const raw = localStorage.getItem("atlas-kinds");
+    return raw ? JSON.parse(raw) : ["place", "person", "dream_sign"];
+  },
+  set activeKinds(v) { localStorage.setItem("atlas-kinds", JSON.stringify(v)); },
+  get minCount() { return parseInt(localStorage.getItem("atlas-min-count") || "1", 10); },
+  set minCount(v) { localStorage.setItem("atlas-min-count", String(v)); },
+  get range() { return localStorage.getItem("atlas-range") || "all"; },
+  set range(v) { localStorage.setItem("atlas-range", v); },
+  get timelapseDate() { return localStorage.getItem("atlas-timelapse-to") || ""; },
+  set timelapseDate(v) { localStorage.setItem("atlas-timelapse-to", v); },
+
+  computeFrom() {
+    if (this.range === "all") return null;
+    const days = parseInt(this.range, 10);
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+  },
+
   async load() {
+    this.bindControls();
     const graphEl = document.getElementById("atlas-graph");
+    const to = this.timelapseDate || undefined;
+    const params = new URLSearchParams({ min_count: String(this.minCount) });
+    const from = this.computeFrom();
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
     let data;
     try {
-      data = await api.request("/api/atlas");
+      data = await api.request(`/api/atlas?${params}`);
     } catch (err) {
       showToast(err.message);
       return;
     }
+    this.allNodes = data.nodes;
+    this.allLinks = data.links;
     document.getElementById("atlas-series").innerHTML = "";
-    if (!data.nodes.length) {
+    if (!this.allNodes.length) {
       graphEl.innerHTML = `<div class="empty-state">Noch keine Karte: Gib deinen Träumen
         📍 Orte, 👤 Personen und 🔮 Traumzeichen – hier entsteht daraus deine Traumwelt.</div>`;
       return;
     }
-    this.render(graphEl, data);
+    await this.buildTimelapseRange();
+    this.renderGraph();
+  },
+
+  // ---- Filterleiste, Fokus, Suche (B.1) ----
+  bindControls() {
+    if (this.bound) {
+      this.syncControlUI();
+      return;
+    }
+    this.bound = true;
+
+    document.querySelectorAll(".atlas-kind-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const kinds = this.activeKinds;
+        const idx = kinds.indexOf(btn.dataset.kind);
+        if (idx >= 0) kinds.splice(idx, 1); else kinds.push(btn.dataset.kind);
+        this.activeKinds = kinds.length ? kinds : [btn.dataset.kind];
+        this.limit = 20;
+        this.syncControlUI();
+        this.renderGraph();
+      });
+    });
+
+    document.querySelectorAll(".atlas-min-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        this.minCount = parseInt(chip.dataset.min, 10);
+        this.load();
+      });
+    });
+
+    document.querySelectorAll(".atlas-range-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        this.range = chip.dataset.range;
+        this.load();
+      });
+    });
+
+    const searchInput = document.getElementById("atlas-search");
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.searchNode(searchInput.value.trim());
+    });
+    document.getElementById("atlas-search-btn").addEventListener("click", () => this.searchNode(searchInput.value.trim()));
+
+    document.getElementById("atlas-more-btn").addEventListener("click", () => {
+      this.limit += 20;
+      this.renderGraph();
+    });
+
+    document.getElementById("atlas-unfocus-btn").addEventListener("click", () => {
+      this.focus = null;
+      this.renderGraph();
+    });
+
+    // Zeitraffer (B.5)
+    const slider = document.getElementById("atlas-timelapse-slider");
+    slider.addEventListener("input", () => this.onTimelapseInput(parseInt(slider.value, 10)));
+    document.getElementById("atlas-timelapse-play").addEventListener("click", () => this.toggleTimelapsePlay());
+
+    this.syncControlUI();
+  },
+
+  syncControlUI() {
+    document.querySelectorAll(".atlas-kind-toggle").forEach((btn) => {
+      btn.classList.toggle("active", this.activeKinds.includes(btn.dataset.kind));
+    });
+    document.querySelectorAll(".atlas-min-chip").forEach((chip) => {
+      chip.classList.toggle("active", parseInt(chip.dataset.min, 10) === this.minCount);
+    });
+    document.querySelectorAll(".atlas-range-chip").forEach((chip) => {
+      chip.classList.toggle("active", chip.dataset.range === this.range);
+    });
+  },
+
+  searchNode(term) {
+    if (!term) return;
+    const hit = this.allNodes.find((n) => n.name.toLowerCase().includes(term.toLowerCase()));
+    if (!hit) {
+      showToast(`„${term}" nicht gefunden`);
+      return;
+    }
+    this.focus = { id: hit.id, name: hit.name, kind: hit.kind };
+    this.searchHighlight = hit.id;
+    this.renderGraph();
+  },
+
+  visibleNodesAndLinks() {
+    let nodes = this.allNodes.filter((n) => this.activeKinds.includes(n.kind));
+    let links = this.allLinks;
+
+    if (this.focus) {
+      const neighborIds = new Set([this.focus.id]);
+      links.forEach((l) => {
+        if (l.source === this.focus.id) neighborIds.add(l.target);
+        if (l.target === this.focus.id) neighborIds.add(l.source);
+      });
+      nodes = nodes.filter((n) => neighborIds.has(n.id));
+      links = links.filter((l) => neighborIds.has(l.source) && neighborIds.has(l.target));
+      return { nodes, links, truncated: false };
+    }
+
+    nodes = [...nodes].sort((a, b) => b.count - a.count);
+    const truncated = nodes.length > this.limit;
+    nodes = nodes.slice(0, this.limit);
+    const ids = new Set(nodes.map((n) => n.id));
+    links = links.filter((l) => ids.has(l.source) && ids.has(l.target));
+    return { nodes, links, truncated, total: this.allNodes.filter((n) => this.activeKinds.includes(n.kind)).length };
+  },
+
+  renderGraph() {
+    const graphEl = document.getElementById("atlas-graph");
+    const { nodes, links, truncated, total } = this.visibleNodesAndLinks();
+
+    const focusBar = document.getElementById("atlas-focus-bar");
+    if (this.focus) {
+      focusBar.classList.remove("hidden");
+      document.getElementById("atlas-focus-label").textContent = `Fokus: ${this.focus.name}`;
+    } else {
+      focusBar.classList.add("hidden");
+    }
+
+    const moreBtn = document.getElementById("atlas-more-btn");
+    if (!this.focus && truncated) {
+      moreBtn.classList.remove("hidden");
+      moreBtn.textContent = `+ ${total - nodes.length} weitere anzeigen`;
+    } else {
+      moreBtn.classList.add("hidden");
+    }
+
+    if (!nodes.length) {
+      graphEl.innerHTML = `<div class="empty-state">Keine Elemente mit diesem Filter.</div>`;
+      return;
+    }
+    this.render(graphEl, { nodes, links });
   },
 
   render(el, { nodes, links }) {
@@ -36,20 +204,27 @@ const atlas = {
         stroke="#3a3c55" stroke-width="${Math.min(l.weight * 1.5, 5)}" />`;
     }).join("");
 
-    const circles = nodes.map((n) => `
-      <g class="atlas-node" data-name="${escapeHtml(n.name)}" data-kind="${n.kind}">
+    const circles = nodes.map((n) => {
+      const showLabel = n.count >= 2 || radius(n) > 15;
+      const highlighted = this.searchHighlight === n.id;
+      return `
+      <g class="atlas-node" data-id="${escapeHtml(n.id)}" data-name="${escapeHtml(n.name)}" data-kind="${n.kind}">
+        <title>${escapeHtml(n.name)} (${n.count}×)</title>
         <circle cx="${n.x}" cy="${n.y}" r="${radius(n)}"
-          fill="${this.COLORS[n.kind]}" fill-opacity="0.85" />
-        <text x="${n.x}" y="${n.y - radius(n) - 5}" text-anchor="middle"
-          fill="#e8e6f0" font-size="12">${this.ICONS[n.kind]} ${escapeHtml(n.name)}${n.count > 1 ? ` (${n.count}×)` : ""}</text>
-      </g>`).join("");
+          fill="${this.COLORS[n.kind]}" fill-opacity="0.85"
+          ${highlighted ? 'stroke="#f5c66a" stroke-width="3"' : ""} />
+        ${showLabel ? `<text x="${n.x}" y="${n.y - radius(n) - 5}" text-anchor="middle"
+          fill="#e8e6f0" font-size="12">${this.ICONS[n.kind]} ${escapeHtml(n.name)}${n.count > 1 ? ` (${n.count}×)` : ""}</text>` : ""}
+      </g>`;
+    }).join("");
 
     el.innerHTML = `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">
       ${lines}${circles}</svg>`;
 
     el.querySelectorAll(".atlas-node").forEach((g) => {
-      g.addEventListener("click", () => this.showSeries(g.dataset.name, g.dataset.kind));
+      g.addEventListener("click", () => this.showSeries(g.dataset.name, g.dataset.kind, g.dataset.id));
     });
+    this.searchHighlight = null;
   },
 
   // Einfache Kräfte-Simulation: Knoten stoßen sich ab, Verbindungen ziehen an
@@ -60,13 +235,15 @@ const atlas = {
       n.y = height / 2 + Math.sin(angle) * height * 0.28;
     });
     const index = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
+    const repulsion = 1800 + 80 * nodes.length;
+    const iterations = nodes.length > 40 ? 150 : 250;
 
-    for (let iter = 0; iter < 250; iter++) {
+    for (let iter = 0; iter < iterations; iter++) {
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           let dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
           const d2 = dx * dx + dy * dy || 1;
-          const force = 2200 / d2;
+          const force = repulsion / d2;
           dx *= force; dy *= force;
           nodes[i].x -= dx; nodes[i].y -= dy;
           nodes[j].x += dx; nodes[j].y += dy;
@@ -74,6 +251,7 @@ const atlas = {
       }
       for (const l of links) {
         const a = nodes[index[l.source]], b = nodes[index[l.target]];
+        if (!a || !b) continue;
         const pull = 0.006 * Math.min(l.weight, 3);
         const dx = b.x - a.x, dy = b.y - a.y;
         a.x += dx * pull; a.y += dy * pull;
@@ -88,6 +266,64 @@ const atlas = {
       n.x = Math.round(Math.max(45, Math.min(width - 45, n.x)));
       n.y = Math.round(Math.max(40, Math.min(height - 25, n.y)));
     }
+  },
+
+  // ---- Atlas-Zeitraffer (B.5) ----
+  async buildTimelapseRange() {
+    if (this.timelapseDates) return;
+    let dreams;
+    try {
+      dreams = await api.listDreams({});
+    } catch {
+      return;
+    }
+    if (!dreams.length) return;
+    const dates = dreams.map((d) => d.date).sort();
+    const first = new Date(dates[0]);
+    const today = new Date();
+    const months = [];
+    const cursor = new Date(first.getFullYear(), first.getMonth(), 1);
+    while (cursor <= today) {
+      months.push(cursor.toISOString().slice(0, 10));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    months.push(today.toISOString().slice(0, 10));
+    this.timelapseDates = months;
+    const slider = document.getElementById("atlas-timelapse-slider");
+    slider.max = String(months.length - 1);
+    slider.value = String(months.length - 1);
+    document.getElementById("atlas-timelapse-date").textContent = "Heute";
+  },
+
+  onTimelapseInput(idx) {
+    if (!this.timelapseDates) return;
+    const isLast = idx === this.timelapseDates.length - 1;
+    this.timelapseDate = isLast ? "" : this.timelapseDates[idx];
+    document.getElementById("atlas-timelapse-date").textContent = isLast ? "Heute" : this.timelapseDates[idx];
+    this.load();
+  },
+
+  toggleTimelapsePlay() {
+    const btn = document.getElementById("atlas-timelapse-play");
+    const slider = document.getElementById("atlas-timelapse-slider");
+    if (this.playTimer) {
+      clearInterval(this.playTimer);
+      this.playTimer = null;
+      btn.textContent = "▶";
+      return;
+    }
+    btn.textContent = "⏸";
+    this.playTimer = setInterval(() => {
+      let v = parseInt(slider.value, 10) + 1;
+      if (v > parseInt(slider.max, 10)) {
+        clearInterval(this.playTimer);
+        this.playTimer = null;
+        btn.textContent = "▶";
+        return;
+      }
+      slider.value = String(v);
+      this.onTimelapseInput(v);
+    }, 800);
   },
 
   ARCHETYPES: {
@@ -109,7 +345,7 @@ const atlas = {
     "Wenn … sprechen könnte — was würde es sagen?",
   ],
 
-  async showSeries(name, kind) {
+  async showSeries(name, kind, nodeId) {
     const el = document.getElementById("atlas-series");
     let dreams, tags;
     try {
@@ -159,6 +395,7 @@ const atlas = {
         <div class="stat-card"><span class="stat-value">${dreams.length}</span><span class="stat-label">${dreams.length === 1 ? "Traum" : "Träume"}</span></div>
         ${topEmos.length ? `<div class="stat-card"><span class="stat-value">${topEmos.map(([e]) => EMOTIONS[e]?.icon || e).join(" ")}</span><span class="stat-label">häufigste Gefühle</span></div>` : ""}
       </div>
+      ${nodeId ? `<button id="atlas-focus-btn" class="chip">🎯 Fokussieren</button>` : ""}
       ${archetypeHtml}
       ${tagId ? `<div class="symbol-section">
         <h3>📖 Deine Assoziationen <small><em>Amplifikation nach C. G. Jung</em></small></h3>
@@ -180,6 +417,14 @@ const atlas = {
           <span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${lucidityLabels[d.lucidity]}</span>
         </div>`).join("")}
     </div>`;
+
+    if (nodeId) {
+      document.getElementById("atlas-focus-btn").addEventListener("click", () => {
+        this.focus = { id: nodeId, name, kind };
+        this.renderGraph();
+        document.getElementById("atlas-graph").scrollIntoView({ behavior: "smooth" });
+      });
+    }
 
     // Wire up symbol notes
     if (tagId) {

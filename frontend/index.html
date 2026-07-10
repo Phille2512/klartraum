@@ -276,11 +276,36 @@
             verbunden, wenn sie im selben Traum auftauchen. Je größer, desto öfter geträumt.
             Tippe einen Knoten an, um die ganze Traumserie zu sehen.</p>
           <div class="atlas-legend">
-            <span class="badge place">📍 Ort</span>
-            <span class="badge person">👤 Person</span>
-            <span class="badge sign">🔮 Traumzeichen</span>
+            <span class="badge place atlas-kind-toggle active" data-kind="place">📍 Ort</span>
+            <span class="badge person atlas-kind-toggle active" data-kind="person">👤 Person</span>
+            <span class="badge sign atlas-kind-toggle active" data-kind="dream_sign">🔮 Traumzeichen</span>
+          </div>
+          <div class="chip-row">
+            <button class="chip atlas-min-chip active" data-min="1">alle</button>
+            <button class="chip atlas-min-chip" data-min="2">≥2×</button>
+            <button class="chip atlas-min-chip" data-min="3">≥3×</button>
+            <button class="chip atlas-min-chip" data-min="5">≥5×</button>
+          </div>
+          <div class="chip-row">
+            <button class="chip atlas-range-chip active" data-range="all">Alles</button>
+            <button class="chip atlas-range-chip" data-range="90">90 Tage</button>
+            <button class="chip atlas-range-chip" data-range="30">30 Tage</button>
+          </div>
+          <div class="atlas-search-row">
+            <input type="text" id="atlas-search" placeholder="Element finden …">
+            <button id="atlas-search-btn">🔍</button>
+          </div>
+          <div class="atlas-timelapse">
+            <button id="atlas-timelapse-play" class="chip">▶</button>
+            <input type="range" id="atlas-timelapse-slider" min="0" max="0" value="0">
+            <span id="atlas-timelapse-date" class="hint">Heute</span>
+          </div>
+          <div id="atlas-focus-bar" class="hidden">
+            <span id="atlas-focus-label"></span>
+            <button id="atlas-unfocus-btn" class="chip">‹ zurück zum Überblick</button>
           </div>
           <div id="atlas-graph"></div>
+          <button id="atlas-more-btn" class="chip hidden" style="margin-top:0.5rem"></button>
         </div>
         <div id="atlas-series"></div>
       </div>
