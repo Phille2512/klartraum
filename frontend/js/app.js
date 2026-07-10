@@ -70,6 +70,9 @@ ritualBtn.addEventListener("click", async () => {
     }
   } catch { ritualFocus.innerHTML = ""; }
 
+  // Ort der Woche (B.6): kartierten Ort als Inkubations-Ziel vorschlagen
+  renderPlaceSuggestion();
+
   // Offene Bucket-List-Ziele laden
   try {
     const goals = await api.listGoals();
@@ -91,6 +94,58 @@ ritualBtn.addEventListener("click", async () => {
     }
   } catch { /* ignorieren */ }
 });
+
+let placeSuggestionOverride = null;
+
+async function renderPlaceSuggestion() {
+  const el = document.getElementById("ritual-place-suggestion");
+  placeSuggestionOverride = null;
+  el.innerHTML = "";
+  if (localStorage.getItem("ritual-hide-place-suggestion") === "true") return;
+
+  let map;
+  try {
+    map = await api.getMap();
+  } catch { return; }
+  const places = [...map.placed].sort((a, b) => a.name.localeCompare(b.name));
+  if (places.length < 3) return;
+
+  const iso = getISOWeek(new Date());
+  const place = places[iso % places.length];
+  renderPlaceSuggestionCard(place, places);
+}
+
+function renderPlaceSuggestionCard(place, places) {
+  const el = document.getElementById("ritual-place-suggestion");
+  el.innerHTML = `<div class="ritual-place-card">
+    <p>🌙 Heute Nacht: Besuch das 📍 <strong>${escapeHtml(place.name)}</strong>?</p>
+    <div class="chip-row">
+      <button class="chip primary" id="ritual-place-adopt">Als Absicht übernehmen</button>
+      <button class="chip" id="ritual-place-other">Anderer Vorschlag</button>
+      <button class="hint" id="ritual-place-hide">nicht mehr vorschlagen</button>
+    </div>
+  </div>`;
+  document.getElementById("ritual-place-adopt").addEventListener("click", () => {
+    ritualText.value = `Ich besuche heute Nacht ${place.name} …`;
+  });
+  document.getElementById("ritual-place-other").addEventListener("click", () => {
+    const idx = places.findIndex((p) => p.tag_id === place.tag_id);
+    const next = places[(idx + 1) % places.length];
+    renderPlaceSuggestionCard(next, places);
+  });
+  document.getElementById("ritual-place-hide").addEventListener("click", () => {
+    localStorage.setItem("ritual-hide-place-suggestion", "true");
+    el.innerHTML = "";
+  });
+}
+
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+}
 
 document.getElementById("ritual-save").addEventListener("click", async () => {
   const text = ritualText.value.trim();

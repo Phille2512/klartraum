@@ -530,6 +530,16 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 
 .ritual-goals-list li::before { content: "→ "; color: var(--text-dim); }
 
+.ritual-place-card {
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+.ritual-place-card p { margin: 0 0 0.4rem; }
+.ritual-place-card .chip-row { flex-wrap: wrap; }
+
 .ritual-confirm {
   font-size: 1.1rem;
   color: var(--lucid);
