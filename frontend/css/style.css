@@ -232,10 +232,64 @@ button.danger { color: var(--danger); }
   padding: 2rem 1rem;
 }
 
-/* --- Prozess-Intro "Der Weg des Träumers" (H.4) --- */
+/* --- Prozess-Intro "Der Traumfaden" (H.4) --- */
 .path-welcome p { margin: 0 0 0.6rem; line-height: 1.5; }
 .path-welcome p small { color: var(--text-dim); }
 .path-welcome button { width: 100%; margin-top: 0.5rem; }
+
+.traumfaden-btn {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--lucid));
+  color: #1a1b2e;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: opacity 0.3s ease;
+}
+
+.traumfaden-btn.hidden { display: none; }
+
+.traumfaden-icon { font-size: 1.15rem; }
+.traumfaden-label { font-size: 0.85rem; }
+
+.traumfaden-btn.traumfaden-pulse {
+  animation: traumfadenPulse 3s ease-in-out infinite;
+}
+
+@keyframes traumfadenPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 0 rgba(245,198,106,0.55); }
+  50% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 10px rgba(245,198,106,0); }
+}
+
+.traumfaden-btn.traumfaden-subtle {
+  opacity: 0.55;
+  box-shadow: none;
+}
+.traumfaden-btn.traumfaden-subtle:hover,
+.traumfaden-btn.traumfaden-subtle:focus-visible {
+  opacity: 1;
+}
+
+/* Genug Abstand, damit der Knopf nie über Inhalten schwebt */
+#dream-list { padding-bottom: 4.5rem; }
+
+.login-card.traumfaden-card { position: relative; max-width: 480px; text-align: left; max-height: 85vh; overflow-y: auto; }
+.traumfaden-close { position: absolute; top: 0.5rem; right: 0.75rem; }
+#traumfaden-overlay-body h2 { margin-top: 0; }
+
+@media (max-width: 480px) {
+  .traumfaden-label { display: none; }
+  .traumfaden-btn { padding: 0.8rem; border-radius: 50%; }
+}
 
 /* --- Analyse --- */
 .stat-cards {

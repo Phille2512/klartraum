@@ -247,15 +247,18 @@ const journal = {
     if (!this.dreams.length && !this.pending.length) {
       if (this.search.value) {
         this.list.innerHTML = offlineHint + `<div class="empty-state">Keine Träume gefunden.</div>`;
+        this.updateTraumfadenButton();
         return;
       }
-      // H.4: Erster App-Start (noch nie ein Traum) — Prozess-Intro statt leerer Zeile
+      // H.4: Erster App-Start (noch nie ein Traum) — Prozess-Intro statt leerer Zeile,
+      // der Sternenknopf bleibt dabei versteckt (kein doppeltes Angebot).
       this.list.innerHTML = offlineHint + `<div class="card path-welcome">
-        <h2>🌙 Der Weg des Träumers — so ist Klartraum gedacht</h2>
-        ${PATH_OF_DREAMER_SHORT}
+        <h2>${TRAUMFADEN.title}</h2>
+        ${TRAUMFADEN.short}
         <button class="primary" id="path-welcome-btn">Ersten Traum festhalten</button>
       </div>`;
       document.getElementById("path-welcome-btn")?.addEventListener("click", () => this.startNewDream());
+      document.getElementById("traumfaden-btn")?.classList.add("hidden");
       return;
     }
     const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
@@ -300,6 +303,42 @@ const journal = {
       this.loadSyncEvents(d.id);
       this.loadAnalysis(d.id);
     });
+    this.updateTraumfadenButton();
+  },
+
+  // ---- H.4: Der Traumfaden — Sternenknopf mit Lebenszyklus ----
+  bindTraumfaden() {
+    if (this._traumfadenBound) return;
+    this._traumfadenBound = true;
+    const btn = document.getElementById("traumfaden-btn");
+    const overlay = document.getElementById("traumfaden-overlay");
+    if (!btn || !overlay) return;
+    btn.title = TRAUMFADEN.tooltip;
+    btn.querySelector(".traumfaden-label").textContent = TRAUMFADEN.buttonLabel;
+    btn.addEventListener("click", () => this.openTraumfaden());
+    document.getElementById("traumfaden-close").addEventListener("click", () => overlay.classList.add("hidden"));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.add("hidden"); });
+  },
+
+  openTraumfaden() {
+    document.getElementById("traumfaden-overlay-body").innerHTML = `<h2>${TRAUMFADEN.title}</h2>${TRAUMFADEN.body}`;
+    document.getElementById("traumfaden-overlay").classList.remove("hidden");
+  },
+
+  async updateTraumfadenButton() {
+    this.bindTraumfaden();
+    const btn = document.getElementById("traumfaden-btn");
+    if (!btn) return;
+    // Nie automatisch öffnen — nur Sichtbarkeit/Erscheinungsbild anpassen.
+    if (!this.dreams.length && !this.pending.length && !this.search.value) {
+      btn.classList.add("hidden");
+      return;
+    }
+    btn.classList.remove("hidden");
+    let count = 0;
+    try { count = (await api.dataInfo()).dream_count; } catch { /* Knopf bleibt in aktuellem Zustand */ }
+    btn.classList.toggle("traumfaden-pulse", count < 10);
+    btn.classList.toggle("traumfaden-subtle", count >= 10);
   },
 
   startNewDream() {
