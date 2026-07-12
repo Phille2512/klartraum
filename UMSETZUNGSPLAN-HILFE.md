@@ -207,17 +207,42 @@ Implementierer darf Feinschliff machen, Kernaussagen bleiben):
 > Füttere sie beiläufig. Ernte, wann du willst.
 
 **Einbau:**
-1. **Lernen-Tab, ganz oben** als erste Karte „🌙 Der Weg des Träumers“
-   (eingeklappt nach erstem Lesen; Zustand in localStorage).
-2. **Erster App-Start** (kein einziger Traum vorhanden): Der Text erscheint
-   als Willkommens-Ansicht im Tagebuch-Leerzustand (gekürzt auf die vier
-   Schritt-Überschriften + Schlussabsatz) mit Button „Ersten Traum festhalten“.
+
+1. **Der Sternenknopf (Kernstück):** Ein **mystischer, einladender Knopf im
+   Tagebuch-Tab** — dort, wo freier Platz ist — öffnet den „Weg des Träumers“
+   als Overlay. Gestaltung:
+   - Schwebender runder Knopf (FAB) **unten rechts** im Tagebuch: dunkler
+     Kreis mit 🌙-✨-Motiv, feiner Farbverlauf (Akzent → Gold) und einem
+     **sanft pulsierenden Glow** (CSS-Animation, dezent — 3-s-Puls, kein
+     Blinken). Auf Desktop zusätzlich mit Beschriftung („Der Weg“), mobil nur
+     das Icon. `aria-label` nicht vergessen.
+   - Tipp → Overlay mit dem vollständigen Text (Muster: Login-Overlay),
+     Schließen per ✕/Hintergrund.
+   - **Lebenszyklus („es soll auf keinen Fall stören“):**
+     - 0 Träume: Statt des Knopfs erscheint der Text direkt als
+       Willkommens-Ansicht im Tagebuch-Leerzustand (gekürzt auf die vier
+       Schritt-Überschriften + Schlussabsatz) mit Button „Ersten Traum
+       festhalten“.
+     - 1–9 Träume: Knopf mit Glow-Puls (die Lern-Phase).
+     - ab 10 Träumen: Glow aus, Knopf wird statisch und halbtransparent
+       (opacity ~0,55, voll bei Hover/Tipp) — vorhanden, aber unaufdringlich.
+     - Er öffnet sich **niemals von selbst** und legt sich nie über Inhalte
+       (unterste Karte bekommt genug Abstand nach unten).
+2. **Lernen-Tab, ganz oben** als erste Karte (eingeklappt nach erstem Lesen;
+   Zustand in localStorage) — für alle, die den Knopf übersehen.
 3. **`docs/HANDBUCH.md`** und **`ANLEITUNG-FUER-FREUNDE.md`**: Abschnitt
    „Der tägliche Rhythmus“ um diesen Vier-Schritte-Prozess ergänzen/ersetzen —
    eine Quelle der Wahrheit, gleicher Wortlaut.
 
+**Benennung:** Arbeitstitel „Der Weg des Träumers“ — Philipp erwägt einen
+anderen Namen. Der Name kommt an genau drei Stellen vor (Knopf-Label,
+Overlay-Titel, Lernen-Karte) → als EINE Konstante implementieren, damit eine
+spätere Umbenennung eine Ein-Zeilen-Änderung ist.
+
 **Akzeptanz:** Neue Installation (leere Test-DB) zeigt das Intro im Tagebuch;
-Lernen-Tab-Karte vorhanden und einklappbar; Handbuch & Anleitung aktualisiert.
+Knopf-Lebenszyklus mit 0/5/12 Träumen geprüft (Testdaten danach löschen);
+Overlay mobil (412 px) und im Rotlicht-Modus sauber; Knopf überdeckt keine
+Bedienelemente; Lernen-Tab-Karte vorhanden; Handbuch & Anleitung aktualisiert.
 
 ---
 
