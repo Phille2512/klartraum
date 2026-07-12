@@ -234,10 +234,12 @@ Implementierer darf Feinschliff machen, Kernaussagen bleiben):
    „Der tägliche Rhythmus“ um diesen Vier-Schritte-Prozess ergänzen/ersetzen —
    eine Quelle der Wahrheit, gleicher Wortlaut.
 
-**Benennung:** Arbeitstitel „Der Weg des Träumers“ — Philipp erwägt einen
-anderen Namen. Der Name kommt an genau drei Stellen vor (Knopf-Label,
-Overlay-Titel, Lernen-Karte) → als EINE Konstante implementieren, damit eine
-spätere Umbenennung eine Ein-Zeilen-Änderung ist.
+**Benennung (entschieden):** Das Feature heißt **„Der Traumfaden“** 🧵🌙 —
+der Faden, dem man durch die Traumwelt folgt (Ariadne-Motiv). Knopf-Tooltip:
+„Nimm den Faden auf“. Überall, wo dieser Plan „Weg des Träumers“ sagt, gilt
+„Der Traumfaden“; die Vier-Schritte-Überschrift im Text entsprechend:
+„🧵 Der Traumfaden — so ist Klartraum gedacht“. Trotzdem als EINE Konstante
+implementieren (Knopf-Label, Overlay-Titel, Lernen-Karte).
 
 **Akzeptanz:** Neue Installation (leere Test-DB) zeigt das Intro im Tagebuch;
 Knopf-Lebenszyklus mit 0/5/12 Träumen geprüft (Testdaten danach löschen);
