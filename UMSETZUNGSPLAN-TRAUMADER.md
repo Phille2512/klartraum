@@ -64,24 +64,21 @@ Oberfläche — sie hat sich gegenüber der Traumebenen-Variante nicht bewährt.
 Traumebenen-Analyse in Einträgen funktioniert unverändert; pytest (falls
 vorhanden) ohne Journey-Tests grün.
 
-## Stufe T.3: Logo & Icons
+## Stufe T.3: Logo & Icons  ✅ weitgehend erledigt
 
-Zwei Entwürfe liegen vor (siehe Chat vom Juli 2026):
-**A „Traumader“** — verzweigte Ader (Violett-Töne), goldene Endpunkte =
-Träume; **B „Mondader“** — die Ader mündet in eine goldene Mondsichel
-(Kontinuität zum bisherigen Mond-Icon).
+**Entschieden: Entwurf A „die Traumader“** (verzweigte Ader in Violett-Tönen,
+goldene Endpunkte = Träume, dunkler Grund `#12131f`).
 
-- Philipp wählt den Entwurf; die Icon-PNGs (192/512, maskable) werden aus dem
-  Motiv erzeugt — vorhandenes Vorgehen: Pure-Python-Generator ohne
-  Zusatzpakete (Muster existiert in der Projekthistorie; Kurven als dichte
-  Punkt-Stempel rendern). Alternativ liefert Claude die fertigen PNGs.
-- Dunkler Hintergrund `#12131f` (voller Kreis fürs maskable Icon),
-  Ader `#8b7ff5`/`#a78bfa`/`#c9bfff`, Spitzen `#f5c66a`.
-- Einbauen: `frontend/icons/icon-192.png`, `icon-512.png`, Favicon-Verweise
-  prüfen, `theme_color` bleibt.
+Die Icon-PNGs sind bereits erzeugt und liegen im Projekt:
+`frontend/icons/icon-192.png` und `icon-512.png` (maskable-sicher, Motiv im
+inneren ~78 %). **Rest-Aufgaben für den Implementierer:**
+- Favicon-/`apple-touch-icon`-Verweise in `index.html` prüfen (zeigen bereits
+  auf `icon-192.png` — dann ist nichts zu tun).
+- `sw.js`-Cache bumpen, damit Geräte das neue Icon laden; am Pixel ggf.
+  Homescreen-Verknüpfung neu anlegen (Android cacht Icons hartnäckig).
 
-**Akzeptanz:** Homescreen-Icon am Pixel zeigt das neue Motiv (maskable-sicher:
-Motiv im inneren 80 %-Kreis); Rotlicht-Modus unbeeinflusst.
+**Akzeptanz:** Homescreen-Icon am Pixel zeigt die Ader; Browser-Tab-Favicon
+aktualisiert.
 
 ---
 
