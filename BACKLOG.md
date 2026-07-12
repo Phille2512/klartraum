@@ -99,6 +99,17 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
   wieder anschauen.
 - **⏰ Streak-Nachtrag:** sanfter Hinweis, wenn gestern kein Eintrag war
   („Auch ‚keine Erinnerung' zählt — nachtragen?").
+- **🛡️ Albtraum-Umschreiben (IRT):** Nach einem Albtraum bietet die App an,
+  **ein anderes Ende zu schreiben** — Imagery Rehearsal Therapy (nach Barry
+  Krakow), die am besten belegte Selbsthilfe-Technik gegen wiederkehrende
+  Albträume. Das neue Ende wird am Traum gespeichert und abends im Ritual
+  kurz „eingeübt". Braucht nur: Textfeld am Traum + Abend-Einblendung;
+  setzt sinnvollerweise das Phänomen-Tracking (Albtraum-Flag) voraus.
+  Haltung: Werkzeug, kein Therapieersatz — Hinweis dazu.
+- **🌟 Zeichen-Drill im Abendritual:** Vor dem Schlafen drei eigene
+  Traumzeichen als Mini-Erinnerungsübung („Welches davon kam diese Woche
+  vor?") — trainiert das prospektive Gedächtnis, auf dem MILD beruht, mit
+  echtem eigenem Material statt abstrakter Vorsätze.
 
 ## 📊 Analyse
 
@@ -110,6 +121,12 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
   Korrelationen, Zeitreihen, Wortverläufe — Einladung zum Selbst-Forschen.
 - **🆕 Wort-Neuheiten:** „Neu in deiner Traumwelt" — Wörter/Elemente, die
   zum ersten Mal auftauchen (lexikalische Frische als Signal).
+- **📖 Das Traumbuch (Jahres-Export):** Ein Jahr als gesetztes PDF/ePub —
+  Mandala als Cover, Jahresringe als Vorwort, Träume chronologisch,
+  ⭐-Träume hervorgehoben. Die wörtliche „Ernte" des
+  Füttern-und-ernten-Prinzips, zum Anfassen; auf Wunsch drucken lassen.
+  Auch als kuratierter Auszug denkbar (z. B. für ein Therapie- oder
+  Freundes-Gespräch) — immer bewusster Export, nie automatisch.
 
 ## 🗺️ Traumwelt & Atlas
 
