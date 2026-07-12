@@ -38,8 +38,9 @@ Einträge.
    einsortieren, Orte auf die Karte legen. Jeder Handgriff füttert deine
    Traumlandschaft.
 4. **Verwerten** *(wenn Neugier kommt)* — Schau in die Analyse, den Atlas,
-   die Innenwelt. Geh die Individuationsreise, stell einer Traumfigur eine
-   Frage, folge einer Traumserie. Hier zahlt sich das Füttern aus.
+   die Innenwelt. Geh die Jung-Analyse eines Traums durch, stell einer
+   Traumfigur eine Frage, folge einer Traumserie. Hier zahlt sich das
+   Füttern aus.
 
 **Warum das funktioniert:** Klartraum ist eine persönliche Traumlandschaft,
 die sich mit jedem Eintrag weiter ausbreitet — und dich dir selbst zeigt: wie
@@ -87,8 +88,9 @@ Verbindungen zu früheren Nächten. Nach dem Speichern kannst du **reflektieren*
 
 ### 🎓 Lernen
 Klartraum-Guides (Reality Checks, MILD, WBTB), das **Jung-Kompendium**
-(9 Kapitel), die **Individuationsreise** (6 Stationen mit Übungen an deinen
-echten Träumen), Bucket-List, Reality-Check-Erinnerung, WBTB-Rechner.
+(9 Kapitel), das **Archetypen-Lexikon**, Bucket-List, Reality-Check-Erinnerung,
+WBTB-Rechner. Die Individuationsreise gibt es weiterhin — jetzt direkt an
+jedem Traumeintrag als „Jung-Analyse" (6 Stationen je Traum).
 
 ## 7 Regeln für den Erfolg
 

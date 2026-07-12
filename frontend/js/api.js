@@ -146,12 +146,6 @@ const api = {
     if (to) params.set("to", to);
     return this.request(`/api/mandala?${params}`);
   },
-  getJourney() {
-    return this.request("/api/journey");
-  },
-  completeJourneyStation(station, note) {
-    return this.request(`/api/journey/${station}`, { method: "POST", body: JSON.stringify({ note }) });
-  },
   listSyncEvents() {
     return this.request("/api/sync-events");
   },

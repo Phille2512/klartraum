@@ -43,7 +43,7 @@ Einträge.
    Beschreibungen vervollständigen, Elemente nachtragen, Orte auf die Karte
    legen.
 4. **Verwerten** *(wenn Neugier kommt)* — Analyse, Atlas, Innenwelt,
-   Individuationsreise. Hier zahlt sich das Füttern aus.
+   Jung-Analyse eines Traums. Hier zahlt sich das Füttern aus.
 
 Füttere sie beiläufig. Ernte, wann du willst.
 

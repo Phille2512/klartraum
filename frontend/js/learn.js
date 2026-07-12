@@ -162,8 +162,8 @@ const TRAUMFADEN = {
     Bei Lust und Laune: Beschreibungen vervollständigen, Elemente nachtragen, Traumzeichen einsortieren, Orte auf die
     Karte legen. Jeder Handgriff füttert deine Traumlandschaft.</p>
     <p><strong>4. Verwerten</strong> <small>(wenn Neugier kommt)</small><br>
-    Schau in die Analyse, den Atlas, die Innenwelt. Geh die Individuationsreise, stell einer Traumfigur eine Frage,
-    folge einer Traumserie. Hier zahlt sich das Füttern aus.</p>
+    Schau in die Analyse, den Atlas, die Innenwelt. Geh die Jung-Analyse eines Traums durch, stell einer Traumfigur
+    eine Frage, folge einer Traumserie. Hier zahlt sich das Füttern aus.</p>
     <p><strong>Warum das funktioniert:</strong> Klartraum ist eine <strong>persönliche Traumlandschaft, die sich mit
     jedem Eintrag weiter ausbreitet</strong> — und dich dir selbst zeigt: wie du dich in diesen absurden Momenten
     verhältst, was wiederkehrt, was sich verändert. Du beobachtest dich in Situationen, die kein Wachleben dir bietet
@@ -410,128 +410,6 @@ const learn = {
     } catch (err) {
       showToast(err.message);
     }
-  },
-
-  JOURNEY_STATIONS: [
-    {
-      key: "landkarte",
-      title: "Ankommen",
-      icon: "🗺️",
-      desc: "Kompendium-Kapitel 1+2 lesen. Einem beliebigen Symbol im Lexikon die erste Assoziation schenken.",
-      kompendium: "jung-psyche",
-    },
-    {
-      key: "persona",
-      title: "Deine Maske",
-      icon: "🎭",
-      desc: "Kapitel 4 lesen. Reflexion an einem Traum: \"Wo hast du in diesem Traum eine Rolle gespielt — und für wen?\"",
-      kompendium: "jung-persona",
-    },
-    {
-      key: "schatten",
-      title: "Dem Schatten begegnen",
-      icon: "🌑",
-      desc: "Kapitel 5 lesen. Einer Traumfigur die Schatten-Linse geben UND 2 Assoziationen notieren.",
-      kompendium: "jung-schatten",
-    },
-    {
-      key: "anima",
-      title: "Die Gegenstimme",
-      icon: "🌗",
-      desc: "Kapitel 6 lesen. Eine Aktive Imagination mit einer rätselhaften Figur führen.",
-      kompendium: "jung-anima",
-    },
-    {
-      key: "symbole",
-      title: "Die Sprache der Tiefe",
-      icon: "⚖️",
-      desc: "Kapitel 3+8 lesen. Einen grossen Traum markieren und die Kompensationsfrage beantworten.",
-      kompendium: "jung-kompensation",
-    },
-    {
-      key: "selbst",
-      title: "Ganz werden",
-      icon: "⭕",
-      desc: "Kapitel 7+9 lesen. Dein Traum-Mandala über den größten Zeitraum ansehen und eine Abschluss-Notiz schreiben.",
-      kompendium: "jung-selbst",
-    },
-  ],
-
-  async loadJourney() {
-    const pathEl = document.getElementById("journey-path");
-    const contentEl = document.getElementById("journey-content");
-    if (!pathEl || !contentEl) return;
-
-    let steps;
-    try {
-      steps = await api.getJourney();
-    } catch {
-      pathEl.innerHTML = '<p class="hint">Reise konnte nicht geladen werden.</p>';
-      return;
-    }
-
-    const stepMap = {};
-    steps.forEach((s) => stepMap[s.station] = s);
-
-    const completedCount = steps.filter((s) => s.completed).length;
-    const nextIdx = this.JOURNEY_STATIONS.findIndex((s) => !stepMap[s.key]?.completed);
-
-    pathEl.innerHTML = `<div class="journey-progress">
-      ${this.JOURNEY_STATIONS.map((s, i) => {
-        const done = !!stepMap[s.key]?.completed;
-        const isNext = i === nextIdx;
-        return `<div class="journey-dot ${done ? "done" : ""} ${isNext ? "next" : ""}" data-idx="${i}" title="${s.title}">
-          <span class="journey-dot-icon">${done ? "&#x2714;" : s.icon}</span>
-          <span class="journey-dot-label">${s.title}</span>
-        </div>${i < this.JOURNEY_STATIONS.length - 1 ? '<div class="journey-line ' + (done ? "done" : "") + '"></div>' : ""}`;
-      }).join("")}
-    </div>`;
-
-    if (completedCount === this.JOURNEY_STATIONS.length) {
-      contentEl.innerHTML = `<div class="mission-card" style="margin-top:0.75rem">
-        <p>Die Reise beginnt jetzt von vorn — Individuation ist kein Ziel, sondern eine Richtung. ⭕</p>
-      </div>`;
-      return;
-    }
-
-    const showStation = (idx) => {
-      const s = this.JOURNEY_STATIONS[idx];
-      const step = stepMap[s.key];
-      const done = !!step?.completed;
-      contentEl.innerHTML = `<div class="journey-station" style="margin-top:0.75rem">
-        <h3>${s.icon} Station ${idx + 1}: ${s.title}</h3>
-        <p>${s.desc}</p>
-        <p><a href="#" class="journey-kompendium-link" data-link="${s.kompendium}">Zum Kompendium-Kapitel &rarr;</a></p>
-        ${done
-          ? `<p class="hint">&#x2714; Abgeschlossen${step.note ? ": " + escapeHtml(step.note) : ""}</p>`
-          : `<div class="journey-complete-form">
-              <textarea id="journey-note" rows="2" placeholder="Was habe ich bemerkt? (optional)"></textarea>
-              <button class="primary journey-complete-btn" data-station="${s.key}">Station abschließen</button>
-            </div>`}
-      </div>`;
-
-      contentEl.querySelector(".journey-kompendium-link")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        document.getElementById(s.kompendium)?.scrollIntoView({ behavior: "smooth" });
-        const details = document.getElementById(s.kompendium);
-        if (details) details.open = true;
-      });
-
-      contentEl.querySelector(".journey-complete-btn")?.addEventListener("click", async () => {
-        const note = document.getElementById("journey-note")?.value.trim() || null;
-        try {
-          await api.completeJourneyStation(s.key, note);
-          showToast("Station abgeschlossen ✨");
-          this.loadJourney();
-        } catch (err) { showToast(err.message); }
-      });
-    };
-
-    pathEl.querySelectorAll(".journey-dot").forEach((dot) => {
-      dot.addEventListener("click", () => showStation(Number(dot.dataset.idx)));
-    });
-
-    showStation(nextIdx >= 0 ? nextIdx : 0);
   },
 
   async loadDataInfo() {

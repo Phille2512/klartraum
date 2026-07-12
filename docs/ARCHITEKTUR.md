@@ -51,8 +51,8 @@ Ein Prozess, keine externen Dienste. Start:
 | `reflection` | Antwort auf Reflexionsfrage zu einem Traum | dream_id, question, answer |
 | `symbolnote` | Persönliche Assoziation zu einem Tag (Amplifikation) | tag_id, text |
 | `imagination` | Aktive Imagination zu einem Traum | dream_id, text |
-| `journeystep` | Fortschritt der Individuationsreise | station, note, completed_at |
-| `dreamanalysis` | Individuationsreise auf Traumebene: Antwort je Station | dream_id, station, answer |
+| `journeystep` | *(T.2: aus der UI entfernt, Tabelle bleibt unangetastet)* ehem. Fortschritt der allgemeinen Individuationsreise | station, note, completed_at |
+| `dreamanalysis` | Individuationsreise auf Traumebene: Antwort je Station (aktive Variante) | dream_id, station, answer |
 | `syncevent` | Synchronizität: Wachereignis zu einem Traum | dream_id?, date, text |
 
 **Emotions-Vokabular** (12, definiert in `journal.js::EMOTIONS`, als
@@ -72,7 +72,7 @@ automatisch. Es gibt keine Down-Migrationen.
 | Tags | `GET tags`, `PUT tags/{id}/category`, `PUT tags/{id}/archetype`, `GET/POST tags/{id}/notes`, `DELETE symbol-notes/{id}` |
 | Statistik | `GET stats` (Kennzahlen, Wochen, Kompass, Beifuß, Inkubation, Korrelationen), `GET mandala`, `GET export` |
 | Atlas & Karte | `GET atlas`, `GET map`, `PUT/DELETE map/nodes/{tag_id}`, `POST/DELETE map/paths` |
-| Innenwelt (Jung) | `GET innenwelt`, `GET/POST dreams/{id}/reflections`, `GET/POST dreams/{id}/imaginations`, `GET journey`, `POST journey/{station}`, `GET/POST dreams/{id}/analysis`, `GET/POST sync-events` (+ DELETEs) |
+| Innenwelt (Jung) | `GET innenwelt`, `GET/POST dreams/{id}/reflections`, `GET/POST dreams/{id}/imaginations`, `GET/POST dreams/{id}/analysis`, `GET/POST sync-events` (+ DELETEs) |
 | Zyklus | `GET intentions/current`, `POST intentions`, `PATCH intentions/{id}`, `GET/POST/PATCH/DELETE goals` |
 
 Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`

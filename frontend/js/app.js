@@ -13,7 +13,6 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
       else if (view === "innenwelt") innenwelt.load();
       else atlas.load();
     }
-    if (btn.dataset.tab === "learn") learn.loadJourney();
   });
 });
 

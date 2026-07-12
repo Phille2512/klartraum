@@ -13,7 +13,7 @@ from sqlmodel import Session, col, select
 
 import auth
 from database import get_session, init_db
-from models import Dream, DreamAnalysis, DreamTag, Goal, Imagination, Intention, JourneyStep, MapNode, MapPath, MapRegion, Reflection, SymbolNote, SyncEvent, Tag
+from models import Dream, DreamAnalysis, DreamTag, Goal, Imagination, Intention, MapNode, MapPath, MapRegion, Reflection, SymbolNote, SyncEvent, Tag
 from paths import DATA_DIR, FRONTEND_DIR
 
 
@@ -1203,43 +1203,10 @@ def mandala(
     }
 
 
-# ---------- Individuationsreise (J.5) ----------
-
-JOURNEY_STATIONS = ["landkarte", "persona", "schatten", "anima", "symbole", "selbst"]
-
-
-@router.get("/journey")
-def get_journey(session: Session = Depends(get_session)):
-    steps = session.exec(select(JourneyStep)).all()
-    step_map = {s.station: s for s in steps}
-    return [
-        {
-            "station": st,
-            "completed": step_map[st].completed_at.isoformat() if st in step_map and step_map[st].completed_at else None,
-            "note": step_map[st].note if st in step_map else None,
-        }
-        for st in JOURNEY_STATIONS
-    ]
-
-
-class JourneyCompleteIn(BaseModel):
-    note: str | None = None
-
-
-@router.post("/journey/{station}")
-def complete_journey_station(station: str, payload: JourneyCompleteIn, session: Session = Depends(get_session)):
-    if station not in JOURNEY_STATIONS:
-        raise HTTPException(400, f"Unbekannte Station: {station}")
-    existing = session.exec(select(JourneyStep).where(JourneyStep.station == station)).first()
-    if existing:
-        existing.note = payload.note
-        existing.completed_at = dt.datetime.utcnow()
-        session.add(existing)
-    else:
-        step = JourneyStep(station=station, note=payload.note, completed_at=dt.datetime.utcnow())
-        session.add(step)
-    session.commit()
-    return {"station": station, "completed": True}
+# Hinweis (T.2): Die allgemeine Individuationsreise (/api/journey*) wurde aus
+# der Oberfläche entfernt — die Traumebenen-Variante (DreamAnalysis weiter
+# unten) hat sich bewährt. Tabelle `journeystep` bleibt in models.py bestehen
+# (kein DROP), falls die Idee zurückkommt.
 
 
 # ---------- Traum-Analyse (Jung pro Traum) ----------
