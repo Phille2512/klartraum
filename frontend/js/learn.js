@@ -80,6 +80,70 @@ const JUNG_GUIDES = [
   },
 ];
 
+// Archetypen-Lexikon (H.3): nachlesen und aufs Eigene beziehen
+const ARCHETYPE_LEXICON = [
+  {
+    key: "schatten", icon: "🌑", title: "Der Schatten",
+    kern: "Alles, was du nicht sein willst, verschwindet nicht — es wird zu deinem Schatten. Er ist kein „Böses“, sondern ungelebtes Leben: verdrängte Wut, verbotene Wünsche, ungenutzte Stärke.",
+    im_traum: "Verfolger, Einbrecher, abstoßende oder beschämende Figuren; oft gleichgeschlechtlich.",
+    frage: "Was an dieser Figur kenne ich — und will es nicht wahrhaben?",
+  },
+  {
+    key: "anima_animus", icon: "🌗", title: "Anima / Animus",
+    kern: "Jungs Name für die innere Gegenstimme — das Unvertraute in dir, klassisch gegengeschlechtlich gedacht, heute weiter gelesen. Sie ist Brücke zum Unbewussten: was dich rätselhaft anzieht, will dir etwas zeigen.",
+    im_traum: "faszinierende Unbekannte, Führerinnen/Führer, unerreichbare Geliebte.",
+    frage: "Welche Seite von mir spricht hier, die im Alltag keinen Platz hat?",
+  },
+  {
+    key: "weiser", icon: "🧙", title: "Der/die Weise",
+    kern: "Die Stimme des gesammelten Wissens — der innere Mentor, der auftaucht, wenn du weiter bist, als du glaubst.",
+    im_traum: "alte Frau/alter Mann, Lehrer, sprechende Tiere mit Rat, Stimmen, die einfach wissen.",
+    frage: "Welchen Rat habe ich gehört — und traue ich ihm?",
+  },
+  {
+    key: "kind", icon: "🧒", title: "Das Kind",
+    kern: "Anfang und Möglichkeit: das Verspielte, Verletzliche, Neue. Oft kündigt es Entwicklung an — etwas in dir ist gerade jung.",
+    im_traum: "Babys, Kinder (auch du als Kind), Neugeborenes, das beschützt werden muss.",
+    frage: "Was in meinem Leben ist gerade klein und braucht Schutz — oder will endlich wachsen?",
+  },
+  {
+    key: "trickster", icon: "🃏", title: "Der Trickster",
+    kern: "Der Regelbrecher: stört Pläne, blamiert, dreht Situationen ins Absurde. Er ist lästig — und heilsam, weil er festgefahrene Ordnung aufbricht.",
+    im_traum: "Clowns, Diebe, Gestaltwandler, Figuren, die dich narren; auch absurde Pannen.",
+    frage: "Welche Ordnung in meinem Leben nimmt sich zu ernst?",
+  },
+  {
+    key: "held", icon: "⚔️", title: "Held/in",
+    kern: "Der Teil, der sich stellt: aufbricht, kämpft, über sich hinauswächst. Sein Schatten: Größenwahn und das Nicht-um-Hilfe-bitten-Können.",
+    im_traum: "Prüfungen, Kämpfe, Rettungen, gefährliche Reisen.",
+    frage: "Wofür lohnt sich gerade mein Mut — und wo spiele ich nur den Starken?",
+  },
+  {
+    key: "grosse_mutter", icon: "🌳", title: "Große Mutter",
+    kern: "Das Nährende und Haltende — und seine Kehrseite: das Umklammernde, Verschlingende. Beides gehört zu dieser Urfigur.",
+    im_traum: "mütterliche Gestalten, Häuser der Kindheit, Höhlen, Meer und Erde; auch Hexen.",
+    frage: "Wo werde ich gehalten — und wo festgehalten?",
+  },
+  {
+    key: "persona", icon: "🎭", title: "Persona",
+    kern: "Deine Maske für die Welt: Rolle, Beruf, Höflichkeit. Gesund, solange du sie absetzen kannst; eng, wenn du sie für dein Gesicht hältst.",
+    im_traum: "falsche/fehlende Kleidung, Bühnen, Prüfungen, nackt unter Menschen.",
+    frage: "Wen spiele ich gerade — und für wen?",
+  },
+];
+
+// Springt vom Archetyp-Picker (Atlas/Innenwelt) oder von Wissens-Momenten ins Lexikon (H.3)
+function openArchetypeLexikon(anchorKey) {
+  document.querySelector('[data-tab="learn"]').click();
+  setTimeout(() => {
+    const target = anchorKey ? document.getElementById(`arch-${anchorKey}`) : document.getElementById("archetypen-lexikon");
+    if (target) {
+      if (target.tagName === "DETAILS") target.open = true;
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  }, 200);
+}
+
 // Lernbereich: Guides + Reality-Check-Erinnerung
 const learn = {
   timer: null,
@@ -156,6 +220,19 @@ const learn = {
           ${JUNG_GUIDES.map((g) => `<details class="guide" id="${g.id}">
             <summary>${g.title}</summary>
             <div class="guide-body">${g.body}</div>
+          </details>`).join("")}
+        </div>
+        <div class="card jung-kompendium" id="archetypen-lexikon">
+          <h2>🌗 Die acht Rollen <small><em>Archetypen-Lexikon</em></small></h2>
+          <p class="hint">Wer „Trickster“ noch nie gehört hat, kann es hier in 60 Sekunden verstehen.</p>
+          ${ARCHETYPE_LEXICON.map((a) => `<details class="guide" id="arch-${a.key}">
+            <summary>${a.icon} ${a.title}</summary>
+            <div class="guide-body">
+              <p>${a.kern}</p>
+              <p><strong>Im Traum:</strong> ${a.im_traum}</p>
+              <p><strong>Frage an dich:</strong> <em>${a.frage}</em></p>
+              <p class="hint">Reflexions-Linse nach C. G. Jung, keine Diagnose. Die Figur deines Traums ist immer mehr als die Rolle.</p>
+            </div>
           </details>`).join("")}
         </div>`;
 

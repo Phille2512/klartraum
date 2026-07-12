@@ -481,6 +481,7 @@ const atlas = {
             </button>`
           ).join("")}
         </div>
+        <a href="#" class="archetype-lexicon-link">Was bedeuten die Rollen? →</a>
       </div>`;
     }
 
@@ -548,6 +549,10 @@ const atlas = {
           document.querySelector(".archetype-current").innerHTML = a ? `${a.icon} ${a.label}` : "<em>noch keine</em>";
           showToast(a ? `${a.icon} ${a.label} zugeordnet` : "Archetyp entfernt");
         } catch (err) { showToast(err.message); }
+      });
+      el.querySelector(".archetype-lexicon-link")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        openArchetypeLexikon();
       });
     }
 

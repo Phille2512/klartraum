@@ -410,6 +410,7 @@ const innenwelt = {
             </button>`
           ).join("")}
         </div>
+        <a href="#" class="archetype-lexicon-link">Was bedeuten die Rollen? →</a>
       </div>` : ""}
 
       ${imagTexts.length ? `<div class="symbol-section">
@@ -462,6 +463,10 @@ const innenwelt = {
           showToast(arch ? `${atlas.ARCHETYPES[arch].icon} ${atlas.ARCHETYPES[arch].label} zugeordnet` : "Archetyp entfernt");
           this.load();
         } catch (err) { showToast(err.message); }
+      });
+      el.querySelector(".archetype-lexicon-link")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        openArchetypeLexikon();
       });
 
       // Symbol notes

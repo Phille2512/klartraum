@@ -676,8 +676,87 @@ const stats = {
 
   // ---- 🌗 Rückblick ----
   async renderReview() {
+    await this.renderArchetypeFigures();
     const mc = document.getElementById("mandala-card");
     if (mc) await mandala.render(mc);
+  },
+
+  // ---- 🌗 Deine inneren Figuren (H.3: Bezug Lexikon ↔ eigene Analyse) ----
+  async renderArchetypeFigures() {
+    const el = document.getElementById("archetype-bars");
+    if (!el) return;
+    let figures;
+    try {
+      figures = await api.getInnenwelt();
+    } catch {
+      el.innerHTML = "";
+      return;
+    }
+    const withArch = figures.filter((f) => f.archetype);
+    document.getElementById("archetype-detail").innerHTML = "";
+    if (!withArch.length) {
+      el.innerHTML = `<p class="hint">Noch keine Figur hat eine Rolle bekommen — sortiere im Atlas oder in der Innenwelt ein.</p>`;
+      return;
+    }
+
+    const groups = {};
+    withArch.forEach((f) => {
+      const g = (groups[f.archetype] = groups[f.archetype] || { figures: [], dreamCount: 0, emotions: {}, lastDate: null });
+      g.figures.push(f);
+      g.dreamCount += f.count;
+      Object.entries(f.emotions || {}).forEach(([e, c]) => { g.emotions[e] = (g.emotions[e] || 0) + c; });
+      if (!g.lastDate || f.last_date > g.lastDate) g.lastDate = f.last_date;
+    });
+
+    const entries = Object.entries(groups).sort((a, b) => b[1].figures.length - a[1].figures.length);
+    const maxCount = Math.max(...entries.map(([, g]) => g.figures.length));
+
+    el.innerHTML = `<div class="emotion-bars">
+      ${entries.map(([key, g]) => {
+        const a = atlas.ARCHETYPES[key] || { icon: "❔", label: key };
+        const pct = Math.round(g.figures.length / maxCount * 100);
+        return `<div class="emotion-bar-row archetype-bar-row" data-arch="${key}">
+          <span class="emotion-bar-label">${a.icon} ${a.label}</span>
+          <div class="emotion-bar-track"><div class="emotion-bar-fill" style="width:${pct}%;background:var(--accent)"></div></div>
+          <span class="emotion-bar-count">${g.figures.length}×</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+
+    el.querySelectorAll(".archetype-bar-row").forEach((row) => {
+      row.addEventListener("click", () => this.showArchetypeDetail(row.dataset.arch, groups[row.dataset.arch]));
+    });
+  },
+
+  showArchetypeDetail(key, group) {
+    const el = document.getElementById("archetype-detail");
+    const a = atlas.ARCHETYPES[key] || { icon: "❔", label: key };
+    const lex = ARCHETYPE_LEXICON.find((x) => x.key === key);
+    const topEmos = Object.entries(group.emotions).sort((x, y) => y[1] - x[1]).slice(0, 3)
+      .map(([e]) => EMOTIONS[e]?.icon || e).join(" ");
+
+    el.innerHTML = `<div class="archetype-detail-panel">
+      <div class="archetype-detail-lexicon">
+        <h4>${a.icon} ${a.label}</h4>
+        ${lex ? `<p>${lex.kern}</p><p class="hint"><em>${lex.frage}</em></p>` : ""}
+      </div>
+      <div class="archetype-detail-own">
+        <p><strong>Bei dir:</strong> ${group.figures.length} ${group.figures.length === 1 ? "Figur" : "Figuren"}
+          (${group.figures.map((f) => `<button class="archetype-figure-link">${escapeHtml(f.name)}</button>`).join(", ")})
+          · ${group.dreamCount} ${group.dreamCount === 1 ? "Traum" : "Träume"}
+          ${topEmos ? ` · häufigste Gefühle ${topEmos}` : ""}
+          · zuletzt am ${formatDate(group.lastDate)}</p>
+      </div>
+    </div>`;
+
+    el.querySelectorAll(".archetype-figure-link").forEach((btn, i) => {
+      btn.addEventListener("click", () => {
+        const fig = group.figures[i];
+        document.querySelector('[data-tab="atlas"]').click();
+        document.querySelector('[data-view="innenwelt"]').click();
+        setTimeout(() => innenwelt.showDossier(fig), 250);
+      });
+    });
   },
 
   makeChart(id, config) {

@@ -1,11 +1,11 @@
 const WISSEN = {
   archetypen: {
     text: "Archetypen sind nach C. G. Jung wiederkehrende Grundmuster im kollektiven Unbewussten — innere Figuren, die in allen Kulturen auftauchen. Sie sind keine Schubladen, sondern Reflexions-Linsen.",
-    link: "jung-psyche",
+    link: "archetypen-lexikon",
   },
   schatten: {
     text: "Der Schatten ist alles, was nicht ins Selbstbild passt und verdrängt wird. Im Traum begegnet er oft als bedrohliche oder abstoßende Figur. Ihn zu kennen setzt gebundene Energie frei.",
-    link: "jung-schatten",
+    link: "arch-schatten",
   },
   amplifikation: {
     text: "Amplifikation nach Jung: Ein Symbol nicht nachschlagen, sondern mit eigenen Erinnerungen, Gefühlen und Einfällen anreichern. Dein Meer ist nicht mein Meer.",
