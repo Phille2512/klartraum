@@ -14,11 +14,11 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            artifact: Klartraum-mac
+            artifact: Traumader-mac
           - os: windows-latest
-            artifact: Klartraum-windows
+            artifact: Traumader-windows
           - os: ubuntu-latest
-            artifact: Klartraum-linux
+            artifact: Traumader-linux
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -34,17 +34,17 @@ jobs:
           pip install pyinstaller pillow
 
       - name: Build executable
-        run: pyinstaller klartraum.spec
+        run: pyinstaller traumader.spec
 
       - name: Package (Unix)
         if: runner.os != 'Windows'
         run: |
           cd dist
-          zip -r ../${{ matrix.artifact }}.zip Klartraum
+          zip -r ../${{ matrix.artifact }}.zip Traumader
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
-        run: Compress-Archive -Path dist/Klartraum.exe -DestinationPath ${{ matrix.artifact }}.zip
+        run: Compress-Archive -Path dist/Traumader.exe -DestinationPath ${{ matrix.artifact }}.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -63,10 +63,10 @@ jobs:
         with:
           files: '*.zip'
           body: |
-            ## Klartraum herunterladen
+            ## Traumader herunterladen
 
             Lade das Paket für dein System herunter und folge der [Anleitung für Freunde](../blob/main/ANLEITUNG-FUER-FREUNDE.md).
 
-            - **Mac:** `Klartraum-mac.zip`
-            - **Windows:** `Klartraum-windows.zip`
-            - **Linux:** `Klartraum-linux.zip`
+            - **Mac:** `Traumader-mac.zip`
+            - **Windows:** `Traumader-windows.zip`
+            - **Linux:** `Traumader-linux.zip`

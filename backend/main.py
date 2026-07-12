@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Klartraum-App", lifespan=lifespan)
+app = FastAPI(title="Traumader", lifespan=lifespan)
 
 
 @app.middleware("http")

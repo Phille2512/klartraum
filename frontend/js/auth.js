@@ -31,7 +31,7 @@ const auth = {
       : "🔒 Anmelden";
     document.getElementById("login-hint").textContent = setupMode
       ? "Schütze dein Traumtagebuch: Lege ein Passwort fest (mind. 4 Zeichen). Du brauchst es auf jedem Gerät einmal."
-      : "Gib dein Klartraum-Passwort ein.";
+      : "Gib dein Traumader-Passwort ein.";
     document.getElementById("login-confirm-label").classList.toggle("hidden", !setupMode);
     document.getElementById("login-error").textContent = "";
     this.overlay.classList.remove("hidden");

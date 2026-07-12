@@ -39,7 +39,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Klartraum',
+    name='Traumader',
     debug=False,
     strip=False,
     upx=True,

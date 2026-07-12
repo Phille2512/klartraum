@@ -1,4 +1,4 @@
-# 🌙 Klartraum — Handbuch
+# 🫀 Traumader — Handbuch
 
 *Für dich (und später deine Freunde): Wie man die App nutzt, um Klarträumen zu
 lernen und die eigene Traumwelt zu erkunden.*
@@ -21,7 +21,7 @@ lernen und die eigene Traumwelt zu erkunden.*
 
 ## Der tägliche Rhythmus (das Herz der App)
 
-**🌙 Der Weg des Träumers — so ist Klartraum gedacht:** füttern, wann es
+**🧵 Der Traumfaden — so ist Traumader gedacht:** füttern, wann es
 passt — verwerten, wenn Lust da ist. Kein Pflichtprogramm, keine perfekten
 Einträge.
 
@@ -42,7 +42,7 @@ Einträge.
    Traumfigur eine Frage, folge einer Traumserie. Hier zahlt sich das
    Füttern aus.
 
-**Warum das funktioniert:** Klartraum ist eine persönliche Traumlandschaft,
+**Warum das funktioniert:** Traumader ist eine persönliche Traumlandschaft,
 die sich mit jedem Eintrag weiter ausbreitet — und dich dir selbst zeigt: wie
 du dich in diesen absurden Momenten verhältst, was wiederkehrt, was sich
 verändert. Du beobachtest dich in Situationen, die kein Wachleben dir bietet

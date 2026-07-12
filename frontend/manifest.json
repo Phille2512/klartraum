@@ -1,7 +1,7 @@
 {
-  "name": "Klartraum – Traumtagebuch & Training",
-  "short_name": "Klartraum",
-  "description": "Klarträumen lernen: Traumtagebuch, Traumzeichen-Analyse und Reality-Check-Training",
+  "name": "Traumader – Traumtagebuch & Traumwelt",
+  "short_name": "Traumader",
+  "description": "Klarträumen lernen: Traumtagebuch, Traumzeichen-Analyse, Traumatlas und Reality-Check-Training",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#12131f",

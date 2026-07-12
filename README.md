@@ -1,4 +1,4 @@
-# 🌙 Klartraum-App
+# 🫀 Traumader
 
 Persönliche App zum Klarträumen-Lernen: Traumtagebuch, Traumzeichen-Analyse und
 Reality-Check-Training. FastAPI + SQLite im Backend, Vanilla-JS-PWA im Frontend.
@@ -74,7 +74,8 @@ frontend/   Single-Page-App: index.html, css/, js/, manifest.json, sw.js
 Installation und Backup in 3 Minuten erklärt.
 
 Die Desktop-App bündelt Server + Frontend in eine ausführbare Datei. Deine
-Träume liegen als echte Datei in `~/Klartraum/dreams.db` — keine Cloud, keine
+Träume liegen als echte Datei in `~/Traumader/dreams.db` (bestehende
+Installationen nutzen weiterhin `~/Klartraum/dreams.db`) — keine Cloud, keine
 Registrierung. Verteilung über GitHub Releases (0 €).
 
 ## Geplant für später

@@ -6,7 +6,8 @@ aber Freunde sollen sie nutzen können.*
 > **Entscheidung (Juli 2026), zweistufig:**
 > **Stufe 1 — Desktop-Paket (PyInstaller): ✅ UMGESETZT**
 > Bestehender Python-Server + Frontend als Doppelklick-App, Daten als echte
-> Datei in `~/Klartraum/`, Verteilung über GitHub Releases.
+> Datei in `~/Traumader/` (Alt-Installationen: `~/Klartraum/`), Verteilung
+> über GitHub Releases.
 > → Spezifikation: `UMSETZUNGSPLAN-DESKTOP.md`
 > **Stufe 2 — Local-First-PWA (Endausbau):** gesamte Logik ins Frontend,
 > SQLite-WASM/OPFS im Browser, statisch auf GitHub Pages gehostet (HTTPS →

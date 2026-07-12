@@ -3,7 +3,20 @@ import shutil
 import sys
 from pathlib import Path
 
-DATA_DIR = Path(os.environ.get("KLARTRAUM_DATA", Path.home() / "Klartraum"))
+def _default_data_dir() -> Path:
+    # T.1 (Umbenennung Klartraum -> Traumader): bestehende Installationen mit
+    # ~/Klartraum/ nicht anfassen (weiterverwenden, nichts kopieren);
+    # Neuinstallationen bekommen ~/Traumader/.
+    traumader_dir = Path.home() / "Traumader"
+    klartraum_dir = Path.home() / "Klartraum"
+    if traumader_dir.exists():
+        return traumader_dir
+    if klartraum_dir.exists():
+        return klartraum_dir
+    return traumader_dir
+
+
+DATA_DIR = Path(os.environ.get("TRAUMADER_DATA", os.environ.get("KLARTRAUM_DATA", _default_data_dir())))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 BACKEND_DIR = Path(__file__).parent

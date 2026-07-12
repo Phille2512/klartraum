@@ -30,11 +30,11 @@ def main() -> None:
     db_path = DATA_DIR / "dreams.db"
 
     print()
-    print("  \U0001f319 Klartraum läuft!")
+    print("  \U0001fac0 Traumader läuft!")
     print(f"     Am Computer:  http://localhost:{port}")
     print(f"     Am Handy:     http://{lan_ip}:{port}  (gleiches WLAN)")
     print(f"     Deine Daten:  {db_path}")
-    print("     Dieses Fenster schließen beendet Klartraum.")
+    print("     Dieses Fenster schließen beendet Traumader.")
     print()
 
     webbrowser.open(f"http://localhost:{port}")
@@ -42,7 +42,7 @@ def main() -> None:
     try:
         uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="warning")
     except KeyboardInterrupt:
-        print("\nKlartraum beendet. Gute Nacht! \U0001f319")
+        print("\nTraumader beendet. Gute Nacht! \U0001f319")
         sys.exit(0)
 
 

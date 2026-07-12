@@ -147,7 +147,7 @@ function openArchetypeLexikon(anchorKey) {
 // Prozess-Intro „Der Traumfaden" (H.4) — EINE Konstante für Knopf-Label,
 // Overlay-Titel und Lernen-Karte, damit eine Umbenennung ein Ein-Zeilen-Fix bleibt.
 const TRAUMFADEN = {
-  title: "🧵 Der Traumfaden — so ist Klartraum gedacht",
+  title: "🧵 Der Traumfaden — so ist Traumader gedacht",
   shortTitle: "🧵 Der Traumfaden",
   buttonLabel: "Der Faden",
   tooltip: "Nimm den Faden auf",
@@ -164,7 +164,7 @@ const TRAUMFADEN = {
     <p><strong>4. Verwerten</strong> <small>(wenn Neugier kommt)</small><br>
     Schau in die Analyse, den Atlas, die Innenwelt. Geh die Jung-Analyse eines Traums durch, stell einer Traumfigur
     eine Frage, folge einer Traumserie. Hier zahlt sich das Füttern aus.</p>
-    <p><strong>Warum das funktioniert:</strong> Klartraum ist eine <strong>persönliche Traumlandschaft, die sich mit
+    <p><strong>Warum das funktioniert:</strong> Traumader ist eine <strong>persönliche Traumlandschaft, die sich mit
     jedem Eintrag weiter ausbreitet</strong> — und dich dir selbst zeigt: wie du dich in diesen absurden Momenten
     verhältst, was wiederkehrt, was sich verändert. Du beobachtest dich in Situationen, die kein Wachleben dir bietet
     — und lernst dich genau dort kennen.<br>
@@ -345,7 +345,7 @@ const learn = {
     this.timer = setInterval(() => {
       const message = "Reality Check! Träumst du gerade? 🔍";
       if (useNotification && document.hidden) {
-        new Notification("Klartraum", { body: message, icon: "/icons/icon-192.png" });
+        new Notification("Traumader", { body: message, icon: "/icons/icon-192.png" });
       } else {
         showToast(message);
       }
@@ -418,16 +418,17 @@ const learn = {
     try {
       const info = await api.dataInfo();
       const sizeMB = (info.db_size_bytes / 1024 / 1024).toFixed(1);
+      const folderName = info.data_dir.replace(/^.*[/\\]/, "");
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
         <h2>🔐 Deine Daten</h2>
         <p>Deine <strong>${info.dream_count} Träume</strong>: ${sizeMB} MB in
-          <code>${info.db_file.replace(/^.*[/\\]/, "~/Klartraum/")}</code></p>
+          <code>~/${escapeHtml(folderName)}/dreams.db</code></p>
         <div class="data-info-text">
           <p><strong>Deine Träume gehören dir — wörtlich.</strong> Alles, was du hier einträgst,
           liegt ausschließlich in einer Datei auf DIESEM Gerät
-          (<code>~/Klartraum/dreams.db</code>). Keine Cloud, kein Konto, niemand liest mit.</p>
+          (<code>~/${escapeHtml(folderName)}/dreams.db</code>). Keine Cloud, kein Konto, niemand liest mit.</p>
           <p>Die Kehrseite dieser Freiheit: <strong>Geht das Gerät verloren oder kaputt, sind
           die Träume weg — es sei denn, du hast ein Backup.</strong> Ein Backup ist eine
           Kopie dieser einen Datei oder ein Export (Analyse → Datenexport). Mach das
@@ -456,8 +457,8 @@ const learn = {
       <div class="modal">
         <h2>🔐 Wo liegen deine Daten?</h2>
         <p><strong>Deine Träume gehören dir — wörtlich.</strong> Alles, was du hier einträgst,
-        liegt ausschließlich in einer Datei auf DIESEM Gerät
-        (<code>~/Klartraum/dreams.db</code>). Keine Cloud, kein Konto, niemand liest mit.</p>
+        liegt ausschließlich in einer Datei auf DIESEM Gerät (z. B.
+        <code>~/Traumader/dreams.db</code>). Keine Cloud, kein Konto, niemand liest mit.</p>
         <p>Die Kehrseite dieser Freiheit: <strong>Geht das Gerät verloren oder kaputt, sind
         die Träume weg — es sei denn, du hast ein Backup.</strong></p>
         <p>Du findest Backup-Optionen jederzeit unten im Lernen-Tab.</p>
