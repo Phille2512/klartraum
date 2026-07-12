@@ -245,9 +245,17 @@ const journal = {
       .join("");
 
     if (!this.dreams.length && !this.pending.length) {
-      this.list.innerHTML = offlineHint + `<div class="empty-state">
-        ${this.search.value ? "Keine Träume gefunden." : "Noch keine Träume. Leg direkt nach dem Aufwachen los – auch Fragmente zählen!"}
+      if (this.search.value) {
+        this.list.innerHTML = offlineHint + `<div class="empty-state">Keine Träume gefunden.</div>`;
+        return;
+      }
+      // H.4: Erster App-Start (noch nie ein Traum) — Prozess-Intro statt leerer Zeile
+      this.list.innerHTML = offlineHint + `<div class="card path-welcome">
+        <h2>🌙 Der Weg des Träumers — so ist Klartraum gedacht</h2>
+        ${PATH_OF_DREAMER_SHORT}
+        <button class="primary" id="path-welcome-btn">Ersten Traum festhalten</button>
       </div>`;
+      document.getElementById("path-welcome-btn")?.addEventListener("click", () => this.startNewDream());
       return;
     }
     const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];

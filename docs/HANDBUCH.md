@@ -21,23 +21,42 @@ lernen und die eigene Traumwelt zu erkunden.*
 
 ## Der tägliche Rhythmus (das Herz der App)
 
-**Abends — 2 Minuten:**
-1. 🌙-Knopf oben: das **Abendritual**. Lies dein Fokus-Zeichen und ein
-   Bucket-List-Ziel, formuliere deine **Traumabsicht** („Heute Nacht …“).
-2. Optional 🔴 Rotlicht-Modus — schont die Müdigkeit.
+**🌙 Der Weg des Träumers — so ist Klartraum gedacht:** füttern, wann es
+passt — verwerten, wenn Lust da ist. Kein Pflichtprogramm, keine perfekten
+Einträge.
 
-**Morgens — 5 Minuten, noch im Bett:**
-1. **Bevor du aufstehst:** liegen bleiben, Augen zu, den Traum rückwärts
-   durchgehen.
-2. „+ Neuer Traum“: erst den Text runterschreiben (auch Fragmente!), dann
-   Details: Luzidität, Schlafqualität, Gefühle antippen, 🌿 Beifuß, ⭐ falls
-   es ein Großer Traum war.
-3. **Traumzeichen, Orte, Personen taggen** — das ist der wichtigste Schritt,
-   davon leben Kompass, Atlas und Innenwelt.
-4. Die App fragt nach deiner Absicht von gestern: Ja / Nein / Später.
+1. **Festhalten** *(direkt nach dem Aufwachen · 1 Minute)* — Schreib auf, was
+   da ist, egal wo: Zettel, Handy-Notiz, Sprachnachricht an dich selbst. Ein
+   paar Wörter reichen. Nur eines ist Pflicht: **das Datum**. Fällt dir
+   tagsüber mehr ein, häng es einfach an.
+2. **Einpflegen** *(wenn Zeit ist · 5 Minuten)* — Bring den Text in die App,
+   unverändert und unperfekt. Wenn es leicht von der Hand geht, vergib schon
+   ein paar Merkmale: Traumzeichen, Orte, Personen, Gefühle. Wenn nicht: auch
+   gut. **Alles lässt sich später ergänzen.**
+3. **Anreichern** *(irgendwann · nebenbei)* — Bei Lust und Laune:
+   Beschreibungen vervollständigen, Elemente nachtragen, Traumzeichen
+   einsortieren, Orte auf die Karte legen. Jeder Handgriff füttert deine
+   Traumlandschaft.
+4. **Verwerten** *(wenn Neugier kommt)* — Schau in die Analyse, den Atlas,
+   die Innenwelt. Geh die Individuationsreise, stell einer Traumfigur eine
+   Frage, folge einer Traumserie. Hier zahlt sich das Füttern aus.
 
-**Tagsüber:** Reality Checks — besonders, wenn dir dein Fokus-Zeichen begegnet.
-Die Erinnerung dafür stellst du im Lernen-Tab ein.
+**Warum das funktioniert:** Klartraum ist eine persönliche Traumlandschaft,
+die sich mit jedem Eintrag weiter ausbreitet — und dich dir selbst zeigt: wie
+du dich in diesen absurden Momenten verhältst, was wiederkehrt, was sich
+verändert. Du beobachtest dich in Situationen, die kein Wachleben dir bietet
+— und lernst dich genau dort kennen. Füttere sie beiläufig. Ernte, wann du
+willst.
+
+Ergänzend, für den Klartraum-Trainingseffekt:
+
+**Abends — optional, 2 Minuten:** 🌙-Knopf oben: das **Abendritual**. Lies
+dein Fokus-Zeichen und ein Bucket-List-Ziel, formuliere deine
+**Traumabsicht** („Heute Nacht …“). Optional 🔴 Rotlicht-Modus — schont die
+Müdigkeit.
+
+**Tagsüber:** Reality Checks — besonders, wenn dir dein Fokus-Zeichen
+begegnet. Die Erinnerung dafür stellst du im Lernen-Tab ein.
 
 ## Die Bereiche
 

@@ -27,6 +27,26 @@ Handy ins gleiche WLAN, im schwarzen Fenster steht eine Adresse wie
 Menü → „Zum Startbildschirm hinzufügen". Fertig: App-Icon auf dem Handy.
 (Funktioniert nur, solange Klartraum auf deinem Computer läuft.)
 
+## Der tägliche Rhythmus
+
+🌙 **Der Weg des Träumers — so ist Klartraum gedacht:** füttern, wann es
+passt — verwerten, wenn Lust da ist. Kein Pflichtprogramm, keine perfekten
+Einträge.
+
+1. **Festhalten** *(direkt nach dem Aufwachen · 1 Minute)* — Zettel,
+   Handy-Notiz, Sprachnachricht, egal wo. Ein paar Wörter reichen, nur das
+   **Datum** ist Pflicht.
+2. **Einpflegen** *(wenn Zeit ist · 5 Minuten)* — Text unverändert in die App
+   bringen. Merkmale wie Traumzeichen, Orte, Personen, Gefühle nur, wenn es
+   leicht geht — **alles lässt sich später ergänzen.**
+3. **Anreichern** *(irgendwann · nebenbei)* — bei Lust und Laune
+   Beschreibungen vervollständigen, Elemente nachtragen, Orte auf die Karte
+   legen.
+4. **Verwerten** *(wenn Neugier kommt)* — Analyse, Atlas, Innenwelt,
+   Individuationsreise. Hier zahlt sich das Füttern aus.
+
+Füttere sie beiläufig. Ernte, wann du willst.
+
 ## 🔐 Wo sind meine Daten — und was ist das Risiko?
 
 **Deine Träume gehören dir — wörtlich.** Alles, was du hier einträgst,

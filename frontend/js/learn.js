@@ -144,6 +144,33 @@ function openArchetypeLexikon(anchorKey) {
   }, 200);
 }
 
+// Prozess-Intro „Der Weg des Träumers" (H.4)
+const PATH_OF_DREAMER_BODY = `
+  <p><strong>1. Festhalten</strong> <small>(direkt nach dem Aufwachen · 1 Minute)</small><br>
+  Schreib auf, was da ist — egal wo: Zettel, Handy-Notiz, Sprachnachricht an dich selbst. Ein paar Wörter reichen.
+  Nur eines ist Pflicht: <strong>das Datum</strong>. Fällt dir tagsüber mehr ein, häng es einfach an.</p>
+  <p><strong>2. Einpflegen</strong> <small>(wenn Zeit ist · 5 Minuten)</small><br>
+  Bring den Text in die App — unverändert und unperfekt. Wenn es leicht von der Hand geht, vergib schon ein paar
+  Merkmale: Traumzeichen, Orte, Personen, Gefühle. Wenn nicht: auch gut. <strong>Alles lässt sich später ergänzen.</strong></p>
+  <p><strong>3. Anreichern</strong> <small>(irgendwann · nebenbei)</small><br>
+  Bei Lust und Laune: Beschreibungen vervollständigen, Elemente nachtragen, Traumzeichen einsortieren, Orte auf die
+  Karte legen. Jeder Handgriff füttert deine Traumlandschaft.</p>
+  <p><strong>4. Verwerten</strong> <small>(wenn Neugier kommt)</small><br>
+  Schau in die Analyse, den Atlas, die Innenwelt. Geh die Individuationsreise, stell einer Traumfigur eine Frage,
+  folge einer Traumserie. Hier zahlt sich das Füttern aus.</p>
+  <p><strong>Warum das funktioniert:</strong> Klartraum ist eine <strong>persönliche Traumlandschaft, die sich mit
+  jedem Eintrag weiter ausbreitet</strong> — und dich dir selbst zeigt: wie du dich in diesen absurden Momenten
+  verhältst, was wiederkehrt, was sich verändert. Du beobachtest dich in Situationen, die kein Wachleben dir bietet
+  — und lernst dich genau dort kennen.<br>
+  <strong>Füttere sie beiläufig. Ernte, wann du willst.</strong></p>`;
+
+const PATH_OF_DREAMER_SHORT = `
+  <p><strong>1. Festhalten</strong> — direkt nach dem Aufwachen, egal wo, nur das Datum ist Pflicht.</p>
+  <p><strong>2. Einpflegen</strong> — wenn Zeit ist, unverändert und unperfekt. Alles lässt sich später ergänzen.</p>
+  <p><strong>3. Anreichern</strong> — irgendwann, nebenbei, bei Lust und Laune.</p>
+  <p><strong>4. Verwerten</strong> — wenn Neugier kommt: Analyse, Atlas, Innenwelt.</p>
+  <p>Füttere sie beiläufig. Ernte, wann du willst. 🌙</p>`;
+
 // Lernbereich: Guides + Reality-Check-Erinnerung
 const learn = {
   timer: null,
@@ -206,7 +233,14 @@ const learn = {
   ],
 
   init() {
-    document.getElementById("guides").innerHTML = this.guides
+    const pathRead = localStorage.getItem("hint-weg-des-traeumers") === "1";
+    if (!pathRead) localStorage.setItem("hint-weg-des-traeumers", "1");
+    const pathIntroHtml = `<details class="guide" id="weg-des-traeumers" ${pathRead ? "" : "open"}>
+      <summary>🌙 Der Weg des Träumers</summary>
+      <div class="guide-body">${PATH_OF_DREAMER_BODY}</div>
+    </details>`;
+
+    document.getElementById("guides").innerHTML = pathIntroHtml + this.guides
       .map(
         (g) => `<details class="guide">
           <summary>${g.title}</summary>

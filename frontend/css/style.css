@@ -232,6 +232,11 @@ button.danger { color: var(--danger); }
   padding: 2rem 1rem;
 }
 
+/* --- Prozess-Intro "Der Weg des Träumers" (H.4) --- */
+.path-welcome p { margin: 0 0 0.6rem; line-height: 1.5; }
+.path-welcome p small { color: var(--text-dim); }
+.path-welcome button { width: 100%; margin-top: 0.5rem; }
+
 /* --- Analyse --- */
 .stat-cards {
   display: grid;
