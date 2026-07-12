@@ -9,6 +9,10 @@ const atlas = {
   bound: false,
   limit: 20,
   focus: null, // { id, name, kind }
+  // Zeitraffer-Stand bewusst NICHT in localStorage (H.1): ein in der
+  // Vergangenheit geparkter Slider aus einer früheren Sitzung war die
+  // "perfekte Verwirrungsmaschine". Startet bei jedem Seitenaufruf neu bei "heute".
+  timelapseDate: "",
 
   // ---- Filter-Zustand (B.1) ----
   get activeKinds() {
@@ -20,8 +24,22 @@ const atlas = {
   set minCount(v) { localStorage.setItem("atlas-min-count", String(v)); },
   get range() { return localStorage.getItem("atlas-range") || "all"; },
   set range(v) { localStorage.setItem("atlas-range", v); },
-  get timelapseDate() { return localStorage.getItem("atlas-timelapse-to") || ""; },
-  set timelapseDate(v) { localStorage.setItem("atlas-timelapse-to", v); },
+
+  isDefaultFilters() {
+    return this.minCount === 1 && this.range === "all" && this.activeKinds.length === 3 && !this.focus && !this.timelapseDate;
+  },
+
+  resetFilters() {
+    this.minCount = 1;
+    this.range = "all";
+    this.activeKinds = ["place", "person", "dream_sign"];
+    this.focus = null;
+    this.timelapseDate = "";
+    this.limit = 20;
+    const slider = document.getElementById("atlas-timelapse-slider");
+    if (slider) slider.value = slider.max;
+    this.load();
+  },
 
   computeFrom() {
     if (this.range === "all") return null;
@@ -34,13 +52,16 @@ const atlas = {
   async load() {
     this.bindControls();
     const graphEl = document.getElementById("atlas-graph");
-    const params = new URLSearchParams({ min_count: String(this.minCount) });
+    // min_count wird bewusst NICHT an den Server geschickt (H.1): der volle,
+    // ungefilterte Bestand wird einmal geladen — Häufigkeits-Filter und die
+    // Sichtbarkeits-Bilanz rechnen anschließend clientseitig darauf.
+    const params = new URLSearchParams();
     const from = this.computeFrom();
     if (from) params.set("from", from);
 
     // Kanonisches Layout: einmal für den Endstand (heute) berechnen und
     // einfrieren, damit der Zeitraffer nicht "zappelt" (B.5).
-    const canonicalKey = `${from || ""}|${this.minCount}`;
+    const canonicalKey = `${from || ""}`;
     if (this.canonicalKey !== canonicalKey) {
       let canonicalData;
       try {
@@ -107,7 +128,9 @@ const atlas = {
     document.querySelectorAll(".atlas-min-chip").forEach((chip) => {
       chip.addEventListener("click", () => {
         this.minCount = parseInt(chip.dataset.min, 10);
-        this.load();
+        this.limit = 20;
+        this.syncControlUI();
+        this.renderGraph();
       });
     });
 
@@ -167,7 +190,10 @@ const atlas = {
   },
 
   visibleNodesAndLinks() {
-    let nodes = this.allNodes.filter((n) => this.activeKinds.includes(n.kind));
+    // rawTotal: alles, was im gewählten Zeitraum überhaupt existiert (vor
+    // Art-/Häufigkeits-Filter, Fokus, Top-N) — Basis für die Bilanz-Zeile (H.1).
+    const rawTotal = this.allNodes.length;
+    let nodes = this.allNodes.filter((n) => this.activeKinds.includes(n.kind) && n.count >= this.minCount);
     let links = this.allLinks;
 
     if (this.focus) {
@@ -178,20 +204,50 @@ const atlas = {
       });
       nodes = nodes.filter((n) => neighborIds.has(n.id));
       links = links.filter((l) => neighborIds.has(l.source) && neighborIds.has(l.target));
-      return { nodes, links, truncated: false };
+      return { nodes, links, truncated: false, rawTotal, filteredTotal: nodes.length };
     }
 
     nodes = [...nodes].sort((a, b) => b.count - a.count);
+    const filteredTotal = nodes.length;
     const truncated = nodes.length > this.limit;
     nodes = nodes.slice(0, this.limit);
     const ids = new Set(nodes.map((n) => n.id));
     links = links.filter((l) => ids.has(l.source) && ids.has(l.target));
-    return { nodes, links, truncated, total: this.allNodes.filter((n) => this.activeKinds.includes(n.kind)).length };
+    return { nodes, links, truncated, total: filteredTotal, rawTotal, filteredTotal };
+  },
+
+  filterDescription() {
+    const parts = [];
+    if (this.minCount > 1) parts.push(`≥${this.minCount}×`);
+    if (this.range !== "all") parts.push(this.range === "30" ? "30 Tage" : this.range === "90" ? "90 Tage" : this.range);
+    if (this.activeKinds.length < 3) {
+      const labels = { place: "Orte", person: "Personen", dream_sign: "Traumzeichen" };
+      parts.push(`nur ${this.activeKinds.map((k) => labels[k]).join("/")}`);
+    }
+    if (this.focus) parts.push(`Fokus: ${this.focus.name}`);
+    if (this.timelapseDate) parts.push("Zeitraffer in der Vergangenheit");
+    return parts;
+  },
+
+  renderBalance(rawTotal, filteredTotal) {
+    const el = document.getElementById("atlas-balance");
+    if (!el) return;
+    const filters = this.filterDescription();
+    if (!filters.length) {
+      el.innerHTML = `<p class="hint">${rawTotal} ${rawTotal === 1 ? "Element" : "Elemente"} sichtbar</p>`;
+      return;
+    }
+    el.innerHTML = `<p class="hint">
+      <strong>${filteredTotal} von ${rawTotal} Elementen sichtbar</strong> · Filter: ${filters.join(", ")} ·
+      <button class="hint atlas-reset-link" id="atlas-reset-filters">Filter zurücksetzen</button>
+    </p>`;
+    document.getElementById("atlas-reset-filters").addEventListener("click", () => this.resetFilters());
   },
 
   renderGraph() {
     const graphEl = document.getElementById("atlas-graph");
-    const { nodes, links, truncated, total } = this.visibleNodesAndLinks();
+    const { nodes, links, truncated, total, rawTotal, filteredTotal } = this.visibleNodesAndLinks();
+    this.renderBalance(rawTotal, filteredTotal);
 
     const focusBar = document.getElementById("atlas-focus-bar");
     if (this.focus) {
@@ -210,7 +266,12 @@ const atlas = {
     }
 
     if (!nodes.length) {
-      graphEl.innerHTML = `<div class="empty-state">Keine Elemente mit diesem Filter.</div>`;
+      // H.1: Freundlicher Leer-Zustand statt totem SVG, wenn Filter alles verstecken
+      graphEl.innerHTML = rawTotal > 0
+        ? `<div class="empty-state">Deine Filter verstecken gerade alle ${rawTotal} Elemente.
+            <button class="chip" id="atlas-reset-filters-empty">Filter zurücksetzen</button></div>`
+        : `<div class="empty-state">Keine Elemente mit diesem Filter.</div>`;
+      document.getElementById("atlas-reset-filters-empty")?.addEventListener("click", () => this.resetFilters());
       return;
     }
     this.render(graphEl, { nodes, links });
@@ -239,8 +300,11 @@ const atlas = {
         stroke="#3a3c55" stroke-width="${Math.min(l.weight * 1.5, 5)}" />`;
     }).join("");
 
+    // H.1: Bei wenigen sichtbaren Knoten (≤15) alle Namen zeigen — erst
+    // darüber greift die Hygiene-Regel gegen das Knäuel (B.1).
+    const showAllLabels = nodes.length <= 15;
     const circles = nodes.map((n) => {
-      const showLabel = n.count >= 2 || radius(n) > 15;
+      const showLabel = showAllLabels || n.count >= 2 || radius(n) > 15;
       const highlighted = this.searchHighlight === n.id;
       return `
       <g class="atlas-node" data-id="${escapeHtml(n.id)}" data-name="${escapeHtml(n.name)}" data-kind="${n.kind}">
