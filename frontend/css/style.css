@@ -1028,6 +1028,60 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   font-size: 0.75rem;
 }
 
+/* --- Klickbare Hilfe (H.2) --- */
+.hilfe-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0 0.3rem;
+  vertical-align: middle;
+  color: var(--text-dim);
+  opacity: 0.8;
+}
+.hilfe-btn:hover { opacity: 1; color: var(--accent); }
+
+.hilfe-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(10, 11, 20, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.hilfe-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.hilfe-card h2 { margin-top: 0; }
+.hilfe-card h3 { margin: 0.9rem 0 0.2rem; font-size: 0.95rem; color: var(--accent); }
+.hilfe-card p { margin: 0; line-height: 1.5; }
+
+.hilfe-extra-link {
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: var(--accent);
+}
+
+.hilfe-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
 /* --- Innenwelt-Buhne (J.3) --- */
 .innenwelt-svg { display: block; margin: 0 auto; }
 

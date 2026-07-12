@@ -216,6 +216,15 @@ document.querySelector(".mandala-range")?.addEventListener("change", () => {
   if (mc) mandala.render(mc);
 });
 
+// Klickbare Hilfe (H.2) an feste Überschriften anhängen
+hilfe.attach(document.querySelector("#atlas-net-view h2"), "atlas-netz");
+hilfe.attach(document.querySelector("#atlas-map-view h2"), "atlas-karte");
+document.querySelectorAll(".chart-card h2").forEach((h2) => {
+  if (h2.textContent.includes("Traumkompass")) hilfe.attach(h2, "kompass");
+});
+hilfe.attach(document.querySelector("#mandala-card h2"), "mandala");
+hilfe.attach(document.getElementById("atlas-timelapse-date").parentElement, "zeitraffer");
+
 // Service Worker (funktioniert nur über HTTPS oder localhost)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {

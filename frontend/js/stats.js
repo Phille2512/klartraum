@@ -156,6 +156,7 @@ const stats = {
         this.split = e.target.value;
         this.load();
       });
+      hilfe.attach(el.querySelector("label"), "analyse-aufriss");
     });
   },
 

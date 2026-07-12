@@ -85,6 +85,7 @@ const innenwelt = {
 
     this.bindControls();
     this.renderBody();
+    hilfe.attach(el.querySelector(".card h2"), "atlas-innenwelt");
   },
 
   introCard() {
@@ -446,6 +447,7 @@ const innenwelt = {
       el.innerHTML = "";
       document.getElementById("innenwelt-stage-wrap").scrollIntoView({ behavior: "smooth" });
     });
+    hilfe.attach(el.querySelector("h3"), "innenwelt-dossier");
 
     // Wire archetype picker
     if (tagId) {
