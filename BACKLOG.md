@@ -34,6 +34,56 @@ Gestaltungsrichtung (verbindlicher Geist, Details offen):
 - Warum es zählt: Wiederlesen ist laut LaBerge selbst ein Erinnerungs-Booster,
   und Muster erkennt man beim Lesen, nicht im Balkendiagramm.
 
+## 🎞️ Herausgehoben: „Traumtakt" — die Bewegungssprache von Traumader
+
+*(Philipps Wunsch, Juli 2026: Navigation schöner, traumartiger, mystischer.
+Wird bei Umsetzung ein eigener Umsetzungsplan; hier Konzept + Vokabular.)*
+
+**Leitidee:** Traumader bewegt sich, wie Träume sich anfühlen — **nichts
+schnappt, alles treibt.** Sechs Prinzipien:
+
+1. **Treiben statt Schnappen.** Nur `transform` + `opacity` (ruckelfrei),
+   weiche Ease-out-Kurven mit langem Auslauf (eine eigene
+   „traumhaft"-Bezier als CSS-Token). Mikro: 150–250 ms · Übergänge:
+   400–700 ms · nie länger.
+2. **Der Faden führt.** Die Tab-Markierung wird zum **Traumfaden**: Beim
+   Wechsel zieht sich eine feine Linie (Akzent → Gold) vom alten zum neuen
+   Tab, als würde der Faden weitergesponnen. Das Navigations-Element IST
+   die Marke.
+3. **Tiefe statt Richtung.** Ansichtswechsel erzählen „tiefer tauchen":
+   Richtung Atlas/Innenwelt sinkt die alte Ansicht minimal ab und die neue
+   steigt leicht skaliert aus dem Dunkel auf („eintauchen"); zurück zum
+   Tagebuch = „auftauchen". Umsetzung: **View Transitions API**
+   (`document.startViewTransition`) mit CSS-Fallback — kein Framework nötig.
+4. **Atem als Metrum.** Alles, was dauerhaft pulsiert (Sternenknopf,
+   Leerzustände, Nebel der Weltkarte), atmet im ~4-Sekunden-Takt — ruhig
+   wie Schlaf, nie blinkend.
+5. **Morgens still.** Auf dem 30-Sekunden-Kernpfad (öffnen → Traum eintragen)
+   sind Animationen minimal bis null — Immersion darf nie bremsen, schon gar
+   nicht im Halbschlaf.
+6. **Respekt.** `prefers-reduced-motion` schaltet alles ab (Pflicht);
+   Rotlicht-Modus dämpft zusätzlich (keine Pulse nachts).
+
+**Microinteractions-Kandidaten:** Speichern → der Eintrag „legt sich" sanft
+in die Liste; ⭐-Stern funkelt einmal kurz beim Setzen; Emotions-Chips
+antworten mit weichem Aufleuchten; neue Atlas-Knoten „keimen" (Scale 0→1 mit
+Überschwingen); Zeitraffer-Elemente tauchen aus Nebel auf; Toast gleitet wie
+eine Feder ein.
+
+**Choreographie-Regeln (Design-System-Ebene):** zentrale CSS-Tokens
+(`--dur-touch`, `--dur-drift`, `--dur-breath`, `--ease-traum`); Listen
+erscheinen gestaffelt (40 ms Versatz, max. 6 Elemente); pro Ansicht bewegt
+sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
+
+**Begriffs-Kompass** (fürs Weiterlernen und für Prompts an Modelle):
+- *Motion Design* — Oberbegriff: Gestaltung von Animation & Übergängen in UIs
+- *UI Animation* — Animationen innerhalb einer Oberfläche
+- *Microinteractions* — kleine, kontextbezogene Reaktionen auf Nutzeraktionen
+- *Screen/Page Transitions* — Übergänge zwischen Ansichten
+- *Interaction Design (IxD)* — Gestaltung des gesamten Interaktionsablaufs
+- *Animation Choreography* — Abstimmung mehrerer Animationen zu einem
+  konsistenten Ablauf (Design-System-Denken)
+
 ## 🌙 Erfassen & Alltag
 
 - **🌀 Phänomen-Tracking:** falsches Erwachen, Schlafparalyse, Traum-im-Traum,
