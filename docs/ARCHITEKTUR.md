@@ -3,6 +3,9 @@
 *Stand: Juli 2026. Bei Änderungen am Datenmodell oder an den API-Gruppen bitte
 dieses Dokument mitpflegen.*
 
+> 📖 Verständliche Einführung ohne Vorwissen zu Backups/Tests/Modul-Aufteilung:
+> siehe `docs/SICHERHEITSNETZ-ERKLAERT.md`.
+
 ## Überblick
 
 ```

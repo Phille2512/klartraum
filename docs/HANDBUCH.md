@@ -115,6 +115,7 @@ Monat für 6 Monate bleiben erhalten. Status siehe Lernen-Tab, Karte
 „🔐 Deine Daten“. Zusätzlich weiterhin: regelmäßig CSV/JSON exportieren
 (Analyse-Tab) oder die Datei `dreams.db` manuell kopieren (Server vorher
 stoppen) — ein Backup an einem anderen Ort schützt zusätzlich vor Geräteverlust.
+Verständliche Erklärung dazu (und zur Testsuite): `docs/SICHERHEITSNETZ-ERKLAERT.md`.
 
 **Wiederherstellen?** Server stoppen. Gewünschte Datei aus dem Backup-Ordner
 (z. B. `dreams-2026-07-10.db`) nach `~/Traumader/dreams.db` kopieren
