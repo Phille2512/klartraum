@@ -148,64 +148,64 @@
     <section id="tab-stats" class="tab">
       <div class="stats-controlbar">
         <div class="chip-row" id="stats-range-chips">
-          <button class="chip" data-range="30">30 Tage</button>
-          <button class="chip" data-range="90">90 Tage</button>
-          <button class="chip" data-range="365">Jahr</button>
-          <button class="chip active" data-range="all">Alles</button>
-          <button class="chip" data-range="custom">…</button>
+          <button class="chip" data-range="30" data-i18n="stats.range30">30 Tage</button>
+          <button class="chip" data-range="90" data-i18n="stats.range90">90 Tage</button>
+          <button class="chip" data-range="365" data-i18n="stats.rangeYear">Jahr</button>
+          <button class="chip active" data-range="all" data-i18n="stats.rangeAll">Alles</button>
+          <button class="chip" data-range="custom" data-i18n="stats.rangeCustom">…</button>
         </div>
         <div class="stats-custom-range hidden" id="stats-custom-range">
-          <label>von <input type="date" id="stats-from"></label>
-          <label>bis <input type="date" id="stats-to"></label>
+          <label><span data-i18n="stats.rangeFrom">von</span> <input type="date" id="stats-from"></label>
+          <label><span data-i18n="stats.rangeTo">bis</span> <input type="date" id="stats-to"></label>
         </div>
         <div class="chip-row" id="stats-gran-chips">
-          <button class="chip" data-gran="day">Tag</button>
-          <button class="chip active" data-gran="week">Woche</button>
-          <button class="chip" data-gran="month">Monat</button>
+          <button class="chip" data-gran="day" data-i18n="stats.granDay">Tag</button>
+          <button class="chip active" data-gran="week" data-i18n="stats.granWeek">Woche</button>
+          <button class="chip" data-gran="month" data-i18n="stats.granMonth">Monat</button>
         </div>
-        <p class="hint hidden" id="stats-gran-hint">Bei diesem Zeitraum zu viele Punkte für „Tag" – automatisch auf „Woche" umgeschaltet.</p>
+        <p class="hint hidden" id="stats-gran-hint" data-i18n="stats.granHint">Bei diesem Zeitraum zu viele Punkte für „Tag" – automatisch auf „Woche" umgeschaltet.</p>
       </div>
 
       <div id="stat-cards" class="stat-cards"></div>
 
       <div class="chip-row" id="stats-section-nav">
-        <button class="chip active" data-section="write">✍️ Schreiben</button>
-        <button class="chip" data-section="lucidity">✨ Luzidität</button>
-        <button class="chip" data-section="emotions">💛 Gefühle</button>
-        <button class="chip" data-section="experiments">🔬 Experimente</button>
-        <button class="chip" data-section="compass">🧭 Kompass</button>
-        <button class="chip" data-section="review">🌗 Rückblick</button>
+        <button class="chip active" data-section="write" data-i18n="stats.sectionWrite">✍️ Schreiben</button>
+        <button class="chip" data-section="lucidity" data-i18n="stats.sectionLucidity">✨ Luzidität</button>
+        <button class="chip" data-section="emotions" data-i18n="stats.sectionEmotions">💛 Gefühle</button>
+        <button class="chip" data-section="experiments" data-i18n="stats.sectionExperiments">🔬 Experimente</button>
+        <button class="chip" data-section="compass" data-i18n="stats.sectionCompass">🧭 Kompass</button>
+        <button class="chip" data-section="review" data-i18n="stats.sectionReview">🌗 Rückblick</button>
       </div>
 
       <div id="stats-sections">
         <div class="stats-section" data-section="write">
           <div class="card">
-            <h2>✍️ Dein Traumbuch in Wörtern</h2>
+            <h2 data-i18n="stats.writingTitle">✍️ Dein Traumbuch in Wörtern</h2>
             <div class="split-control" data-target="write"></div>
             <div id="writing-headline-cards" class="stat-cards"></div>
           </div>
           <div class="card chart-card">
-            <h2>📈 Wörter pro Eintrag über Zeit</h2>
-            <p class="hint">Dünne Linie = Bucket-Werte, dicke Linie = gleitender Durchschnitt über 5 Buckets.</p>
+            <h2 data-i18n="stats.recallChartTitle">📈 Wörter pro Eintrag über Zeit</h2>
+            <p class="hint" data-i18n="stats.recallChartHint">Dünne Linie = Bucket-Werte, dicke Linie = gleitender Durchschnitt über 5 Buckets.</p>
             <canvas id="chart-recall"></canvas>
           </div>
           <div class="card">
-            <h2>🔥 Schreib-Kalender</h2>
-            <p class="hint">Letzte 6 Monate – Farbintensität = Wortzahl, leere Tage bleiben sichtbar. Tippen für Details.</p>
+            <h2 data-i18n="stats.calendarTitle">🔥 Schreib-Kalender</h2>
+            <p class="hint" data-i18n="stats.calendarHint">Letzte 6 Monate – Farbintensität = Wortzahl, leere Tage bleiben sichtbar. Tippen für Details.</p>
             <div id="writing-heatmap" class="heatmap-grid"></div>
           </div>
           <div class="card chart-card">
-            <h2>📊 Wortzahl-Verteilung</h2>
+            <h2 data-i18n="stats.histogramTitle">📊 Wortzahl-Verteilung</h2>
             <canvas id="chart-histogram"></canvas>
           </div>
           <div class="card chart-card">
-            <h2>🔍 Detailtiefe</h2>
-            <p class="hint">Ø Anzahl erinnerter Zeichen, Orte und Personen pro Traum – erinnerst du mehr Substanz, nicht nur mehr Text?</p>
+            <h2 data-i18n="stats.detailChartTitle">🔍 Detailtiefe</h2>
+            <p class="hint" data-i18n="stats.detailChartHint">Ø Anzahl erinnerter Zeichen, Orte und Personen pro Traum – erinnerst du mehr Substanz, nicht nur mehr Text?</p>
             <canvas id="chart-detail"></canvas>
           </div>
           <div class="card chart-card">
-            <h2>🧮 Erinnerungs-Score</h2>
-            <small class="hint">Formel: 40 % Wortzahl-Perzentil + 30 % Detailtiefe-Perzentil + 30 % Erinnerungsquote (lucidity ≥ 1) je Bucket</small>
+            <h2 data-i18n="stats.scoreChartTitle">🧮 Erinnerungs-Score</h2>
+            <small class="hint" data-i18n="stats.scoreChartHint">Formel: 40 % Wortzahl-Perzentil + 30 % Detailtiefe-Perzentil + 30 % Erinnerungsquote (lucidity ≥ 1) je Bucket</small>
             <canvas id="chart-score"></canvas>
           </div>
         </div>
@@ -213,19 +213,19 @@
         <div class="stats-section hidden" data-section="lucidity">
           <div class="split-control" data-target="lucidity"></div>
           <div class="card chart-card">
-            <h2>Klarträume pro Zeitraum</h2>
+            <h2 data-i18n="stats.chartWeeksTitle">Klarträume pro Zeitraum</h2>
             <canvas id="chart-weeks"></canvas>
           </div>
           <div class="card chart-card">
-            <h2>Verteilung der Traumerinnerung</h2>
+            <h2 data-i18n="stats.chartLucidityDistTitle">Verteilung der Traumerinnerung</h2>
             <canvas id="chart-lucidity"></canvas>
           </div>
           <div id="incubation-card" class="card hidden">
-            <h2>🎯 Inkubations-Quote</h2>
+            <h2 data-i18n="stats.incubationTitle">🎯 Inkubations-Quote</h2>
             <div id="incubation-stats" class="stat-cards"></div>
           </div>
           <div id="phenomena-card" class="card hidden">
-            <h2>🔁 Phänomene</h2>
+            <h2 data-i18n="stats.phenomenaTitle">🔁 Phänomene</h2>
             <div id="phenomena-stats" class="stat-cards"></div>
             <div id="phenomena-hints"></div>
           </div>
@@ -234,10 +234,10 @@
         <div class="stats-section hidden" data-section="emotions">
           <div class="split-control" data-target="emotions"></div>
           <div id="emotion-section" class="card hidden">
-            <h2>💛 Emotionale Landschaft</h2>
-            <p class="hint">Was du im Traum fühlst — und wie sich deine Gefühle verteilen.</p>
+            <h2 data-i18n="stats.emotionsTitle">💛 Emotionale Landschaft</h2>
+            <p class="hint" data-i18n="stats.emotionsHint">Was du im Traum fühlst — und wie sich deine Gefühle verteilen.</p>
             <div id="emotion-distribution"></div>
-            <h3 style="margin-top:1rem">Emotionen über Zeit</h3>
+            <h3 style="margin-top:1rem" data-i18n="stats.emotionsOverTimeTitle">Emotionen über Zeit</h3>
             <canvas id="chart-emotions-time"></canvas>
             <div id="emotion-valence"></div>
             <div id="emotion-lucid-quote"></div>
@@ -249,12 +249,12 @@
 
         <div class="stats-section hidden" data-section="experiments">
           <div class="card">
-            <h2>🌿 Wirkt Beifuß bei dir?</h2>
+            <h2 data-i18n="stats.beifussTitle">🌿 Wirkt Beifuß bei dir?</h2>
             <div id="beifuss-compare"></div>
           </div>
           <div id="correlation-section" class="card hidden">
-            <h2>📊 Korrelationen</h2>
-            <p class="hint">Welche Faktoren beeinflussen deine Klarträume?</p>
+            <h2 data-i18n="stats.correlationsTitle">📊 Korrelationen</h2>
+            <p class="hint" data-i18n="stats.correlationsHint">Welche Faktoren beeinflussen deine Klarträume?</p>
             <div id="correlation-weekday"></div>
             <div id="correlation-sleep"></div>
           </div>
@@ -270,48 +270,48 @@
             <div id="mission"></div>
           </div>
           <div class="card chart-card">
-            <h2>Deine häufigsten Traumzeichen</h2>
-            <p class="hint">Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.</p>
+            <h2 data-i18n="stats.topSignsTitle">Deine häufigsten Traumzeichen</h2>
+            <p class="hint" data-i18n="stats.topSignsHint">Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.</p>
             <canvas id="chart-signs"></canvas>
           </div>
           <div class="card" id="new-elements-card">
-            <h2>🆕 Neu in deiner Traumwelt</h2>
-            <p class="hint">Zeichen, Orte und Personen, die in den letzten 30 Tagen zum ersten Mal auftauchten – frisches Material aus dem Unbewussten.</p>
+            <h2 data-i18n="stats.newElementsTitle">🆕 Neu in deiner Traumwelt</h2>
+            <p class="hint" data-i18n="stats.newElementsHint">Zeichen, Orte und Personen, die in den letzten 30 Tagen zum ersten Mal auftauchten – frisches Material aus dem Unbewussten.</p>
             <div id="new-elements-list"></div>
           </div>
         </div>
 
         <div class="stats-section hidden" data-section="review">
           <div class="card" id="archetype-figures-card">
-            <h2>🌗 Deine inneren Figuren <small><em>nach C. G. Jung</em></small></h2>
-            <p class="hint">Welche Archetypen dominieren dein Innenleben? Tippe einen Balken an.</p>
+            <h2><span data-i18n="stats.archetypeFiguresTitle">🌗 Deine inneren Figuren</span> <small><em data-i18n="stats.afterJung">nach C. G. Jung</em></small></h2>
+            <p class="hint" data-i18n="stats.archetypeFiguresHint">Welche Archetypen dominieren dein Innenleben? Tippe einen Balken an.</p>
             <div id="archetype-bars"></div>
             <div id="archetype-detail"></div>
           </div>
           <div class="card" id="mandala-card">
-            <h2>🌗 Dein Traum-Mandala <small><em>nach C. G. Jung</em></small></h2>
-            <p class="hint">Deine Traumdaten als Momentaufnahme — gleiche Daten ergeben immer dasselbe Bild.</p>
+            <h2><span data-i18n="stats.mandalaTitle">🌗 Dein Traum-Mandala</span> <small><em data-i18n="stats.afterJung">nach C. G. Jung</em></small></h2>
+            <p class="hint" data-i18n="stats.mandalaHint">Deine Traumdaten als Momentaufnahme — gleiche Daten ergeben immer dasselbe Bild.</p>
             <div class="form-row" style="margin-bottom:0.75rem">
-              <label>Zeitraum
+              <label><span data-i18n="stats.mandalaRangeLabel">Zeitraum</span>
                 <select class="mandala-range">
-                  <option value="month">Letzter Monat</option>
-                  <option value="quarter">Letztes Quartal</option>
-                  <option value="year">Letztes Jahr</option>
+                  <option value="month" data-i18n="stats.mandalaLastMonth">Letzter Monat</option>
+                  <option value="quarter" data-i18n="stats.mandalaLastQuarter">Letztes Quartal</option>
+                  <option value="year" data-i18n="stats.mandalaLastYear">Letztes Jahr</option>
                 </select>
               </label>
             </div>
             <div class="mandala-svg-wrap"></div>
-            <button class="mandala-export primary" style="margin-top:0.5rem">Als Bild sichern</button>
+            <button class="mandala-export primary" style="margin-top:0.5rem" data-i18n="stats.mandalaExportBtn">Als Bild sichern</button>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <h2>📤 Datenexport</h2>
-        <p class="hint">Alle Träume als Datei – für eigene Auswertungen (Pandas!) oder als Backup.</p>
+        <h2 data-i18n="stats.exportTitle">📤 Datenexport</h2>
+        <p class="hint" data-i18n="stats.exportHint">Alle Träume als Datei – für eigene Auswertungen (Pandas!) oder als Backup.</p>
         <div class="form-actions">
-          <button id="export-json">JSON exportieren</button>
-          <button id="export-csv">CSV exportieren</button>
+          <button id="export-json" data-i18n="stats.exportJson">JSON exportieren</button>
+          <button id="export-csv" data-i18n="stats.exportCsv">CSV exportieren</button>
         </div>
       </div>
     </section>

@@ -58,12 +58,26 @@ sichtbar auf Deutsch zurück (kein leerer Text).
 
 Modul für Modul alle sichtbaren Strings in Schlüssel umziehen — Checkliste:
 
-- [ ] `index.html` (Tabs, Formular-Labels, Buttons, Overlays → `data-i18n`)
-- [ ] `journal.js` (Toasts, Leerzustände, Luzuditäts-Labels, confirm()-Texte,
+- [~] `index.html` (Tabs, Formular-Labels, Buttons, Overlays → `data-i18n`) —
+      Tagebuch- und Analyse-Tab fertig; Atlas-, Lernen-Tab und die restlichen
+      Overlays (Reflexion/Imagination/Analyse-Stationstexte, Traumfaden) stehen
+      noch aus bzw. gehören zu I.3
+- [x] `journal.js` (Toasts, Leerzustände, Luzuditäts-Labels, confirm()-Texte,
       Echos, Morgen-Rückfrage; **EMOTIONS**: Schlüssel `angst`, `freude` …
-      bleiben unverändert in der Datenbank — nur `label` wird `t()`-basiert)
-- [ ] `stats.js` (Kartentitel, Chart-Datasets/Achsen, Kompass-Kategorien
-      inkl. Missionen, Aufriss-Labels, Export-Toasts)
+      bleiben unverändert in der Datenbank — nur `label` wird `t()`-basiert).
+      EMOTIONS/PHENOMENA/SUBSTANCES bekommen `label` als Getter statt festem
+      String — dadurch übersetzen sich auch `stats.js`/`lesezimmer.js` mit,
+      ohne dort etwas ändern zu müssen. `lesezimmer.js` (noch nicht Teil des
+      ursprünglichen Plans, da nach dessen Verfassen gebaut) ebenfalls erledigt.
+      Reflexionsfragen, Jung-Analyse-Stationstexte und der Traumfaden-Inhalt
+      bewusst NICHT übersetzt (gehören zu I.3).
+- [x] `stats.js` (Kartentitel, Chart-Datasets/Achsen, Aufriss-Labels,
+      Export-Toasts). COMPASS-Objekt (Kategorien + Missionen),
+      ARCHETYPE_LEXICON, `renderMission()`/`openPicker()`/`renderSorter()`
+      bewusst NICHT übersetzt (Kompass-Missionen/Archetypen-Lexikon sind I.3).
+      `atlas.ARCHETYPES[key].label` wird referenziert, aber erst mit
+      `atlas.js` übersetzt. Wochentags-Kürzel und Split-Gruppennamen kommen
+      unübersetzt vom Backend (I.4).
 - [ ] `atlas.js` / `worldmap.js` / `innenwelt.js` (Filterleiste, Bilanz-Zeile,
       Fokus, Werkzeuge, Hinweiszeilen, ARCHETYPES-Labels/-Hints, Dossier)
 - [ ] `learn.js` (Reminder/WBTB/Bucket-List-UI — die Guide-INHALTE kommen

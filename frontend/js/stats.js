@@ -23,10 +23,10 @@ const COMPASS = {
 };
 
 const SPLIT_OPTIONS = [
-  { value: "", label: "–" },
-  { value: "beifuss", label: "🌿 Beifuß" },
-  { value: "weekend", label: "Wochenende/Werktag" },
-  { value: "big_dream", label: "⭐ Große Träume" },
+  { value: "", get label() { return t("stats.splitNone"); } },
+  { value: "beifuss", get label() { return t("stats.splitBeifuss"); } },
+  { value: "weekend", get label() { return t("stats.splitWeekend"); } },
+  { value: "big_dream", get label() { return t("journal.filterBigDreams"); } },
 ];
 
 const stats = {
@@ -147,7 +147,7 @@ const stats = {
   // ---- Vergleichs-Aufriss (A.4) ----
   renderSplitControls() {
     document.querySelectorAll(".split-control").forEach((el) => {
-      el.innerHTML = `<label>Aufreißen nach
+      el.innerHTML = `<label>${t("stats.splitLabel")}
         <select class="split-select">
           ${SPLIT_OPTIONS.map((o) => `<option value="${o.value}" ${o.value === this.split ? "selected" : ""}>${o.label}</option>`).join("")}
         </select>
@@ -174,10 +174,10 @@ const stats = {
 
   renderCards(data) {
     document.getElementById("stat-cards").innerHTML = `
-      <div class="stat-card"><div class="value">${data.total}</div><div class="label">Einträge</div></div>
-      <div class="stat-card"><div class="value gold">${data.lucid}</div><div class="label">Klarträume</div></div>
-      <div class="stat-card"><div class="value">${data.lucid_rate}%</div><div class="label">Klartraum-Quote</div></div>
-      <div class="stat-card"><div class="value">${data.streak} 🔥</div><div class="label">Tage-Streak</div></div>`;
+      <div class="stat-card"><div class="value">${data.total}</div><div class="label">${t("stats.cardEntries")}</div></div>
+      <div class="stat-card"><div class="value gold">${data.lucid}</div><div class="label">${t("stats.cardLucidDreams")}</div></div>
+      <div class="stat-card"><div class="value">${data.lucid_rate}%</div><div class="label">${t("stats.cardLucidRate")}</div></div>
+      <div class="stat-card"><div class="value">${data.streak} 🔥</div><div class="label">${t("stats.cardStreak")}</div></div>`;
   },
 
   // ---- ✍️ Schreiben (A.3) ----
@@ -197,19 +197,19 @@ const stats = {
     if (split) {
       const w = data_or(this.data.split.writing_a), v = data_or(this.data.split.writing_b);
       el.innerHTML = `<div class="stat-card"><div class="value gold">${w.total_words}</div>
-          <div class="label">Wörter · ${escapeHtml(this.data.split.label_a)} (${this.data.split.n_a})</div></div>
+          <div class="label">${t("stats.wordsSplit", { label: escapeHtml(this.data.split.label_a), n: this.data.split.n_a })}</div></div>
         <div class="stat-card"><div class="value">${v.total_words}</div>
-          <div class="label">Wörter · ${escapeHtml(this.data.split.label_b)} (${this.data.split.n_b})</div></div>`;
+          <div class="label">${t("stats.wordsSplit", { label: escapeHtml(this.data.split.label_b), n: this.data.split.n_b })}</div></div>`;
       return;
     }
     const w = writing;
     const trendArrow = w.trend.delta_pct == null ? "" : (w.trend.delta_pct >= 0 ? "▲" : "▼");
     el.innerHTML = `
-      <div class="stat-card"><div class="value gold">${w.total_words.toLocaleString("de-DE")}</div><div class="label">Wörter im Traumbuch</div></div>
-      <div class="stat-card"><div class="value">${w.avg_words}</div><div class="label">Ø Wörter/Eintrag</div></div>
-      <div class="stat-card"><div class="value">${w.median_words}</div><div class="label">Median Wörter/Eintrag</div></div>
-      ${w.longest ? `<div class="stat-card"><div class="value">${w.longest.words}</div><div class="label">Längster Traum: "${escapeHtml(w.longest.title)}"</div></div>` : ""}
-      <div class="stat-card"><div class="value">${trendArrow} ${w.trend.delta_pct == null ? "–" : w.trend.delta_pct + "%"}</div><div class="label">Letzte 7 Tage vs. 7 davor</div></div>`;
+      <div class="stat-card"><div class="value gold">${w.total_words.toLocaleString(localeForLang())}</div><div class="label">${t("stats.wordsInJournal")}</div></div>
+      <div class="stat-card"><div class="value">${w.avg_words}</div><div class="label">${t("stats.avgWordsPerEntry")}</div></div>
+      <div class="stat-card"><div class="value">${w.median_words}</div><div class="label">${t("stats.medianWordsPerEntry")}</div></div>
+      ${w.longest ? `<div class="stat-card"><div class="value">${w.longest.words}</div><div class="label">${t("stats.longestDream", { title: escapeHtml(w.longest.title) })}</div></div>` : ""}
+      <div class="stat-card"><div class="value">${trendArrow} ${w.trend.delta_pct == null ? "–" : w.trend.delta_pct + "%"}</div><div class="label">${t("stats.trendLabel")}</div></div>`;
   },
 
   renderRecall(perBucket, split) {
@@ -237,8 +237,8 @@ const stats = {
       data: {
         labels: perBucket.map((w) => w.bucket),
         datasets: [
-          { label: "Ø Wörter pro Eintrag", data: perBucket.map((w) => w.avg_words), borderColor: "#8fd49a", backgroundColor: "rgba(143, 212, 154, 0.15)", fill: true, tension: 0.3, borderWidth: 1 },
-          { label: "Gleitender Ø (5 Buckets)", data: movingAvg, borderColor: "#f5c66a", borderWidth: 3, tension: 0.3, pointRadius: 0 },
+          { label: t("stats.avgWordsDataset"), data: perBucket.map((w) => w.avg_words), borderColor: "#8fd49a", backgroundColor: "rgba(143, 212, 154, 0.15)", fill: true, tension: 0.3, borderWidth: 1 },
+          { label: t("stats.movingAvgDataset"), data: movingAvg, borderColor: "#f5c66a", borderWidth: 3, tension: 0.3, pointRadius: 0 },
         ],
       },
       options: this.baseOptions(),
@@ -271,7 +271,7 @@ const stats = {
       if (!date) return `<div class="heatmap-cell empty"></div>`;
       const entry = byDate[date];
       const pct = entry ? Math.max(0.15, entry.words / maxWords) : 0;
-      const title = entry ? `${date}: ${entry.words} Wörter – "${entry.title}"` : `${date}: kein Eintrag`;
+      const title = entry ? t("stats.heatmapTooltipEntry", { date, words: entry.words, title: entry.title }) : t("stats.heatmapTooltipEmpty", { date });
       return `<div class="heatmap-cell" title="${escapeHtml(title)}"
         style="background:${entry ? `rgba(143,212,154,${pct})` : "var(--bg-input)"}"></div>`;
     }).join("");
@@ -282,7 +282,7 @@ const stats = {
       type: "bar",
       data: {
         labels: histogram.map((h) => h.bucket),
-        datasets: [{ label: "Einträge", data: histogram.map((h) => h.count), backgroundColor: "#c9bfff" }],
+        datasets: [{ label: t("stats.cardEntries"), data: histogram.map((h) => h.count), backgroundColor: "#c9bfff" }],
       },
       options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
     });
@@ -293,7 +293,7 @@ const stats = {
       type: "line",
       data: {
         labels: detail.map((d) => d.bucket),
-        datasets: [{ label: "Ø getaggte Elemente", data: detail.map((d) => d.avg_detail), borderColor: "#8b7ff5", backgroundColor: "rgba(139,127,245,.15)", fill: true, tension: 0.3 }],
+        datasets: [{ label: t("stats.avgTaggedDataset"), data: detail.map((d) => d.avg_detail), borderColor: "#8b7ff5", backgroundColor: "rgba(139,127,245,.15)", fill: true, tension: 0.3 }],
       },
       options: this.baseOptions(),
     });
@@ -304,7 +304,7 @@ const stats = {
       type: "line",
       data: {
         labels: score.map((s) => s.bucket),
-        datasets: [{ label: "Erinnerungs-Score", data: score.map((s) => s.score), borderColor: "#f5c66a", backgroundColor: "rgba(245,198,106,.15)", fill: true, tension: 0.3 }],
+        datasets: [{ label: t("stats.recallScoreDataset"), data: score.map((s) => s.score), borderColor: "#f5c66a", backgroundColor: "rgba(245,198,106,.15)", fill: true, tension: 0.3 }],
       },
       options: this.baseOptions({ y: { max: 100 } }),
     });
@@ -321,8 +321,8 @@ const stats = {
         data: {
           labels: this.mergedBuckets(a, b),
           datasets: [
-            { label: `Klarträume · ${data.split.label_a}`, data: this.alignSeries(a, "lucid"), backgroundColor: "#f5c66a" },
-            { label: `Klarträume · ${data.split.label_b}`, data: this.alignSeries(b, "lucid"), backgroundColor: "#8b7ff5" },
+            { label: `${t("stats.cardLucidDreams")} · ${data.split.label_a}`, data: this.alignSeries(a, "lucid"), backgroundColor: "#f5c66a" },
+            { label: `${t("stats.cardLucidDreams")} · ${data.split.label_b}`, data: this.alignSeries(b, "lucid"), backgroundColor: "#8b7ff5" },
           ],
         },
         options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
@@ -341,9 +341,9 @@ const stats = {
     }
     card.classList.remove("hidden");
     document.getElementById("incubation-stats").innerHTML = `
-      <div class="stat-card"><div class="value">${incubation.total}</div><div class="label">Absichten bewertet</div></div>
-      <div class="stat-card"><div class="value gold">${incubation.fulfilled}</div><div class="label">davon erfüllt</div></div>
-      <div class="stat-card"><div class="value">${incubation.rate}%</div><div class="label">Erfolgsquote</div></div>`;
+      <div class="stat-card"><div class="value">${incubation.total}</div><div class="label">${t("stats.incubationTotal")}</div></div>
+      <div class="stat-card"><div class="value gold">${incubation.fulfilled}</div><div class="label">${t("stats.incubationFulfilled")}</div></div>
+      <div class="stat-card"><div class="value">${incubation.rate}%</div><div class="label">${t("stats.incubationRate")}</div></div>`;
   },
 
   renderPhenomena(phenomena) {
@@ -354,13 +354,7 @@ const stats = {
       return;
     }
     card.classList.remove("hidden");
-    const labels = {
-      falsches_erwachen: { icon: "🔁", label: "Falsches Erwachen" },
-      schlafparalyse: { icon: "🧊", label: "Schlafparalyse" },
-      traum_im_traum: { icon: "🪆", label: "Traum-im-Traum" },
-      wiederkehrend: { icon: "♻️", label: "Wiederkehrend" },
-      albtraum: { icon: "😱", label: "Albtraum" },
-    };
+    const labels = Object.fromEntries(PHENOMENA.map((p) => [p.field, p]));
     document.getElementById("phenomena-stats").innerHTML = Object.entries(phenomena.counts)
       .filter(([, count]) => count > 0)
       .map(([key, count]) => `<div class="stat-card"><div class="value">${count}</div><div class="label">${labels[key].icon} ${labels[key].label}</div></div>`)
@@ -376,8 +370,8 @@ const stats = {
       data: {
         labels: perBucket.map((w) => w.bucket),
         datasets: [
-          { label: "Träume gesamt", data: perBucket.map((w) => w.total), backgroundColor: "#8b7ff5" },
-          { label: "davon luzide", data: perBucket.map((w) => w.lucid), backgroundColor: "#f5c66a" },
+          { label: t("stats.totalDreamsDataset"), data: perBucket.map((w) => w.total), backgroundColor: "#8b7ff5" },
+          { label: t("stats.lucidDreamsDataset"), data: perBucket.map((w) => w.lucid), backgroundColor: "#f5c66a" },
         ],
       },
       options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
@@ -388,7 +382,7 @@ const stats = {
     this.makeChart("chart-lucidity", {
       type: "doughnut",
       data: {
-        labels: ["keine Erinnerung", "Fragment", "normaler Traum", "kurz luzide", "voll luzide"],
+        labels: [0, 1, 2, 3, 4].map((i) => t(`stats.lucidityDist.${i}`)),
         datasets: [{
           data: distribution,
           backgroundColor: ["#3a3c55", "#565a80", "#8b7ff5", "#e0b25a", "#f5c66a"],
@@ -433,7 +427,7 @@ const stats = {
       data: {
         labels: emotions.over_time.map((r) => r.bucket),
         datasets: [...emotions.top_emotions, "andere"].map((key) => {
-          const e = EMOTIONS[key] || { icon: "🔘", label: key === "andere" ? "Andere" : key, color: "#888" };
+          const e = EMOTIONS[key] || { icon: "🔘", label: key === "andere" ? t("stats.otherEmotion") : key, color: "#888" };
           return {
             label: `${e.icon} ${e.label}`,
             data: emotions.over_time.map((r) => r[key] || 0),
@@ -452,8 +446,8 @@ const stats = {
     const valEl = document.getElementById("emotion-valence");
     const legendHint = Object.entries(emotions.valence.legend)
       .map(([e, v]) => `${(EMOTIONS[e] || {}).icon || "?"} ${e} → ${v}`).join(", ");
-    valEl.innerHTML = `<h3 style="margin-top:1rem">💚 Valenz-Bilanz</h3>
-      <p class="hint">Anteil positiver Gefühle diesen Monat: <strong>${emotions.valence.current_month_positive_share ?? "–"}${emotions.valence.current_month_positive_share != null ? "%" : ""}</strong>
+    valEl.innerHTML = `<h3 style="margin-top:1rem">${t("stats.valenceTitle")}</h3>
+      <p class="hint">${t("stats.valenceText")} <strong>${emotions.valence.current_month_positive_share ?? "–"}${emotions.valence.current_month_positive_share != null ? "%" : ""}</strong>
         <span title="${escapeHtml(legendHint)}"> 💡</span></p>
       <div class="corr-grid" style="grid-template-columns:repeat(${Math.max(emotions.valence.over_time.length, 1)},1fr)">
         ${emotions.valence.over_time.map((v) => `<div class="corr-cell">
@@ -464,8 +458,8 @@ const stats = {
       </div>`;
 
     const lqEl = document.getElementById("emotion-lucid-quote");
-    lqEl.innerHTML = emotions.lucid_quote.length ? `<h3 style="margin-top:1rem">✨ Klartraum-Quote je Emotion</h3>
-      <p class="hint">Nur Emotionen mit ≥ 3 Vorkommen.</p>
+    lqEl.innerHTML = emotions.lucid_quote.length ? `<h3 style="margin-top:1rem">${t("stats.lucidQuoteTitle")}</h3>
+      <p class="hint">${t("stats.lucidQuoteHint")}</p>
       <div class="emotion-bars">
         ${emotions.lucid_quote.map((q) => {
           const e = EMOTIONS[q.emotion] || { icon: "?", label: q.emotion, color: "#888" };
@@ -478,7 +472,7 @@ const stats = {
       </div>` : "";
 
     const pairsEl = document.getElementById("emotion-pairs");
-    pairsEl.innerHTML = emotions.top_pairs.length ? `<h3 style="margin-top:1rem">🤝 Gefühls-Paare</h3>
+    pairsEl.innerHTML = emotions.top_pairs.length ? `<h3 style="margin-top:1rem">${t("stats.pairsTitle")}</h3>
       <ul class="hint" style="list-style:none;padding:0">
         ${emotions.top_pairs.map((p) => {
           const a = EMOTIONS[p.a] || { icon: "?", label: p.a }, b = EMOTIONS[p.b] || { icon: "?", label: p.b };
@@ -488,8 +482,8 @@ const stats = {
 
     const matrix = document.getElementById("emotion-place-matrix");
     const entries = Object.entries(emotions.place_matrix).filter(([, places]) => places.length > 0);
-    matrix.innerHTML = entries.length ? `<h3 style="margin-top:1rem">Gefühle × Orte</h3>
-        <p class="hint">Welche Emotionen tauchen an welchen Orten auf?</p>
+    matrix.innerHTML = entries.length ? `<h3 style="margin-top:1rem">${t("stats.placeMatrixTitle")}</h3>
+        <p class="hint">${t("stats.placeMatrixHint")}</p>
         ${entries.map(([emo, places]) => {
           const e = EMOTIONS[emo] || { icon: "?", label: emo };
           return `<div class="emotion-matrix-row">
@@ -501,13 +495,13 @@ const stats = {
     const combosEl = document.getElementById("emotion-combos");
     const placeCombos = emotions.top_place_combos.map((c) => {
       const e = EMOTIONS[c.emotion] || { icon: "?", label: c.emotion };
-      return `<li>${e.icon} ${e.label} am 📍 ${escapeHtml(c.place)}: ${c.count}×</li>`;
+      return `<li>${t("stats.comboPlaceTemplate", { emo: `${e.icon} ${e.label}`, place: escapeHtml(c.place), count: c.count })}</li>`;
     });
     const personCombos = emotions.top_person_combos.map((c) => {
       const e = EMOTIONS[c.emotion] || { icon: "?", label: c.emotion };
-      return `<li>${e.icon} ${e.label} bei 👤 ${escapeHtml(c.person)}: ${c.count}×</li>`;
+      return `<li>${t("stats.comboPersonTemplate", { emo: `${e.icon} ${e.label}`, person: escapeHtml(c.person), count: c.count })}</li>`;
     });
-    combosEl.innerHTML = (placeCombos.length || personCombos.length) ? `<h3 style="margin-top:1rem">🔗 Emotion × Ort/Person</h3>
+    combosEl.innerHTML = (placeCombos.length || personCombos.length) ? `<h3 style="margin-top:1rem">${t("stats.combosTitle")}</h3>
       <ul class="hint" style="list-style:none;padding:0">${[...placeCombos, ...personCombos].join("")}</ul>` : "";
   },
 
@@ -520,20 +514,18 @@ const stats = {
   renderBeifuss(beifuss) {
     const el = document.getElementById("beifuss-compare");
     if (!beifuss.with.count) {
-      el.innerHTML = `<p class="hint">Noch keine Einträge mit Beifuß. Hake beim Eintragen
-        "🌿 Beifuß getrunken" an – hier entsteht dann dein persönliches Experiment:
-        Klartraum-Quote mit vs. ohne.</p>`;
+      el.innerHTML = `<p class="hint">${t("stats.beifussEmpty")}</p>`;
       return;
     }
     const fmt = (g) => (g.lucid_rate == null ? "–" : g.lucid_rate + "%");
+    const nightNoun = (count) => count === 1 ? t("stats.nightOne") : t("stats.nightMany");
     el.innerHTML = `<div class="stat-cards">
         <div class="stat-card"><div class="value gold">${fmt(beifuss.with)}</div>
-          <div class="label">mit Beifuß (${beifuss.with.count} ${beifuss.with.count === 1 ? "Nacht" : "Nächte"})</div></div>
+          <div class="label">${t("stats.beifussWithLabel", { count: beifuss.with.count, noun: nightNoun(beifuss.with.count) })}</div></div>
         <div class="stat-card"><div class="value">${fmt(beifuss.without)}</div>
-          <div class="label">ohne Beifuß (${beifuss.without.count} ${beifuss.without.count === 1 ? "Nacht" : "Nächte"})</div></div>
+          <div class="label">${t("stats.beifussWithoutLabel", { count: beifuss.without.count, noun: nightNoun(beifuss.without.count) })}</div></div>
       </div>
-      ${beifuss.with.count < 5 ? `<p class="hint">Für eine belastbare Aussage brauchst du
-        mehrere Nächte in beiden Gruppen – als Data Scientist weißt du das besser als jede App. 😉</p>` : ""}`;
+      ${beifuss.with.count < 5 ? `<p class="hint">${t("stats.beifussLowN")}</p>` : ""}`;
   },
 
   renderCorrelations(corr) {
@@ -547,7 +539,7 @@ const stats = {
 
     const wdEl = document.getElementById("correlation-weekday");
     if (hasWeekday) {
-      wdEl.innerHTML = `<h3>Wochentag × Luzidität</h3>
+      wdEl.innerHTML = `<h3>${t("stats.weekdayTitle")}</h3>
         <div class="corr-grid">
           ${corr.weekday.map((d) => {
             const rate = d.total ? Math.round(d.lucid / d.total * 100) : 0;
@@ -558,12 +550,12 @@ const stats = {
             </div>`;
           }).join("")}
         </div>
-        <p class="hint">Klartraum-Quote nach Wochentag (${corr.weekday.reduce((s, d) => s + d.total, 0)} Einträge)</p>`;
+        <p class="hint">${t("stats.weekdayHint", { count: corr.weekday.reduce((s, d) => s + d.total, 0) })}</p>`;
     }
 
     const sqEl = document.getElementById("correlation-sleep");
     if (hasSleep) {
-      sqEl.innerHTML = `<h3>Schlafqualität × Luzidität</h3>
+      sqEl.innerHTML = `<h3>${t("stats.sleepTitle")}</h3>
         <div class="corr-grid corr-5">
           ${corr.sleep_quality.map((d) => {
             const rate = d.total ? Math.round(d.lucid / d.total * 100) : 0;
@@ -574,7 +566,7 @@ const stats = {
             </div>`;
           }).join("")}
         </div>
-        <p class="hint">Klartraum-Quote nach Schlafqualität (1=schlecht, 5=sehr gut)</p>`;
+        <p class="hint">${t("stats.sleepHint")}</p>`;
     }
   },
 
@@ -590,7 +582,7 @@ const stats = {
   renderNewElements(newElements) {
     const el = document.getElementById("new-elements-list");
     if (!newElements || !newElements.length) {
-      el.innerHTML = `<p class="hint">Keine neuen Zeichen, Orte oder Personen in den letzten 30 Tagen.</p>`;
+      el.innerHTML = `<p class="hint">${t("stats.newElementsEmpty")}</p>`;
       return;
     }
     const icons = { dream_sign: "🔮", place: "📍", person: "👤", tag: "🏷️" };
@@ -706,7 +698,7 @@ const stats = {
       type: "bar",
       data: {
         labels: signs.map((s) => s.name),
-        datasets: [{ label: "Häufigkeit", data: signs.map((s) => s.count), backgroundColor: "#c9bfff" }],
+        datasets: [{ label: t("stats.signsDataset"), data: signs.map((s) => s.count), backgroundColor: "#c9bfff" }],
       },
       options: this.baseOptions({ x: { ticks: { stepSize: 1 } } }, "y"),
     });
@@ -733,7 +725,7 @@ const stats = {
     const withArch = figures.filter((f) => f.archetype);
     document.getElementById("archetype-detail").innerHTML = "";
     if (!withArch.length) {
-      el.innerHTML = `<p class="hint">Noch keine Figur hat eine Rolle bekommen — sortiere im Atlas oder in der Innenwelt ein.</p>`;
+      el.innerHTML = `<p class="hint">${t("stats.archetypeEmpty")}</p>`;
       return;
     }
 
@@ -779,11 +771,11 @@ const stats = {
         ${lex ? `<p>${lex.kern}</p><p class="hint"><em>${lex.frage}</em></p>` : ""}
       </div>
       <div class="archetype-detail-own">
-        <p><strong>Bei dir:</strong> ${group.figures.length} ${group.figures.length === 1 ? "Figur" : "Figuren"}
+        <p><strong>${t("stats.archetypeYours")}</strong> ${group.figures.length} ${group.figures.length === 1 ? t("stats.figureOne") : t("stats.figureMany")}
           (${group.figures.map((f) => `<button class="archetype-figure-link">${escapeHtml(f.name)}</button>`).join(", ")})
-          · ${group.dreamCount} ${group.dreamCount === 1 ? "Traum" : "Träume"}
-          ${topEmos ? ` · häufigste Gefühle ${topEmos}` : ""}
-          · zuletzt am ${formatDate(group.lastDate)}</p>
+          · ${group.dreamCount} ${group.dreamCount === 1 ? t("stats.dreamOne") : t("stats.dreamMany")}
+          ${topEmos ? ` · ${t("stats.topEmotionsPrefix")} ${topEmos}` : ""}
+          · ${t("stats.lastOn")} ${formatDate(group.lastDate)}</p>
       </div>
     </div>`;
 
@@ -809,7 +801,7 @@ const stats = {
       const res = await fetch(`/api/export?format=${format}`, {
         headers: auth.token ? { Authorization: `Bearer ${auth.token}` } : {},
       });
-      if (!res.ok) throw new Error(`Export fehlgeschlagen (${res.status})`);
+      if (!res.ok) throw new Error(t("stats.exportFailed", { status: res.status }));
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -817,7 +809,7 @@ const stats = {
       a.download = `klartraum-export-${todayISO()}.${format}`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Export heruntergeladen 📤");
+      showToast(t("stats.exportDownloaded"));
     } catch (err) {
       showToast(err.message);
     }
