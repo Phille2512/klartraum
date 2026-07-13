@@ -382,7 +382,7 @@ button.danger { color: var(--danger); }
 }
 .streak-nachtrag p { margin: 0 0 0.5rem; color: var(--text); }
 
-.entry-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+.entry-actions { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .entry-actions button { padding: 0.3rem 0.8rem; font-size: 0.85rem; }
 
 .empty-state {
@@ -766,6 +766,20 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 }
 
 .ritual-btn:hover { background: var(--bg-input); }
+
+.lesezimmer-header-btn {
+  position: absolute;
+  right: 6rem;
+  top: 0.65rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 8px;
+}
+
+.lesezimmer-header-btn:hover { background: var(--bg-input); }
 
 
 .ritual-card {
@@ -1571,4 +1585,145 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   margin-top: 0.75rem;
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+/* --- Lesezimmer: stiller Gegenpol zum Analyse-Tab, ein Traum pro Bildschirm --- */
+.lesezimmer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.lesezimmer-glow {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 35%, var(--accent), transparent 60%);
+  opacity: 0.2;
+  animation: lesezimmer-puls var(--dur-breath) ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes lesezimmer-puls {
+  0%, 100% { opacity: 0.16; transform: scale(1); }
+  50% { opacity: 0.34; transform: scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesezimmer-glow { animation: none; opacity: 0.22; }
+}
+
+.lesezimmer-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 2;
+}
+
+.lesezimmer-sources {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 3.5rem 1rem 0.5rem;
+}
+
+.lesezimmer-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.lesezimmer-empty {
+  color: var(--text-dim);
+  text-align: center;
+  padding: 2rem;
+}
+
+.lesezimmer-dream {
+  position: relative;
+  max-width: 640px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1.5rem 1.75rem;
+  cursor: pointer;
+}
+
+.lesezimmer-fade-in {
+  animation: lesezimmer-fade var(--dur-drift) var(--ease-traum);
+}
+
+@keyframes lesezimmer-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesezimmer-fade-in { animation: none; }
+}
+
+.lesezimmer-date {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+}
+
+.lesezimmer-dream h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem;
+}
+
+.lesezimmer-text {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.lesezimmer-details {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-input);
+  cursor: default;
+}
+
+.lesezimmer-badges { margin-bottom: 0.5rem; }
+
+.lesezimmer-echoes {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 1rem;
+  text-align: center;
+}
+.lesezimmer-echoes .chip { margin: 0.2rem; }
+
+.lesezimmer-nav {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
 }

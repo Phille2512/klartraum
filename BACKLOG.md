@@ -17,6 +17,25 @@
 *(Philipps Wunsch, Juli 2026: „In dieser Nacht" und „Nachtlektüre" gehören
 zusammen — eventuell auf eine eigene Seite, sehr harmonisch lesbar.)*
 
+> ✅ **Umgesetzt, Juli 2026** (auf Wunsch stilistisch immersiv/vibrierend):
+> eigenes Vollbild-Overlay (`lesezimmer.js`, kein neuer Tab — bewusst als
+> Vollbild-Rückzug statt als weiterer Nav-Punkt), erreichbar über einen
+> Buch-Button im Header und über einen Link im Abendritual („📖 Eine
+> Geschichte aus deiner Welt lesen"). Ein Traum pro Bildschirm, große
+> ruhige Lese-Typografie, Badges/Notizen erst per Tipp auf den Text
+> sichtbar. Ein sanft pulsierender Glow (`--accent`-Farbe, `--dur-breath`-
+> Takt, respektiert `prefers-reduced-motion`) sitzt hinter dem Text — dadurch
+> automatisch Rotlicht-tauglich, da er wie die restliche App nur CSS-Variablen
+> nutzt. Quellen des Blätterns: „In dieser Nacht" (Datum stimmt mit heute
+> überein, über alle Jahre), Zufall, ⭐ große Träume, „lange nicht gelesen"
+> (Lesehistorie lokal im Browser, `localStorage`). Am Ende jedes Textes
+> erscheinen „Ähnliche Träume" (wiederverwendet den bestehenden
+> `/api/dreams/echoes`-Endpunkt). *Bewusst nicht umgesetzt:* „nächste Folge
+> einer Traumserie" — setzt die noch offene Serien-Auto-Erkennung voraus.
+> Beim Mobile-Test nebenbei einen vorbestehenden Bug gefunden und behoben:
+> die Aktions-Buttons-Zeile der Tagebuch-Karten brach auf schmalen Bildschirmen
+> nicht um und sprengte den Viewport (`entry-actions` fehlte `flex-wrap`).
+
 **Idee:** Ein eigener, bewusst stiller Bereich zum **Wiederlesen** — das
 Gegenstück zum geschäftigen Analyse-Tab. Kein Diagramm, keine Buttons-Batterie:
 **ein Traum pro Bildschirm**, ruhig gesetzt, zum Blättern.

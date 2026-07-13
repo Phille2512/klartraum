@@ -14,6 +14,7 @@
   <header>
     <h1><img src="/icons/icon-192.png" alt="" class="brand-icon">Traumader</h1>
     <button id="theme-btn" class="theme-btn" title="Rotlicht-Modus">🔴</button>
+    <button id="lesezimmer-btn" class="lesezimmer-header-btn" title="Lesezimmer">📖</button>
     <button id="ritual-btn" class="ritual-btn" title="Abendritual">🌙</button>
     <nav>
       <button class="tab-btn active" data-tab="journal">Tagebuch</button>
@@ -451,6 +452,7 @@
         <p class="ritual-confirm">Absicht gesetzt. Guten Flug. 🌙</p>
       </div>
       <p class="hint"><a href="#" id="ritual-nightmode">🔴 Rotlicht an</a></p>
+      <p class="hint"><a href="#" id="ritual-lesezimmer-link">📖 Eine Geschichte aus deiner Welt lesen</a></p>
       <button id="ritual-close" class="ritual-close-btn">✕</button>
     </div>
   </div>
@@ -519,11 +521,41 @@
     </div>
   </div>
 
+  <!-- Lesezimmer-Overlay -->
+  <div id="lesezimmer-overlay" class="lesezimmer-overlay hidden">
+    <div class="lesezimmer-glow" aria-hidden="true"></div>
+    <button id="lesezimmer-close" class="ritual-close-btn lesezimmer-close-btn" aria-label="Lesezimmer schließen">✕</button>
+    <div id="lesezimmer-sources" class="lesezimmer-sources">
+      <button type="button" class="chip" data-source="night">🌙 In dieser Nacht</button>
+      <button type="button" class="chip" data-source="random">🎲 Zufall</button>
+      <button type="button" class="chip" data-source="big">⭐ Große Träume</button>
+      <button type="button" class="chip" data-source="stale">🕰️ Lange nicht gelesen</button>
+    </div>
+    <div class="lesezimmer-body">
+      <div id="lesezimmer-empty" class="lesezimmer-empty hidden">
+        <p>Noch keine passenden Träume zum Wiederlesen da.</p>
+      </div>
+      <article id="lesezimmer-dream" class="lesezimmer-dream hidden">
+        <p class="lesezimmer-date" id="lesezimmer-date"></p>
+        <h2 id="lesezimmer-title"></h2>
+        <div class="lesezimmer-text" id="lesezimmer-text"></div>
+        <div id="lesezimmer-details" class="lesezimmer-details hidden"></div>
+      </article>
+    </div>
+    <div id="lesezimmer-echoes" class="lesezimmer-echoes"></div>
+    <div id="lesezimmer-nav" class="lesezimmer-nav hidden">
+      <button type="button" id="lesezimmer-prev" class="hint">← Zurück</button>
+      <button type="button" id="lesezimmer-reveal" class="hint">Details</button>
+      <button type="button" id="lesezimmer-next" class="hint">Weiter →</button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/offline.js"></script>
   <script src="/js/journal.js"></script>
+  <script src="/js/lesezimmer.js"></script>
   <script src="/js/stats.js"></script>
   <script src="/js/wissen.js"></script>
   <script src="/js/hilfe.js"></script>
