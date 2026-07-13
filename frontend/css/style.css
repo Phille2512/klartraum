@@ -10,6 +10,11 @@
   --lucid: #f5c66a;
   --danger: #e06c75;
   --radius: 12px;
+
+  /* Traumtakt (Navigation, Prinzip 1+2): treiben statt schnappen */
+  --ease-traum: cubic-bezier(0.22, 1, 0.36, 1); /* langer, weicher Auslauf */
+  --dur-touch: 200ms;
+  --dur-drift: 550ms;
 }
 
 [data-theme="night"] {
@@ -79,6 +84,7 @@ header h1 {
 nav {
   display: flex;
   gap: 0.25rem;
+  position: relative;
 }
 
 .tab-btn {
@@ -90,11 +96,49 @@ nav {
   font-size: 1rem;
   padding: 0.6rem 0.5rem;
   cursor: pointer;
+  transition: color var(--dur-touch) var(--ease-traum);
 }
 
 .tab-btn.active {
   color: var(--text);
+  /* Die eigentliche Markierung übernimmt jetzt der Traumfaden (.nav-thread)
+     darunter; border-bottom-color bleibt als Fallback, falls JS/Animation
+     mal nicht greift (z. B. sehr altes Browser-Rendering). */
   border-bottom-color: var(--accent);
+}
+
+/* Traumtakt (Prinzip 2, "Der Faden führt"): statt dass die Markierung
+   springt, gleitet ein feiner Faden vom alten zum neuen Tab und leuchtet
+   unterwegs kurz golden auf — das Navigations-Element IST die Marke. */
+.nav-thread {
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+  transform: translateX(0);
+  transition: transform var(--dur-drift) var(--ease-traum), width var(--dur-drift) var(--ease-traum);
+}
+
+.nav-thread.traveling {
+  animation: traumfaden-glow var(--dur-drift) var(--ease-traum);
+}
+
+@keyframes traumfaden-glow {
+  0%, 100% { background: var(--accent); }
+  50% { background: var(--lucid); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-thread {
+    transition: none;
+  }
+  .nav-thread.traveling {
+    animation: none;
+  }
 }
 
 main {

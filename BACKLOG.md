@@ -39,6 +39,17 @@ Gestaltungsrichtung (verbindlicher Geist, Details offen):
 *(Philipps Wunsch, Juli 2026: Navigation schöner, traumartiger, mystischer.
 Wird bei Umsetzung ein eigener Umsetzungsplan; hier Konzept + Vokabular.)*
 
+> ✅ **Navigation (Prinzipien 1+2+6) umgesetzt, Juli 2026:** Die Tab-Markierung
+> ist jetzt der Traumfaden — ein `.nav-thread`-Element in `index.html`, per
+> `moveTraumfaden()` in `app.js` positioniert. Beim Tab-Wechsel gleitet er
+> (`transform`/`width`, `--ease-traum`-Bezier, `--dur-drift` 550 ms) statt zu
+> springen und leuchtet unterwegs kurz golden auf (`@keyframes
+> traumfaden-glow`). `prefers-reduced-motion` schaltet Übergang + Glow ab
+> (CSS-Media-Query), Rotlicht-Modus nutzt automatisch seine eigenen Farben
+> (CSS-Variablen). Noch offen aus dem Konzept: Prinzip 3 (Tiefe/View
+> Transitions), 4 (Atem-Takt für Sternenknopf/Nebel), 5 (Morgens-still-Prüfung),
+> weitere Microinteractions-Kandidaten unten.
+
 **Leitidee:** Traumader bewegt sich, wie Träume sich anfühlen — **nichts
 schnappt, alles treibt.** Sechs Prinzipien:
 

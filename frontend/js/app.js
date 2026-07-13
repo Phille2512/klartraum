@@ -1,10 +1,40 @@
 // Navigation + Initialisierung
+
+// Traumtakt (Backlog "Der Faden führt"): die Tab-Markierung gleitet als
+// feiner Faden vom alten zum neuen Tab, statt zu springen, und leuchtet
+// unterwegs kurz golden auf. Respektiert prefers-reduced-motion (siehe CSS).
+const navThread = document.getElementById("nav-thread");
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function moveTraumfaden(btn, { animate = true } = {}) {
+  if (!navThread || !btn) return;
+  const nav = btn.parentElement;
+  const x = btn.offsetLeft - nav.offsetLeft;
+  const w = btn.offsetWidth;
+
+  if (!animate || prefersReducedMotion) {
+    navThread.style.transition = "none";
+    navThread.style.transform = `translateX(${x}px)`;
+    navThread.style.width = `${w}px`;
+    void navThread.offsetWidth; // Reflow erzwingen, bevor die Transition zurückkommt
+    navThread.style.transition = "";
+    return;
+  }
+
+  navThread.classList.remove("traveling");
+  void navThread.offsetWidth; // Glow-Animation neu starten können
+  navThread.style.transform = `translateX(${x}px)`;
+  navThread.style.width = `${w}px`;
+  navThread.classList.add("traveling");
+}
+
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
     document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+    moveTraumfaden(btn);
     if (btn.dataset.tab === "stats") stats.load();
     if (btn.dataset.tab === "journal") journal.load();
     if (btn.dataset.tab === "atlas") {
@@ -14,6 +44,13 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
       else atlas.load();
     }
   });
+});
+
+// Initiale Position ohne Animation setzen (nichts soll beim Laden "anreisen")
+moveTraumfaden(document.querySelector(".tab-btn.active"), { animate: false });
+// Bei Größenänderung (z. B. Rotation) Position ohne Animation nachziehen
+window.addEventListener("resize", () => {
+  moveTraumfaden(document.querySelector(".tab-btn.active"), { animate: false });
 });
 
 // Rotlicht-Modus
