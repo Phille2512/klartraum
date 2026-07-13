@@ -5,12 +5,16 @@ import traceback
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 import backup
 from database import init_db
-from paths import FRONTEND_DIR
+from paths import FRONTEND_DIR, frontend_version
 from routers import atlas, auth, cycle, dreams, export, jung, map as map_router, stats, tags
+
+# S.4: einmal beim Serverstart berechnet, siehe frontend_version() in paths.py
+FRONTEND_VERSION = frontend_version()
 
 
 @asynccontextmanager
@@ -31,10 +35,34 @@ app = FastAPI(title="Traumader", lifespan=lifespan)
 async def no_cache_static(request, call_next):
     # Browser sollen Frontend-Dateien immer gegen den Server prüfen (304, wenn
     # unverändert) – sonst bleiben nach Updates alte Versionen im HTTP-Cache hängen.
-    response = await call_next(request)
+    #
+    # S.4: try/except hier statt eines separaten @app.exception_handler(Exception) —
+    # BaseHTTPMiddleware (was @app.middleware("http") verwendet) lässt Fehler aus
+    # call_next() sonst als ExceptionGroup nach außen durchschlagen, statt sie an
+    # einen registrierten Exception-Handler weiterzureichen. Saubere JSON-Antwort
+    # statt HTML-Traceback; voller Traceback ins Server-Log. HTTPException
+    # (404, 401, 422, ...) läuft unverändert durch call_next() als normale Response.
+    try:
+        response = await call_next(request)
+    except Exception:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"detail": "internal_error"})
     if not request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-cache"
     return response
+
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "version": FRONTEND_VERSION}
+
+
+@app.get("/sw.js")
+def service_worker():
+    # S.4: __VERSION__-Platzhalter durch den beim Start berechneten Hash
+    # ersetzen — die manuelle Cache-Versionierung in sw.js entfällt.
+    content = (FRONTEND_DIR / "sw.js").read_text().replace("__VERSION__", FRONTEND_VERSION)
+    return Response(content, media_type="application/javascript")
 
 
 # auth.router ist ungeschützt (/api/auth/*); alle anderen erfordern ein Token
@@ -49,5 +77,6 @@ app.include_router(map_router.router)
 app.include_router(jung.router)
 app.include_router(export.router)
 
-# Frontend zuletzt mounten, damit /api/* Vorrang hat
+# Frontend zuletzt mounten (und /sw.js VOR dem Mount registriert, damit die
+# eigene Route Vorrang vor der statischen Datei hat); /api/* hat ohnehin Vorrang
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

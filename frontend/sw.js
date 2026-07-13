@@ -1,6 +1,10 @@
 // Service Worker: App-Shell cachen, damit die PWA schnell startet.
 // API-Anfragen gehen immer ans Netz (Traumdaten sollen aktuell sein).
-const CACHE = "traumader-v2";
+// S.4: __VERSION__ wird vom Server (main.py::service_worker) beim Ausliefern
+// durch einen aus den frontend/-Dateien berechneten Hash ersetzt — kein
+// manuelles Hochzählen mehr nötig. Neue Frontend-Dateien einfach unten in
+// SHELL eintragen.
+const CACHE = "traumader-__VERSION__";
 const SHELL = [
   "/",
   "/index.html",

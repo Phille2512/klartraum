@@ -1,3 +1,4 @@
+import hashlib
 import os
 import shutil
 import sys
@@ -22,6 +23,19 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 BACKEND_DIR = Path(__file__).parent
 
 FRONTEND_DIR = Path(getattr(sys, "_MEIPASS", BACKEND_DIR.parent)) / "frontend"
+
+
+def frontend_version() -> str:
+    """S.4: Hash über Pfad+mtime aller frontend/-Dateien, beim Serverstart
+    berechnet. Ersetzt das manuelle Hochzählen der Service-Worker-Cache-
+    Version — ändert sich irgendeine Frontend-Datei, ändert sich der Hash,
+    der Browser installiert automatisch den neuen Worker."""
+    h = hashlib.sha256()
+    for f in sorted(FRONTEND_DIR.rglob("*")):
+        if f.is_file():
+            h.update(str(f.relative_to(FRONTEND_DIR)).encode())
+            h.update(str(f.stat().st_mtime_ns).encode())
+    return h.hexdigest()[:12]
 
 
 def migrate_legacy_data() -> None:

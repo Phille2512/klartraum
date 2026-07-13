@@ -49,9 +49,12 @@ frontend/sw.js       – Service Worker, Netz-zuerst, Cache-Name `klartraum-vN`
 
 ### Konventionen & Fallstricke (WICHTIG)
 
-1. **Service Worker:** Bei JEDER Frontend-Änderung die Cache-Version in `sw.js`
-   hochzählen (`klartraum-v7` → `v8` …) und neue JS-Dateien in die `SHELL`-Liste
-   aufnehmen. Sonst sehen Nutzer alte Versionen.
+1. **Service Worker (seit S.4 automatisiert):** Die Cache-Version in `sw.js`
+   wird NICHT mehr manuell hochgezählt — `main.py::service_worker` ersetzt
+   den Platzhalter `__VERSION__` beim Ausliefern durch einen aus den mtimes
+   aller `frontend/`-Dateien berechneten Hash. Bei JEDER Frontend-Änderung
+   nur noch: neue JS-Dateien in die `SHELL`-Liste in `sw.js` aufnehmen.
+   Sonst sehen Nutzer alte Versionen.
 2. **Migrationen:** `SQLModel.metadata.create_all` legt nur neue *Tabellen* an.
    Neue *Spalten* in bestehenden Tabellen brauchen einen Eintrag in
    `database.py::_migrate()` (Muster: `PRAGMA table_info(...)` prüfen, dann

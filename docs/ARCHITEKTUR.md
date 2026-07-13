@@ -110,8 +110,17 @@ Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
   mitkopieren, wenn Tokens/Passwort erhalten bleiben sollen.
 - **Passwort vergessen:** `auth.json` (im Datenordner) löschen → App fragt
   beim nächsten Öffnen nach einem neuen Passwort. Traumdaten bleiben unberührt.
-- **Frontend-Update wird nicht sichtbar:** Cache-Version in `sw.js` bumpen
-  (Konvention!) und zweimal neu laden.
+- **Frontend-Update wird nicht sichtbar (S.4: automatisiert):** `sw.js` wird
+  über eine eigene Route ausgeliefert, die `__VERSION__` durch einen beim
+  Serverstart aus den mtimes aller `frontend/`-Dateien berechneten Hash
+  ersetzt — kein manuelles Bumpen mehr nötig, zweimal neu laden reicht.
+  Neue Dateien müssen weiterhin in die `SHELL`-Liste in `sw.js` eingetragen
+  werden.
+- **`GET /api/health`** (S.4, ohne Auth): `{"status": "ok", "version": <hash>}`
+  — derselbe Hash wie in `sw.js`, für Start-Skripte/Monitoring.
+- **Fehlerbehandlung (S.4):** unbehandelte Fehler liefern sauberes JSON
+  `{"detail": "internal_error"}` (500) statt HTML-Traceback; voller
+  Traceback landet im Server-Log.
 - **Bekannte Grenzen:** Statistik/Atlas laden alle Träume in den Speicher
   (unkritisch bis ~10.000 Einträge); keine Nutzertrennung.
 - **Testsuite (S.2):** `pytest` unter `tests/` (92 Tests, Laufzeit < 10 s).
