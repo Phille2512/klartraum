@@ -18,6 +18,8 @@ def list_dreams(
     tag: str | None = None,
     date_from: dt.date | None = Query(default=None, alias="from"),
     date_to: dt.date | None = Query(default=None, alias="to"),
+    big_dream: bool | None = None,
+    emotion: str | None = None,
     session: Session = Depends(get_session),
 ):
     stmt = select(Dream).order_by(col(Dream.date).desc(), col(Dream.id).desc())
@@ -30,11 +32,21 @@ def list_dreams(
         stmt = stmt.where(Dream.date >= date_from)
     if date_to:
         stmt = stmt.where(Dream.date <= date_to)
+    if big_dream is not None:
+        stmt = stmt.where(Dream.big_dream == big_dream)
     if tag:
         stmt = stmt.join(DreamTag, col(DreamTag.dream_id) == col(Dream.id)).join(
             Tag, col(Tag.id) == col(DreamTag.tag_id)
         ).where(Tag.name == tag.strip().lower())
     dreams = session.exec(stmt).unique().all()
+    if emotion:
+        # emotions ist eine kommagetrennte Spalte (siehe helpers.to_out) — Filterung
+        # in Python statt fragilem SQL-LIKE, um Teilstring-Kollisionen zu vermeiden
+        # (z. B. "angst" als Teilstring eines anderen Schlüssels).
+        dreams = [
+            d for d in dreams
+            if emotion in {e.strip() for e in (d.emotions or "").split(",") if e.strip()}
+        ]
     return [to_out(d) for d in dreams]
 
 

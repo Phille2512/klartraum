@@ -32,6 +32,15 @@
         <button id="new-dream-btn" class="primary">+ Neuer Traum</button>
       </div>
 
+      <button type="button" id="journal-filter-toggle" class="chip">🔎 Filter</button>
+      <div id="journal-filter-bar" class="journal-filter-bar hidden">
+        <button type="button" id="filter-bigdream-chip" class="chip">⭐ Große Träume</button>
+        <div id="filter-emotion-chips" class="chip-row"></div>
+        <input type="text" id="filter-tag-input" list="filter-tag-list" placeholder="Nach Tag/Zeichen/Ort/Person filtern …">
+        <datalist id="filter-tag-list"></datalist>
+        <button type="button" id="filter-reset-btn" class="hint">Filter zurücksetzen</button>
+      </div>
+
       <div id="intention-prompt" class="card intention-prompt hidden"></div>
 
       <form id="dream-form" class="card hidden">

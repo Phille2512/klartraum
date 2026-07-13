@@ -21,6 +21,9 @@ const journal = {
 
   selectedEmotions: [],
 
+  // Filter-Chips (Tagebuch-Suche): unabhängig von selectedEmotions (Formular)
+  filters: { tag: "", emotion: "", bigDream: false },
+
   init() {
     this.form = document.getElementById("dream-form");
     this.list = document.getElementById("dream-list");
@@ -29,6 +32,8 @@ const journal = {
     document.getElementById("new-dream-btn").addEventListener("click", () => this.startNewDream());
     document.getElementById("cancel-btn").addEventListener("click", () => this.closeForm());
     this.form.addEventListener("submit", (e) => this.save(e));
+
+    this.initFilterBar();
 
     // Emotion Picker rendern
     const picker = document.getElementById("emotion-picker");
@@ -77,12 +82,69 @@ const journal = {
       debounce = setTimeout(() => this.load(), 300);
     });
 
+    this.refreshDatalists(); // u. a. fuer die Filterleiste (Tag-Liste)
     this.load();
+  },
+
+  // ---- Filter-Chips: Tags, Emotionen, ⭐ (zusätzlich zur Textsuche) ----
+  initFilterBar() {
+    const bar = document.getElementById("journal-filter-bar");
+    const toggleBtn = document.getElementById("journal-filter-toggle");
+    toggleBtn.addEventListener("click", () => {
+      bar.classList.toggle("hidden");
+      toggleBtn.classList.toggle("active", !bar.classList.contains("hidden"));
+    });
+
+    const emotionEl = document.getElementById("filter-emotion-chips");
+    emotionEl.innerHTML = Object.entries(EMOTIONS).map(([key, e]) =>
+      `<button type="button" class="chip filter-emotion-chip" data-emotion="${key}">${e.icon} ${e.label}</button>`
+    ).join("");
+    emotionEl.querySelectorAll(".filter-emotion-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const wasActive = this.filters.emotion === chip.dataset.emotion;
+        this.filters.emotion = wasActive ? "" : chip.dataset.emotion;
+        emotionEl.querySelectorAll(".filter-emotion-chip").forEach((c) => c.classList.remove("active"));
+        if (!wasActive) chip.classList.add("active");
+        this.load();
+      });
+    });
+
+    document.getElementById("filter-bigdream-chip").addEventListener("click", (e) => {
+      this.filters.bigDream = !this.filters.bigDream;
+      e.currentTarget.classList.toggle("active", this.filters.bigDream);
+      this.load();
+    });
+
+    let tagDebounce;
+    document.getElementById("filter-tag-input").addEventListener("input", (e) => {
+      clearTimeout(tagDebounce);
+      tagDebounce = setTimeout(() => {
+        this.filters.tag = e.target.value.trim();
+        this.load();
+      }, 300);
+    });
+
+    document.getElementById("filter-reset-btn").addEventListener("click", () => {
+      this.filters = { tag: "", emotion: "", bigDream: false };
+      document.getElementById("filter-tag-input").value = "";
+      document.getElementById("filter-bigdream-chip").classList.remove("active");
+      emotionEl.querySelectorAll(".filter-emotion-chip").forEach((c) => c.classList.remove("active"));
+      this.load();
+    });
+  },
+
+  hasActiveFilters() {
+    return !!(this.filters.tag || this.filters.emotion || this.filters.bigDream);
   },
 
   async load() {
     try {
-      this.dreams = await api.listDreams({ search: this.search.value.trim() });
+      this.dreams = await api.listDreams({
+        search: this.search.value.trim(),
+        tag: this.filters.tag,
+        emotion: this.filters.emotion,
+        big_dream: this.filters.bigDream ? "true" : undefined,
+      });
       this.serverOffline = false;
     } catch (err) {
       if (err.isNetworkError) {
@@ -108,6 +170,11 @@ const journal = {
     fill("signs-list", "dream_sign");
     fill("places-list", "place");
     fill("persons-list", "person");
+    // Filter-Leiste: alle Arten in einer Liste (Tags/Zeichen/Orte/Personen)
+    const filterList = document.getElementById("filter-tag-list");
+    if (filterList) {
+      filterList.innerHTML = tags.map((t) => `<option value="${escapeHtml(t.name)}">`).join("");
+    }
   },
 
   async openForm(dream = null) {
@@ -257,7 +324,7 @@ const journal = {
       .join("");
 
     if (!this.dreams.length && !this.pending.length) {
-      if (this.search.value) {
+      if (this.search.value || this.hasActiveFilters()) {
         this.list.innerHTML = offlineHint + `<div class="empty-state">Keine Träume gefunden.</div>`;
         this.updateTraumfadenButton();
         return;
@@ -321,7 +388,7 @@ const journal = {
 
   // ---- Streak-Nachtrag: sanfter Hinweis, wenn gestern kein Eintrag existiert ----
   renderStreakNachtrag() {
-    if (this.search.value.trim()) return ""; // nur in der unbefilterten Ansicht sinnvoll
+    if (this.search.value.trim() || this.hasActiveFilters()) return ""; // nur in der unbefilterten Ansicht sinnvoll
     const yesterday = yesterdayISO();
     if (localStorage.getItem("streak-nachtrag-dismissed") === todayISO()) return "";
     const hasYesterday = this.dreams.some((d) => d.date === yesterday);
@@ -392,7 +459,7 @@ const journal = {
     const btn = document.getElementById("traumfaden-btn");
     if (!btn) return;
     // Nie automatisch öffnen — nur Sichtbarkeit/Erscheinungsbild anpassen.
-    if (!this.dreams.length && !this.pending.length && !this.search.value) {
+    if (!this.dreams.length && !this.pending.length && !this.search.value && !this.hasActiveFilters()) {
       btn.classList.add("hidden");
       return;
     }

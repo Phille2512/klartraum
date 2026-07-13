@@ -70,6 +70,31 @@ def test_list_dreams_filter_by_tag(auth_client):
     assert titles == ["Mit Zeichen"]
 
 
+def test_list_dreams_filter_by_big_dream(auth_client):
+    auth_client.post("/api/dreams", json=make_dream(title="Gross", big_dream=True))
+    auth_client.post("/api/dreams", json=make_dream(title="Normal", big_dream=False))
+    resp = auth_client.get("/api/dreams", params={"big_dream": "true"})
+    titles = [d["title"] for d in resp.json()]
+    assert titles == ["Gross"]
+
+
+def test_list_dreams_filter_by_emotion(auth_client):
+    auth_client.post("/api/dreams", json=make_dream(title="Angst", emotions=["angst"]))
+    auth_client.post("/api/dreams", json=make_dream(title="Freude", emotions=["freude"]))
+    auth_client.post("/api/dreams", json=make_dream(title="Beides", emotions=["angst", "freude"]))
+    resp = auth_client.get("/api/dreams", params={"emotion": "angst"})
+    titles = sorted(d["title"] for d in resp.json())
+    assert titles == ["Angst", "Beides"]
+
+
+def test_list_dreams_filter_combination(auth_client):
+    auth_client.post("/api/dreams", json=make_dream(title="Treffer", big_dream=True, emotions=["angst"], dream_signs=["fliegen"]))
+    auth_client.post("/api/dreams", json=make_dream(title="Fast", big_dream=True, emotions=["angst"]))
+    resp = auth_client.get("/api/dreams", params={"big_dream": "true", "emotion": "angst", "tag": "fliegen"})
+    titles = [d["title"] for d in resp.json()]
+    assert titles == ["Treffer"]
+
+
 def test_regression_update_with_places_persons_emotions_returns_200(auth_client):
     """Historischer 500er-Bug: places/persons/emotions gehören nicht zum
     Dream-Modell und müssen beim model_dump ausgeklammert werden."""

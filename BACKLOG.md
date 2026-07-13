@@ -166,8 +166,12 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
 
 ## 📊 Analyse
 
-- **🔎 Filter-Chips in der Tagebuch-Suche:** nach Tags, Emotionen, ⭐,
-  Phänomenen filtern — Suche kann bisher nur Text.
+- ~~**🔎 Filter-Chips in der Tagebuch-Suche:** nach Tags, Emotionen, ⭐,
+  Phänomenen filtern — Suche kann bisher nur Text.~~ ✅ Umgesetzt:
+  Filter-Leiste (⭐, 12 Emotions-Chips, Tag/Zeichen/Ort/Person-Suchfeld mit
+  Autovervollständigung) über der Textsuche im Tagebuch, ein-/ausklappbar.
+  Backend-Filter (`GET /api/dreams?big_dream=&emotion=&tag=`) sind
+  kombinierbar; Emotion wird in Python statt fragilem SQL-LIKE gefiltert.
 - **😴 Schlafdaten-Import:** CSV aus Schlaftracker/Smartwatch (Schlafdauer,
   Phasen) → Korrelation mit Luzidität/Erinnerung. Data-Science-Spielplatz.
 - **📓 Jupyter-Starter-Notebook** im Repo: lädt den CSV-Export, zeigt
