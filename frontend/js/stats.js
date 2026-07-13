@@ -584,6 +584,19 @@ const stats = {
     this.renderMission(data);
     this.renderSorter();
     this.renderSigns(data.top_dream_signs);
+    this.renderNewElements(data.new_elements);
+  },
+
+  renderNewElements(newElements) {
+    const el = document.getElementById("new-elements-list");
+    if (!newElements || !newElements.length) {
+      el.innerHTML = `<p class="hint">Keine neuen Zeichen, Orte oder Personen in den letzten 30 Tagen.</p>`;
+      return;
+    }
+    const icons = { dream_sign: "🔮", place: "📍", person: "👤", tag: "🏷️" };
+    el.innerHTML = newElements
+      .map((e) => `<span class="badge">${icons[e.kind] || ""} ${escapeHtml(e.name)}</span>`)
+      .join("");
   },
 
   renderCompass(compass) {

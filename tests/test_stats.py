@@ -1,3 +1,5 @@
+import datetime as dt
+
 from test_dreams import make_dream
 
 
@@ -111,6 +113,31 @@ def test_phenomena_empty_when_no_flags_set(auth_client):
     data = _stats(auth_client)
     assert all(count == 0 for count in data["phenomena"]["counts"].values())
     assert data["phenomena"]["hints"] == []
+
+
+def test_new_elements_detects_first_time_occurrences(auth_client):
+    today = dt.date.today()
+    old_date = (today - dt.timedelta(days=200)).isoformat()
+    recent_date = (today - dt.timedelta(days=5)).isoformat()
+    auth_client.post("/api/dreams", json=make_dream(
+        title="Alt", date=old_date, dream_signs=["fliegen"], places=["schule"],
+    ))
+    auth_client.post("/api/dreams", json=make_dream(
+        title="Neu", date=recent_date, dream_signs=["fliegen", "zaehne"], persons=["oma"],
+    ))
+    data = _stats(auth_client)
+    names = {(e["kind"], e["name"]) for e in data["new_elements"]}
+    assert ("dream_sign", "zaehne") in names
+    assert ("person", "oma") in names
+    assert ("dream_sign", "fliegen") not in names  # existierte schon vor 200 Tagen
+    assert ("place", "schule") not in names
+
+
+def test_new_elements_empty_outside_30_day_window(auth_client):
+    old_date = (dt.date.today() - dt.timedelta(days=200)).isoformat()
+    auth_client.post("/api/dreams", json=make_dream(title="Alt", date=old_date, dream_signs=["fliegen"]))
+    data = _stats(auth_client)
+    assert data["new_elements"] == []
 
 
 def test_incubation_rate_in_stats(auth_client):

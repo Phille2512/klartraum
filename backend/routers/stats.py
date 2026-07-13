@@ -82,6 +82,28 @@ def stats(
     focus = recent_counter.most_common(1)
     focus_sign = {"name": focus[0][0], "count": focus[0][1]} if focus else None
 
+    # Wort-Neuheiten: Zeichen/Orte/Personen/Tags, die zum ersten Mal überhaupt
+    # auftauchen — unabhängig vom gewählten Zeitraum-Filter der Seite, sonst
+    # würde ein enger Filter ältere Elemente fälschlich als "neu" zeigen.
+    all_dreams = session.exec(select(Dream)).all()
+    first_seen: dict[tuple[str, str], dt.date] = {}
+    for d in sorted(all_dreams, key=lambda x: x.date):
+        for t in d.tags:
+            if t.kind in ("dream_sign", "place", "person", "tag"):
+                key = (t.kind, t.name)
+                if key not in first_seen:
+                    first_seen[key] = d.date
+    new_cutoff = dt.date.today() - dt.timedelta(days=30)
+    new_elements = sorted(
+        (
+            {"kind": kind, "name": name, "first_seen": date.isoformat()}
+            for (kind, name), date in first_seen.items()
+            if date >= new_cutoff
+        ),
+        key=lambda x: x["first_seen"],
+        reverse=True,
+    )[:15]
+
     # Beifuß-Experiment: Klartraum-Quote mit vs. ohne
     def lucid_rate(group: list[Dream]) -> float | None:
         if not group:
@@ -175,6 +197,7 @@ def stats(
         "split": split_data,
         "writing": writing,
         "top_dream_signs": top_signs,
+        "new_elements": new_elements,
         "lucidity_distribution": [
             sum(1 for d in dreams if d.lucidity == level) for level in range(5)
         ],

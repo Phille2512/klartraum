@@ -186,8 +186,12 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
   Phasen) → Korrelation mit Luzidität/Erinnerung. Data-Science-Spielplatz.
 - **📓 Jupyter-Starter-Notebook** im Repo: lädt den CSV-Export, zeigt
   Korrelationen, Zeitreihen, Wortverläufe — Einladung zum Selbst-Forschen.
-- **🆕 Wort-Neuheiten:** „Neu in deiner Traumwelt" — Wörter/Elemente, die
-  zum ersten Mal auftauchen (lexikalische Frische als Signal).
+- ~~**🆕 Wort-Neuheiten:**~~ *(Juli 2026)*: Karte „Neu in deiner Traumwelt"
+  im Analyse-Tab (Kompass-Unterreiter) — zeigt Zeichen, Orte, Personen und
+  Tags, die in den letzten 30 Tagen zum allerersten Mal auftauchten.
+  Berechnung läuft bewusst über die komplette Traum-Historie statt über
+  den auf der Seite gewählten Zeitraum-Filter, sonst würden längst
+  bekannte Elemente bei engem Filter fälschlich als „neu" erscheinen.
 - **📖 Das Traumbuch (Jahres-Export):** Ein Jahr als gesetztes PDF/ePub —
   Mandala als Cover, Jahresringe als Vorwort, Träume chronologisch,
   ⭐-Träume hervorgehoben. Die wörtliche „Ernte" des
