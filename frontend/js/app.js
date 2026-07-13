@@ -28,20 +28,41 @@ function moveTraumfaden(btn, { animate = true } = {}) {
   navThread.classList.add("traveling");
 }
 
+// Traumtakt (Prinzip 3, "Tiefe statt Richtung"): Richtung Atlas taucht die
+// Ansicht ein (dunkler, tiefer), zurück zum Tagebuch taucht sie auf. Nur
+// main (view-transition-name: main-content, siehe CSS) bewegt sich, Header/
+// Nav bleiben ruhig stehen.
+const TAB_DEPTH = { journal: 0, stats: 1, learn: 1, atlas: 2 };
+let currentTabName = document.querySelector(".tab-btn.active")?.dataset.tab || "journal";
+
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
-    moveTraumfaden(btn);
-    if (btn.dataset.tab === "stats") stats.load();
-    if (btn.dataset.tab === "journal") journal.load();
-    if (btn.dataset.tab === "atlas") {
-      const view = localStorage.getItem("atlas-view") || "net";
-      if (view === "map") worldmap.load();
-      else if (view === "innenwelt") innenwelt.load();
-      else atlas.load();
+    const applyTabSwitch = () => {
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+      moveTraumfaden(btn);
+      if (btn.dataset.tab === "stats") stats.load();
+      if (btn.dataset.tab === "journal") journal.load();
+      if (btn.dataset.tab === "atlas") {
+        const view = localStorage.getItem("atlas-view") || "net";
+        if (view === "map") worldmap.load();
+        else if (view === "innenwelt") innenwelt.load();
+        else atlas.load();
+      }
+    };
+
+    const fromDepth = TAB_DEPTH[currentTabName] ?? 0;
+    const toDepth = TAB_DEPTH[btn.dataset.tab] ?? 0;
+    document.documentElement.dataset.transitionDirection =
+      toDepth > fromDepth ? "dive" : toDepth < fromDepth ? "surface" : "flat";
+    currentTabName = btn.dataset.tab;
+
+    if (prefersReducedMotion || !document.startViewTransition) {
+      applyTabSwitch();
+    } else {
+      document.startViewTransition(applyTabSwitch);
     }
   });
 });

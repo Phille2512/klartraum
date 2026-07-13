@@ -108,7 +108,7 @@ const worldmap = {
       }
     });
 
-    svg += `<rect width="${W}" height="${H}" fill="rgba(10,8,16,0.75)" mask="url(#wm-fog-mask)" pointer-events="none"/>`;
+    svg += `<rect class="wm-fog" width="${W}" height="${H}" fill="rgba(10,8,16,0.75)" mask="url(#wm-fog-mask)" pointer-events="none"/>`;
 
     d.placed.forEach((n) => {
       const r = 8 + Math.min(n.dream_count, 10) * 2;

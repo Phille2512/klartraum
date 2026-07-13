@@ -139,12 +139,57 @@ nav {
   .nav-thread.traveling {
     animation: none;
   }
+  ::view-transition-old(main-content),
+  ::view-transition-new(main-content) {
+    animation: none !important;
+  }
+}
+
+/* Traumtakt (Prinzip 3, "Tiefe statt Richtung"): Tab-Wechsel Richtung
+   Atlas/Innenwelt tauchen ein (alte Ansicht sinkt & verblasst, neue steigt
+   skaliert aus dem Dunkel auf), zurück zum Tagebuch taucht auf (Umkehrung).
+   Nur der Inhalt (main), nicht Header/Nav, bekommt einen eigenen
+   View-Transition-Namen — sonst würde die ganze Seite mitanimieren.
+   app.js setzt data-transition-direction und ruft document.startViewTransition
+   auf (mit Fallback für Browser ohne Unterstützung / reduced motion). */
+
+::view-transition-old(main-content),
+::view-transition-new(main-content) {
+  animation-duration: var(--dur-drift);
+  animation-timing-function: var(--ease-traum);
+}
+
+html[data-transition-direction="dive"]::view-transition-old(main-content) {
+  animation-name: traumtakt-dive-out;
+}
+html[data-transition-direction="dive"]::view-transition-new(main-content) {
+  animation-name: traumtakt-dive-in;
+}
+html[data-transition-direction="surface"]::view-transition-old(main-content) {
+  animation-name: traumtakt-surface-out;
+}
+html[data-transition-direction="surface"]::view-transition-new(main-content) {
+  animation-name: traumtakt-surface-in;
+}
+
+@keyframes traumtakt-dive-out {
+  to { transform: translateY(6px) scale(0.98); opacity: 0; }
+}
+@keyframes traumtakt-dive-in {
+  from { transform: translateY(14px) scale(0.95); opacity: 0; }
+}
+@keyframes traumtakt-surface-out {
+  to { transform: translateY(-10px) scale(1.02); opacity: 0; }
+}
+@keyframes traumtakt-surface-in {
+  from { transform: translateY(-6px) scale(1.02); opacity: 0; }
 }
 
 main {
   max-width: 720px;
   margin: 0 auto;
   padding: 1rem;
+  view-transition-name: main-content;
 }
 
 .tab { display: none; }
@@ -284,6 +329,19 @@ button.danger { color: var(--danger); }
   text-align: center;
   color: var(--text-dim);
   padding: 2rem 1rem;
+  /* Traumtakt (Prinzip 4): Leerzustände atmen leise statt starr zu stehen */
+  animation: leerzustand-atem 4s ease-in-out infinite;
+}
+
+@keyframes leerzustand-atem {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state {
+    animation: none;
+  }
 }
 
 /* --- Prozess-Intro "Der Traumfaden" (H.4) --- */
@@ -315,13 +373,21 @@ button.danger { color: var(--danger); }
 .traumfaden-icon { font-size: 1.15rem; }
 .traumfaden-label { font-size: 0.85rem; }
 
+/* Traumtakt (Prinzip 4, "Atem als Metrum"): ~4s-Takt statt scharfem Ring-Ping —
+   ruhig wie Schlaf, nie blinkend. */
 .traumfaden-btn.traumfaden-pulse {
-  animation: traumfadenPulse 3s ease-in-out infinite;
+  animation: traumfaden-atem 4s ease-in-out infinite;
 }
 
-@keyframes traumfadenPulse {
-  0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 0 rgba(245,198,106,0.55); }
-  50% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 10px rgba(245,198,106,0); }
+@keyframes traumfaden-atem {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 0 rgba(245,198,106,0.35); }
+  50% { transform: scale(1.045); box-shadow: 0 4px 20px rgba(0,0,0,0.45), 0 0 0 8px rgba(245,198,106,0.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .traumfaden-btn.traumfaden-pulse {
+    animation: none;
+  }
 }
 
 .traumfaden-btn.traumfaden-subtle {
@@ -807,6 +873,18 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 .wm-node { cursor: grab; }
 .wm-node:hover circle { stroke: #fff; stroke-width: 2; }
 .wm-path { cursor: pointer; }
+
+/* Traumtakt (Prinzip 4): der Nebel des Unerforschten atmet leise */
+.wm-fog {
+  animation: nebel-atem 4s ease-in-out infinite;
+}
+@keyframes nebel-atem {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-fog { animation: none; }
+}
 
 .wm-unplaced { margin-top: 0.75rem; }
 

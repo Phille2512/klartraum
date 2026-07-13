@@ -39,16 +39,40 @@ Gestaltungsrichtung (verbindlicher Geist, Details offen):
 *(Philipps Wunsch, Juli 2026: Navigation schöner, traumartiger, mystischer.
 Wird bei Umsetzung ein eigener Umsetzungsplan; hier Konzept + Vokabular.)*
 
-> ✅ **Navigation (Prinzipien 1+2+6) umgesetzt, Juli 2026:** Die Tab-Markierung
-> ist jetzt der Traumfaden — ein `.nav-thread`-Element in `index.html`, per
-> `moveTraumfaden()` in `app.js` positioniert. Beim Tab-Wechsel gleitet er
-> (`transform`/`width`, `--ease-traum`-Bezier, `--dur-drift` 550 ms) statt zu
-> springen und leuchtet unterwegs kurz golden auf (`@keyframes
-> traumfaden-glow`). `prefers-reduced-motion` schaltet Übergang + Glow ab
-> (CSS-Media-Query), Rotlicht-Modus nutzt automatisch seine eigenen Farben
-> (CSS-Variablen). Noch offen aus dem Konzept: Prinzip 3 (Tiefe/View
-> Transitions), 4 (Atem-Takt für Sternenknopf/Nebel), 5 (Morgens-still-Prüfung),
-> weitere Microinteractions-Kandidaten unten.
+> ✅ **Alle sechs Prinzipien umgesetzt, Juli 2026:**
+> - **1+2 (Treiben + Der Faden führt):** Die Tab-Markierung ist der
+>   Traumfaden — ein `.nav-thread`-Element in `index.html`, per
+>   `moveTraumfaden()` in `app.js` positioniert. Beim Tab-Wechsel gleitet er
+>   (`transform`/`width`, `--ease-traum`-Bezier, `--dur-drift` 550 ms) statt
+>   zu springen und leuchtet unterwegs kurz golden auf (`@keyframes
+>   traumfaden-glow`).
+> - **3 (Tiefe statt Richtung):** `main` trägt `view-transition-name:
+>   main-content`; `app.js` ordnet jedem Tab eine Tiefe zu
+>   (`TAB_DEPTH`: Tagebuch 0, Analyse/Lernen 1, Atlas 2) und setzt vor jedem
+>   `document.startViewTransition()`-Aufruf `data-transition-direction`
+>   (`dive`/`surface`/`flat`) am `<html>`-Element. CSS-Keyframes
+>   `traumtakt-dive-*`/`traumtakt-surface-*` lassen die alte Ansicht sinken/
+>   steigen und die neue aus dem Dunkel auftauchen bzw. umgekehrt. Browser
+>   ohne View-Transitions-Unterstützung bekommen den bisherigen, unanimierten
+>   Wechsel (Feature-Check auf `document.startViewTransition`).
+> - **4 (Atem als Metrum):** Sternenknopf (`.traumfaden-pulse`), Leerzustände
+>   (`.empty-state`) und der Nebel der Traumweltkarte (`.wm-fog`) pulsieren
+>   jetzt alle im ruhigen ~4s-Takt (`@keyframes *-atem`) statt im alten,
+>   schärferen 3s-Ring-Ping.
+> - **5 (Morgens still):** geprüft — das Öffnen des Traum-Formulars
+>   (`journal.js::openForm`) war schon immer ein reines `classList`-Umschalten
+>   ohne CSS-Transition und bleibt davon unberührt; die neuen Tab-Übergänge
+>   greifen nur beim Wechsel zwischen den vier Haupt-Tabs, nicht beim
+>   Formular selbst.
+> - **6 (Respekt):** `prefers-reduced-motion` schaltet Traumfaden-Übergang,
+>   View-Transition-Animationen und alle drei Atem-Animationen ab (jeweils
+>   per CSS-Media-Query bzw. JS-Feature-Check); Rotlicht-Modus nutzt
+>   automatisch seine eigenen Akzent-/Gold-Farbtöne (bestehende
+>   CSS-Variablen).
+>
+> Noch offen: weitere Microinteractions-Kandidaten unten (Speichern-Animation,
+> ⭐-Funkeln, Atlas-Knoten-Keimen, …) — kein Kernstück des Konzepts, eher
+> Feinschliff für später.
 
 **Leitidee:** Traumader bewegt sich, wie Träume sich anfühlen — **nichts
 schnappt, alles treibt.** Sechs Prinzipien:
