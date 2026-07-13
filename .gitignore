@@ -5,6 +5,8 @@ backend/dreams.db
 backend/dreams.db.backup-*
 backend/auth.json
 backend/auth.json.backup-*
+backend/backups/
+backups/
 .DS_Store
 certs/
 dist/

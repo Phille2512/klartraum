@@ -1,6 +1,6 @@
 // Service Worker: App-Shell cachen, damit die PWA schnell startet.
 // API-Anfragen gehen immer ans Netz (Traumdaten sollen aktuell sein).
-const CACHE = "traumader-v1";
+const CACHE = "traumader-v2";
 const SHELL = [
   "/",
   "/index.html",

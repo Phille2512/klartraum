@@ -97,16 +97,24 @@ Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
 
 ## Betriebs-Wissen
 
-- **Backup = eine Datei:** `backend/dreams.db` kopieren (bei gestopptem Server)
-  oder Export (JSON/CSV) aus der Analyse. `auth.json` mitkopieren, wenn
-  Tokens/Passwort erhalten bleiben sollen.
-- **Passwort vergessen:** `backend/auth.json` löschen → App fragt beim nächsten
-  Öffnen nach einem neuen Passwort. Traumdaten bleiben unberührt.
+- **Automatische Backups (S.1):** `backend/backup.py` legt bei jedem
+  Serverstart höchstens ein Backup pro Tag an (`DATA_DIR/backups/dreams-YYYY-MM-DD.db`,
+  via SQLite-Online-Backup-API — sicher gegen laufende Schreibzugriffe).
+  Rotation: 14 Tages-Backups + je ein Monats-Anker für 6 Monate. Vor jeder
+  echten Schema-Migration zusätzlich ein `dreams-pre-migration-*.db`-Snapshot
+  (nie rotiert). Status/Warnung sichtbar in `GET /api/datainfo` und im
+  Lernen-Tab („🔐 Deine Daten“).
+- **Backup = eine Datei:** zusätzlich `dreams.db` kopieren (bei gestopptem
+  Server) oder Export (JSON/CSV) aus der Analyse — schützt vor Geräteverlust,
+  was das automatische Backup (gleiche Platte) nicht kann. `auth.json`
+  mitkopieren, wenn Tokens/Passwort erhalten bleiben sollen.
+- **Passwort vergessen:** `auth.json` (im Datenordner) löschen → App fragt
+  beim nächsten Öffnen nach einem neuen Passwort. Traumdaten bleiben unberührt.
 - **Frontend-Update wird nicht sichtbar:** Cache-Version in `sw.js` bumpen
   (Konvention!) und zweimal neu laden.
 - **Bekannte Grenzen:** Statistik/Atlas laden alle Träume in den Speicher
-  (unkritisch bis ~10.000 Einträge); keine Nutzertrennung; keine automatischen
-  Backups; keine Testsuite (Verifikation manuell im Browser).
+  (unkritisch bis ~10.000 Einträge); keine Nutzertrennung; keine Testsuite
+  (Verifikation manuell im Browser).
 
 Weitere Pflichtlektüre für Implementierer: `UMSETZUNGSPLAN.md` Teil A
 (Konventionen & Fallstricke), `ROADMAP.md` (Vision).

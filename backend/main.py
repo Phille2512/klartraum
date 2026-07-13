@@ -2,6 +2,7 @@ import csv
 import datetime as dt
 import io
 import json
+import traceback
 from collections import Counter
 from contextlib import asynccontextmanager
 
@@ -12,6 +13,7 @@ from pydantic import BaseModel, Field as PField
 from sqlmodel import Session, col, select
 
 import auth
+import backup
 from database import get_session, init_db
 from models import Dream, DreamAnalysis, DreamTag, Goal, Imagination, Intention, MapNode, MapPath, MapRegion, Reflection, SymbolNote, SyncEvent, Tag
 from paths import DATA_DIR, FRONTEND_DIR
@@ -19,6 +21,11 @@ from paths import DATA_DIR, FRONTEND_DIR
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # S.1: Backup-Fehler dürfen den Serverstart nicht verhindern.
+    try:
+        backup.create_daily_backup_if_missing()
+    except Exception:
+        traceback.print_exc()
     init_db()
     yield
 
@@ -1320,6 +1327,7 @@ def data_info(session: Session = Depends(get_session)):
         "db_file": str(db_file),
         "db_size_bytes": db_size,
         "dream_count": dream_count,
+        **backup.backup_info(),
     }
 
 

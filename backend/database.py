@@ -1,5 +1,6 @@
 from sqlmodel import Session, SQLModel, create_engine
 
+import backup
 from paths import DATA_DIR, migrate_legacy_data
 
 DB_PATH = DATA_DIR / "dreams.db"
@@ -21,6 +22,21 @@ def _migrate() -> None:
     # Tabellen müssen per ALTER TABLE nachgezogen werden.
     with engine.connect() as conn:
         dream_cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(dream)")}
+        tag_cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(tag)")}
+
+        pending = (
+            "beifuss" not in dream_cols
+            or "emotions" not in dream_cols
+            or "big_dream" not in dream_cols
+            or "category" not in tag_cols
+            or "archetype" not in tag_cols
+            or "region_id" not in tag_cols
+        )
+        if pending:
+            # S.1: vor jedem tatsächlichen ALTER TABLE einen Extra-Snapshot,
+            # unabhängig vom täglichen Rotations-Backup.
+            backup.create_pre_migration_backup()
+
         if "beifuss" not in dream_cols:
             conn.exec_driver_sql(
                 "ALTER TABLE dream ADD COLUMN beifuss INTEGER NOT NULL DEFAULT 0"
@@ -31,7 +47,6 @@ def _migrate() -> None:
             conn.exec_driver_sql(
                 "ALTER TABLE dream ADD COLUMN big_dream INTEGER NOT NULL DEFAULT 0"
             )
-        tag_cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(tag)")}
         if "category" not in tag_cols:
             conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN category VARCHAR")
         if "archetype" not in tag_cols:

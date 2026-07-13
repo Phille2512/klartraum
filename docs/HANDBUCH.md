@@ -108,8 +108,17 @@ jedem Traumeintrag als „Jung-Analyse" (6 Stationen je Traum).
 **Passwort vergessen?** Auf dem MacBook `backend/auth.json` löschen — die App
 fragt nach einem neuen Passwort. Träume bleiben erhalten.
 
-**Backup?** Regelmäßig CSV/JSON exportieren (Analyse-Tab) — oder die Datei
-`backend/dreams.db` kopieren (Server vorher stoppen).
+**Backup?** Die App legt bei jedem Start automatisch ein Backup an (höchstens
+eines pro Tag) unter `~/Traumader/backups/` (bzw. `~/Klartraum/backups/` bei
+älteren Installationen) — die letzten 14 Tage plus je ein Anker-Backup pro
+Monat für 6 Monate bleiben erhalten. Status siehe Lernen-Tab, Karte
+„🔐 Deine Daten“. Zusätzlich weiterhin: regelmäßig CSV/JSON exportieren
+(Analyse-Tab) oder die Datei `dreams.db` manuell kopieren (Server vorher
+stoppen) — ein Backup an einem anderen Ort schützt zusätzlich vor Geräteverlust.
+
+**Wiederherstellen?** Server stoppen. Gewünschte Datei aus dem Backup-Ordner
+(z. B. `dreams-2026-07-10.db`) nach `~/Traumader/dreams.db` kopieren
+(bestehende Datei vorher zur Sicherheit umbenennen). Server neu starten.
 
 **Handy zeigt alte Version?** Seite zweimal neu laden (Service-Worker-Update).
 

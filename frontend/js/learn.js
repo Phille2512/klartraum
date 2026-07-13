@@ -419,20 +419,39 @@ const learn = {
       const info = await api.dataInfo();
       const sizeMB = (info.db_size_bytes / 1024 / 1024).toFixed(1);
       const folderName = info.data_dir.replace(/^.*[/\\]/, "");
+
+      // S.1: Status der automatischen Backups
+      let backupLine;
+      let backupWarning = "";
+      if (!info.last_backup) {
+        backupLine = "Noch kein automatisches Backup vorhanden.";
+        backupWarning = "⚠️ Es wurde noch kein automatisches Backup angelegt — starte die App einmal neu, um eines zu erzeugen.";
+      } else {
+        const lastDate = new Date(info.last_backup + "T00:00:00");
+        const daysAgo = Math.floor((Date.now() - lastDate.getTime()) / 86400000);
+        const when = daysAgo <= 0 ? "heute" : daysAgo === 1 ? "gestern" : `vor ${daysAgo} Tagen`;
+        backupLine = `Letztes automatisches Backup: ${when} · ${info.backup_count} Stände aufbewahrt`;
+        if (daysAgo > 3) {
+          backupWarning = `⚠️ Das letzte automatische Backup ist ${daysAgo} Tage alt. Starte die App, um ein neues anzulegen.`;
+        }
+      }
+
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
         <h2>🔐 Deine Daten</h2>
         <p>Deine <strong>${info.dream_count} Träume</strong>: ${sizeMB} MB in
           <code>~/${escapeHtml(folderName)}/dreams.db</code></p>
+        <p class="text-dim" style="font-size:0.9em">${escapeHtml(backupLine)}</p>
+        ${backupWarning ? `<p style="color:var(--lucid,#f5c66a);font-size:0.9em">${escapeHtml(backupWarning)}</p>` : ""}
         <div class="data-info-text">
           <p><strong>Deine Träume gehören dir — wörtlich.</strong> Alles, was du hier einträgst,
           liegt ausschließlich in einer Datei auf DIESEM Gerät
           (<code>~/${escapeHtml(folderName)}/dreams.db</code>). Keine Cloud, kein Konto, niemand liest mit.</p>
-          <p>Die Kehrseite dieser Freiheit: <strong>Geht das Gerät verloren oder kaputt, sind
-          die Träume weg — es sei denn, du hast ein Backup.</strong> Ein Backup ist eine
-          Kopie dieser einen Datei oder ein Export (Analyse → Datenexport). Mach das
-          regelmäßig — dein zukünftiges Ich dankt dir.</p>
+          <p>Zusätzlich zu deinen eigenen Backups sichert die App bei jedem Start automatisch
+          eine Kopie (siehe oben). Die Kehrseite bleibt trotzdem: <strong>Geht das Gerät
+          verloren oder kaputt, sind die Träume weg</strong>, wenn du keine Kopie an einem
+          anderen Ort hast. Ein Export (Analyse → Datenexport) hilft zusätzlich.</p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem">
           <button class="primary" id="data-export-btn">📤 Backup jetzt (JSON)</button>
