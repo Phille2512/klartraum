@@ -22,9 +22,18 @@
 ### Architektur & Dateien
 
 ```
-backend/main.py      – alle API-Routen, Pydantic-Schemas (DreamIn/DreamOut), Middleware
+backend/main.py      – App-Factory, Middleware, Static Files, Router-Includes (seit S.3)
+backend/deps.py       – get_session, require_auth
+backend/schemas.py     – alle Pydantic-Schemas (DreamIn/DreamOut, ...)
+backend/helpers.py     – to_out, apply_tags, get_or_create_tag
+backend/stats_helpers.py – Statistik-Berechnungen für routers/stats.py
+backend/routers/*.py   – Endpunkte nach API-Gruppe (auth, dreams, tags, cycle,
+                          stats, atlas, map, jung, export) — je eigener
+                          APIRouter(prefix="/api", dependencies=[Depends(require_auth)]),
+                          außer auth.py (ungeschützt)
 backend/models.py    – SQLModel: Dream, Tag (kind: tag|dream_sign|place|person), DreamTag
 backend/database.py  – Engine, init_db(), _migrate() (PRAGMA-basierte ALTER TABLEs)
+backend/backup.py     – automatische Backups (S.1): SQLite-Backup-API, Rotation
 backend/auth.py      – Passwort-Hash + Token-Verwaltung (auth.json, git-ignoriert)
 frontend/index.html  – Single Page, 4 Tabs: Tagebuch, Analyse, Atlas, Lernen
 frontend/js/app.js   – Tab-Navigation, Modul-Init, SW-Registrierung

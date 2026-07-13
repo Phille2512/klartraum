@@ -1,0 +1,207 @@
+"""S.3: Statistik + Mandala, Umzugsarbeit aus main.py (Berechnungen in stats_helpers.py)."""
+import datetime as dt
+from collections import Counter
+
+from fastapi import APIRouter, Depends, Query
+from sqlmodel import Session, select
+
+from deps import get_session, require_auth
+from models import Dream, Intention
+from stats_helpers import build_emotions_analysis, build_per_bucket, build_writing, split_groups
+
+router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
+
+
+@router.get("/stats")
+def stats(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    granularity: str = Query(default="week", pattern="^(day|week|month)$"),
+    split: str | None = Query(default=None, pattern="^(beifuss|weekend|big_dream)$"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
+    total = len(dreams)
+    remembered = [d for d in dreams if d.lucidity >= 1]
+    lucid = [d for d in dreams if d.lucidity >= 3]
+
+    per_bucket = build_per_bucket(dreams, granularity)
+
+    split_data = None
+    groups = split_groups(dreams, split)
+    if groups:
+        label_a, label_b, group_a, group_b = groups
+        split_data = {
+            "kind": split,
+            "label_a": label_a,
+            "label_b": label_b,
+            "n_a": len(group_a),
+            "n_b": len(group_b),
+            "per_bucket_a": build_per_bucket(group_a, granularity),
+            "per_bucket_b": build_per_bucket(group_b, granularity),
+            "writing_a": build_writing(group_a, granularity),
+            "writing_b": build_writing(group_b, granularity),
+            "emotions_analysis_a": build_emotions_analysis(group_a, granularity),
+            "emotions_analysis_b": build_emotions_analysis(group_b, granularity),
+        }
+
+    writing = build_writing(dreams, granularity)
+
+    # Top-Traumzeichen
+    sign_counter: Counter[str] = Counter()
+    for d in dreams:
+        for t in d.tags:
+            if t.kind == "dream_sign":
+                sign_counter[t.name] += 1
+    top_signs = [
+        {"name": name, "count": count}
+        for name, count in sign_counter.most_common(10)
+    ]
+
+    # Traumkompass: Traumzeichen-Vorkommen je LaBerge-Kategorie
+    compass = {"awareness": 0, "action": 0, "form": 0, "context": 0, "uncategorized": 0}
+    for d in dreams:
+        for t in d.tags:
+            if t.kind == "dream_sign":
+                compass[t.category if t.category in compass else "uncategorized"] += 1
+
+    # Fokus-Zeichen: häufigstes Traumzeichen der letzten 14 Tage
+    cutoff = dt.date.today() - dt.timedelta(days=14)
+    recent_counter: Counter[str] = Counter()
+    for d in dreams:
+        if d.date >= cutoff:
+            for t in d.tags:
+                if t.kind == "dream_sign":
+                    recent_counter[t.name] += 1
+    focus = recent_counter.most_common(1)
+    focus_sign = {"name": focus[0][0], "count": focus[0][1]} if focus else None
+
+    # Beifuß-Experiment: Klartraum-Quote mit vs. ohne
+    def lucid_rate(group: list[Dream]) -> float | None:
+        if not group:
+            return None
+        return round(sum(1 for d in group if d.lucidity >= 3) / len(group) * 100, 1)
+
+    with_beifuss = [d for d in dreams if d.beifuss]
+    without_beifuss = [d for d in dreams if not d.beifuss]
+
+    # Streak: an wie vielen Tagen in Folge (bis heute/gestern) wurde eingetragen?
+    days = {d.date for d in dreams}
+    streak = 0
+    cursor = dt.date.today()
+    if cursor not in days:
+        cursor -= dt.timedelta(days=1)
+    while cursor in days:
+        streak += 1
+        cursor -= dt.timedelta(days=1)
+
+    # Emotionen (A.5)
+    emotions_analysis = build_emotions_analysis(dreams, granularity)
+
+    # Wochentag/Schlafqualität-Korrelationen
+    weekday_counter: dict[int, dict[str, int]] = {i: {"total": 0, "lucid": 0} for i in range(7)}
+    sq_lucid: dict[int, dict[str, int]] = {i: {"total": 0, "lucid": 0} for i in range(1, 6)}
+    for d in dreams:
+        wd = d.date.weekday()
+        weekday_counter[wd]["total"] += 1
+        if d.lucidity >= 3:
+            weekday_counter[wd]["lucid"] += 1
+        if d.sleep_quality:
+            sq_lucid[d.sleep_quality]["total"] += 1
+            if d.lucidity >= 3:
+                sq_lucid[d.sleep_quality]["lucid"] += 1
+
+    weekday_names = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+    correlations = {
+        "weekday": [
+            {"day": weekday_names[i], "total": weekday_counter[i]["total"], "lucid": weekday_counter[i]["lucid"]}
+            for i in range(7)
+        ],
+        "sleep_quality": [
+            {"quality": q, "total": sq_lucid[q]["total"], "lucid": sq_lucid[q]["lucid"]}
+            for q in range(1, 6)
+        ],
+    }
+
+    # Inkubations-Quote
+    all_intentions = session.exec(select(Intention)).all()
+    closed = [i for i in all_intentions if i.fulfilled is not None]
+    fulfilled_count = sum(1 for i in closed if i.fulfilled)
+    incubation = {
+        "total": len(closed),
+        "fulfilled": fulfilled_count,
+        "rate": round(fulfilled_count / len(closed) * 100, 1) if closed else 0.0,
+    }
+
+    return {
+        "total": total,
+        "remembered": len(remembered),
+        "lucid": len(lucid),
+        "lucid_rate": round(len(lucid) / total * 100, 1) if total else 0.0,
+        "streak": streak,
+        "granularity": granularity,
+        "per_bucket": per_bucket,
+        "split": split_data,
+        "writing": writing,
+        "top_dream_signs": top_signs,
+        "lucidity_distribution": [
+            sum(1 for d in dreams if d.lucidity == level) for level in range(5)
+        ],
+        "compass": compass,
+        "focus_sign": focus_sign,
+        "beifuss": {
+            "with": {"count": len(with_beifuss), "lucid_rate": lucid_rate(with_beifuss)},
+            "without": {"count": len(without_beifuss), "lucid_rate": lucid_rate(without_beifuss)},
+        },
+        "incubation": incubation,
+        "emotions_analysis": emotions_analysis,
+        "correlations": correlations,
+    }
+
+
+@router.get("/mandala")
+def mandala(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream).order_by(Dream.date)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
+
+    emotion_totals: Counter[str] = Counter()
+    element_counter: Counter[tuple[str, str]] = Counter()
+    dream_data = []
+    for d in dreams:
+        emos = [e.strip() for e in (d.emotions or "").split(",") if e.strip()]
+        for e in emos:
+            emotion_totals[e] += 1
+        for t in d.tags:
+            if t.kind in ("place", "person", "dream_sign"):
+                element_counter[(t.name, t.kind)] += 1
+        dream_data.append({
+            "date": d.date.isoformat(),
+            "lucidity": d.lucidity,
+            "big_dream": d.big_dream,
+            "emotions": emos,
+        })
+
+    top_elements = [
+        {"name": name, "kind": kind, "count": count}
+        for (name, kind), count in element_counter.most_common(12)
+    ]
+
+    return {
+        "days": len({d.date for d in dreams}),
+        "dreams": dream_data,
+        "top_elements": top_elements,
+        "emotion_totals": dict(emotion_totals),
+    }
