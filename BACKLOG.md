@@ -134,10 +134,12 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
 
 ## 🌙 Erfassen & Alltag
 
-- **🌀 Phänomen-Tracking:** falsches Erwachen, Schlafparalyse, Traum-im-Traum,
-  wiederkehrender Traum, Albtraum — als Checkbox-Reihe (Beifuß-Muster) +
-  eigene Auswertung mit Trainings-Hinweisen („4 falsche Erwachen → Reality
-  Check direkt nach jedem Aufwachen"). *Größter fachlicher blinder Fleck.*
+- ~~**🌀 Phänomen-Tracking:**~~ *(Juli 2026)*: falsches Erwachen,
+  Schlafparalyse, Traum-im-Traum, wiederkehrender Traum, Albtraum als
+  Checkbox-Reihe im Formular (analog Beifuß), Badges auf der Traum-Karte,
+  eigene Analyse-Karte mit Zählern + Trainings-Hinweisen (z. B. ab 2 falschen
+  Erwachen: Reality-Check-Tipp; ab 1 Traum-im-Traum: DILD-Hinweis). Neue
+  Dream-Spalten per ALTER-TABLE-Migration (`database.py::_migrate`).
 - **⚡ Zweistufiges Formular (30-Sekunden-Kern):** erst nur Text + Speichern,
   alle Details optional aufklappbar danach. Der meistgenutzte Weg der App
   verdient die meiste Politur.

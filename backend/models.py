@@ -35,6 +35,12 @@ class Dream(SQLModel, table=True):
     beifuss: bool = Field(default=False)  # Beifuß(-Tee) vor dem Schlafen?
     emotions: str | None = None  # kommagetrennte Schlüssel: angst,freude,...
     big_dream: bool = Field(default=False)
+    # Phänomen-Tracking: klassische Traumphänomene für Muster-/Trainingshinweise
+    falsches_erwachen: bool = Field(default=False)
+    schlafparalyse: bool = Field(default=False)
+    traum_im_traum: bool = Field(default=False)
+    wiederkehrend: bool = Field(default=False)
+    albtraum: bool = Field(default=False)
     notes_analysis: str | None = None
     created_at: dt.datetime = Field(default_factory=dt.datetime.utcnow)
 

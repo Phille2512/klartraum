@@ -13,6 +13,15 @@ const EMOTIONS = {
   scham:     { icon: "😳", label: "Scham",        color: "#c97a8a" },
 };
 
+// Phänomen-Tracking: Feld-Id ↔ Checkbox-Id ↔ Badge-Icon/Label
+const PHENOMENA = [
+  { field: "falsches_erwachen", inputId: "dream-falsches-erwachen", icon: "🔁", label: "Falsches Erwachen" },
+  { field: "schlafparalyse", inputId: "dream-schlafparalyse", icon: "🧊", label: "Schlafparalyse" },
+  { field: "traum_im_traum", inputId: "dream-traum-im-traum", icon: "🪆", label: "Traum-im-Traum" },
+  { field: "wiederkehrend", inputId: "dream-wiederkehrend", icon: "♻️", label: "Wiederkehrender Traum" },
+  { field: "albtraum", inputId: "dream-albtraum", icon: "😱", label: "Albtraum" },
+];
+
 // Tagebuch: Erfassen, Liste, Suche, Bearbeiten, Löschen
 const journal = {
   dreams: [],
@@ -188,6 +197,9 @@ const journal = {
     document.getElementById("dream-sleep").value = dream?.sleep_quality ?? "";
     document.getElementById("dream-beifuss").checked = dream ? dream.beifuss : false;
     document.getElementById("dream-bigdream").checked = dream ? dream.big_dream : false;
+    PHENOMENA.forEach((p) => {
+      document.getElementById(p.inputId).checked = dream ? dream[p.field] : false;
+    });
     document.getElementById("dream-tags").value = dream ? dream.tags.join(", ") : "";
     document.getElementById("dream-signs").value = dream ? dream.dream_signs.join(", ") : "";
     document.getElementById("dream-places").value = dream ? dream.places.join(", ") : "";
@@ -254,6 +266,7 @@ const journal = {
       sleep_quality: sleep ? Number(sleep) : null,
       beifuss: document.getElementById("dream-beifuss").checked,
       big_dream: document.getElementById("dream-bigdream").checked,
+      ...Object.fromEntries(PHENOMENA.map((p) => [p.field, document.getElementById(p.inputId).checked])),
       emotions: this.selectedEmotions,
       notes_analysis: document.getElementById("dream-notes").value.trim() || null,
       tags: splitList(document.getElementById("dream-tags").value),
@@ -357,6 +370,7 @@ const journal = {
             ${d.tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join("")}
             ${(d.emotions || []).map((e) => EMOTIONS[e] ? `<span class="badge emotion-badge" style="--emo-color:${EMOTIONS[e].color}">${EMOTIONS[e].icon} ${EMOTIONS[e].label}</span>` : "").join("")}
             ${d.beifuss ? `<span class="badge herb">🌿 Beifuß</span>` : ""}
+            ${PHENOMENA.filter((p) => d[p.field]).map((p) => `<span class="badge phenomenon">${p.icon} ${p.label}</span>`).join("")}
           </div>
           ${d.notes_analysis ? `<p class="hint">📝 ${escapeHtml(d.notes_analysis)}</p>` : ""}
           <div class="entry-expand">

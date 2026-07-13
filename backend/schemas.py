@@ -16,6 +16,11 @@ class DreamIn(BaseModel):
     sleep_quality: int | None = PField(default=None, ge=1, le=5)
     beifuss: bool = False
     big_dream: bool = False
+    falsches_erwachen: bool = False
+    schlafparalyse: bool = False
+    traum_im_traum: bool = False
+    wiederkehrend: bool = False
+    albtraum: bool = False
     emotions: list[str] = []
     notes_analysis: str | None = None
     tags: list[str] = []
@@ -33,6 +38,11 @@ class DreamOut(BaseModel):
     sleep_quality: int | None
     beifuss: bool
     big_dream: bool
+    falsches_erwachen: bool
+    schlafparalyse: bool
+    traum_im_traum: bool
+    wiederkehrend: bool
+    albtraum: bool
     emotions: list[str]
     notes_analysis: str | None
     tags: list[str]

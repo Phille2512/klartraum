@@ -84,6 +84,14 @@
         <label class="checkbox-label">
           <input type="checkbox" id="dream-bigdream"> <span id="bigdream-star">⭐</span> Großer Traum <small>(numinos, aufwühlend, bleibt im Gedächtnis — nach C. G. Jung)</small>
         </label>
+        <label>Phänomene <small>(falls zutreffend)</small></label>
+        <div class="phenomena-picker">
+          <label class="checkbox-label"><input type="checkbox" id="dream-falsches-erwachen"> 🔁 Falsches Erwachen</label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-schlafparalyse"> 🧊 Schlafparalyse</label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-traum-im-traum"> 🪆 Traum-im-Traum</label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-wiederkehrend"> ♻️ Wiederkehrender Traum</label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-albtraum"> 😱 Albtraum</label>
+        </div>
         <label>Emotionen <small>(was hast du im Traum gefühlt?)</small></label>
         <div id="emotion-picker" class="emotion-picker"></div>
         <label>Traumzeichen <small>(wiederkehrende Muster, kommagetrennt)</small>
@@ -206,6 +214,11 @@
           <div id="incubation-card" class="card hidden">
             <h2>🎯 Inkubations-Quote</h2>
             <div id="incubation-stats" class="stat-cards"></div>
+          </div>
+          <div id="phenomena-card" class="card hidden">
+            <h2>🔁 Phänomene</h2>
+            <div id="phenomena-stats" class="stat-cards"></div>
+            <div id="phenomena-hints"></div>
           </div>
         </div>
 

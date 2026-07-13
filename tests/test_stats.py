@@ -89,6 +89,30 @@ def test_stats_split_beifuss(auth_client):
     assert data["split"]["n_b"] == 2  # ohne Beifuß
 
 
+def test_phenomena_counts_and_hints(auth_client):
+    auth_client.post("/api/dreams", json=make_dream(
+        title="P1", date="2026-01-06", falsches_erwachen=True, traum_im_traum=True,
+    ))
+    auth_client.post("/api/dreams", json=make_dream(
+        title="P2", date="2026-01-07", falsches_erwachen=True, albtraum=True,
+    ))
+    data = _stats(auth_client)
+    assert data["phenomena"]["counts"]["falsches_erwachen"] == 2
+    assert data["phenomena"]["counts"]["traum_im_traum"] == 1
+    assert data["phenomena"]["counts"]["albtraum"] == 1
+    assert data["phenomena"]["counts"]["schlafparalyse"] == 0
+    hints = " ".join(data["phenomena"]["hints"])
+    assert "Reality-Check" in hints
+    assert "Traum-im-Traum" in hints
+
+
+def test_phenomena_empty_when_no_flags_set(auth_client):
+    _seed_known_dataset(auth_client)
+    data = _stats(auth_client)
+    assert all(count == 0 for count in data["phenomena"]["counts"].values())
+    assert data["phenomena"]["hints"] == []
+
+
 def test_incubation_rate_in_stats(auth_client):
     auth_client.post("/api/intentions", json={"text": "fliegen üben"})
     intention_id = auth_client.get("/api/intentions/current").json()["id"]

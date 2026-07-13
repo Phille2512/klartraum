@@ -313,6 +313,7 @@ const stats = {
   // ---- ✨ Luzidität ----
   renderLucidity(data) {
     this.renderIncubation(data.incubation);
+    this.renderPhenomena(data.phenomena);
     if (data.split) {
       const a = data.split.per_bucket_a, b = data.split.per_bucket_b;
       this.makeChart("chart-weeks", {
@@ -343,6 +344,30 @@ const stats = {
       <div class="stat-card"><div class="value">${incubation.total}</div><div class="label">Absichten bewertet</div></div>
       <div class="stat-card"><div class="value gold">${incubation.fulfilled}</div><div class="label">davon erfüllt</div></div>
       <div class="stat-card"><div class="value">${incubation.rate}%</div><div class="label">Erfolgsquote</div></div>`;
+  },
+
+  renderPhenomena(phenomena) {
+    const card = document.getElementById("phenomena-card");
+    const total = phenomena ? Object.values(phenomena.counts).reduce((a, b) => a + b, 0) : 0;
+    if (!total) {
+      card.classList.add("hidden");
+      return;
+    }
+    card.classList.remove("hidden");
+    const labels = {
+      falsches_erwachen: { icon: "🔁", label: "Falsches Erwachen" },
+      schlafparalyse: { icon: "🧊", label: "Schlafparalyse" },
+      traum_im_traum: { icon: "🪆", label: "Traum-im-Traum" },
+      wiederkehrend: { icon: "♻️", label: "Wiederkehrend" },
+      albtraum: { icon: "😱", label: "Albtraum" },
+    };
+    document.getElementById("phenomena-stats").innerHTML = Object.entries(phenomena.counts)
+      .filter(([, count]) => count > 0)
+      .map(([key, count]) => `<div class="stat-card"><div class="value">${count}</div><div class="label">${labels[key].icon} ${labels[key].label}</div></div>`)
+      .join("");
+    document.getElementById("phenomena-hints").innerHTML = (phenomena.hints || [])
+      .map((h) => `<p class="hint">💡 ${escapeHtml(h)}</p>`)
+      .join("");
   },
 
   renderWeeks(perBucket) {

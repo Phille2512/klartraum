@@ -302,6 +302,7 @@ button.danger { color: var(--danger); }
 .badge.herb { background: #23402a; color: #8fd49a; }
 .badge.place { background: #23402a; color: #8fd49a; }
 .badge.person { background: #4a3d1f; color: var(--lucid); }
+.badge.phenomenon { background: #402a3a; color: #d49ac0; }
 
 /* --- Traumatlas --- */
 .atlas-legend { margin-bottom: 0.5rem; }
@@ -983,6 +984,15 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 .wm-detail-card { margin-top: 1rem; }
 .wm-detail-card h3 { margin: 0 0 0.5rem; }
 .wm-detail-card .stat-cards { margin-bottom: 0.5rem; }
+
+/* --- Phänomen-Picker --- */
+.phenomena-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.phenomena-picker .checkbox-label { margin-bottom: 0; }
 
 /* --- Emotion Picker --- */
 .emotion-picker {

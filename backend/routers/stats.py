@@ -128,6 +128,31 @@ def stats(
         ],
     }
 
+    # Phänomen-Tracking (falsches Erwachen, Schlafparalyse, Traum-im-Traum, ...)
+    phenomena_counts = {
+        "falsches_erwachen": sum(1 for d in dreams if d.falsches_erwachen),
+        "schlafparalyse": sum(1 for d in dreams if d.schlafparalyse),
+        "traum_im_traum": sum(1 for d in dreams if d.traum_im_traum),
+        "wiederkehrend": sum(1 for d in dreams if d.wiederkehrend),
+        "albtraum": sum(1 for d in dreams if d.albtraum),
+    }
+    phenomena_hints = []
+    if phenomena_counts["falsches_erwachen"] >= 2:
+        phenomena_hints.append(
+            "Mehrere falsche Erwachen — das sind ideale Reality-Check-Momente: "
+            "übe, direkt nach dem Aufwachen einen Reality-Check zu machen, auch wenn es sich echt anfühlt."
+        )
+    if phenomena_counts["traum_im_traum"] >= 1:
+        phenomena_hints.append(
+            "Traum-im-Traum-Momente sind ein starkes Klarheitssignal — achte beim nächsten Mal "
+            "direkt in diesem Moment auf Ungereimtheiten (DILD-Chance)."
+        )
+    if phenomena_counts["wiederkehrend"] >= 2:
+        phenomena_hints.append(
+            "Wiederkehrende Träume eignen sich gut als persönliches Traumzeichen — "
+            "trage sie als Zeichen ein, um sie im Traumatlas zu verfolgen."
+        )
+
     # Inkubations-Quote
     all_intentions = session.exec(select(Intention)).all()
     closed = [i for i in all_intentions if i.fulfilled is not None]
@@ -159,6 +184,7 @@ def stats(
             "without": {"count": len(without_beifuss), "lucid_rate": lucid_rate(without_beifuss)},
         },
         "incubation": incubation,
+        "phenomena": {"counts": phenomena_counts, "hints": phenomena_hints},
         "emotions_analysis": emotions_analysis,
         "correlations": correlations,
     }

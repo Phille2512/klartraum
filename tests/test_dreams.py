@@ -70,6 +70,34 @@ def test_list_dreams_filter_by_tag(auth_client):
     assert titles == ["Mit Zeichen"]
 
 
+def test_phenomena_flags_roundtrip(auth_client):
+    resp = auth_client.post("/api/dreams", json=make_dream(
+        title="Phänomene",
+        falsches_erwachen=True,
+        schlafparalyse=True,
+        traum_im_traum=False,
+        wiederkehrend=True,
+        albtraum=False,
+    ))
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["falsches_erwachen"] is True
+    assert body["schlafparalyse"] is True
+    assert body["traum_im_traum"] is False
+    assert body["wiederkehrend"] is True
+    assert body["albtraum"] is False
+
+    resp = auth_client.get(f"/api/dreams/{body['id']}")
+    assert resp.json()["schlafparalyse"] is True
+
+
+def test_phenomena_flags_default_false(auth_client):
+    resp = auth_client.post("/api/dreams", json=make_dream(title="Ohne Phänomene"))
+    body = resp.json()
+    for field in ("falsches_erwachen", "schlafparalyse", "traum_im_traum", "wiederkehrend", "albtraum"):
+        assert body[field] is False
+
+
 def test_list_dreams_filter_by_big_dream(auth_client):
     auth_client.post("/api/dreams", json=make_dream(title="Gross", big_dream=True))
     auth_client.post("/api/dreams", json=make_dream(title="Normal", big_dream=False))

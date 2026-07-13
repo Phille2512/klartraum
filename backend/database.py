@@ -24,6 +24,9 @@ def _migrate() -> None:
         dream_cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(dream)")}
         tag_cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(tag)")}
 
+        phenomen_cols = (
+            "falsches_erwachen", "schlafparalyse", "traum_im_traum", "wiederkehrend", "albtraum",
+        )
         pending = (
             "beifuss" not in dream_cols
             or "emotions" not in dream_cols
@@ -31,6 +34,7 @@ def _migrate() -> None:
             or "category" not in tag_cols
             or "archetype" not in tag_cols
             or "region_id" not in tag_cols
+            or any(col not in dream_cols for col in phenomen_cols)
         )
         if pending:
             # S.1: vor jedem tatsächlichen ALTER TABLE einen Extra-Snapshot,
@@ -53,6 +57,11 @@ def _migrate() -> None:
             conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN archetype VARCHAR")
         if "region_id" not in tag_cols:
             conn.exec_driver_sql("ALTER TABLE tag ADD COLUMN region_id INTEGER")
+        for col in phenomen_cols:
+            if col not in dream_cols:
+                conn.exec_driver_sql(
+                    f"ALTER TABLE dream ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                )
         conn.commit()
 
 
