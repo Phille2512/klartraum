@@ -145,8 +145,13 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
   anpasst (morgens: großer Erfassen-Knopf + Absichts-Rückfrage; abends:
   Ritual-Einstieg). Philipp war unentschieden — erst nach längerer Nutzung
   wieder anschauen.
-- **⏰ Streak-Nachtrag:** sanfter Hinweis, wenn gestern kein Eintrag war
-  („Auch ‚keine Erinnerung' zählt — nachtragen?").
+- ~~**⏰ Streak-Nachtrag**~~ *(Juli 2026)*: sanfte Hinweis-Karte im Tagebuch,
+  wenn gestern kein Eintrag existiert — mit „Traum eintragen" (Formular
+  vorausgefüllt mit gestern), „Weiß ich nicht mehr" (legt sofort einen
+  Eintrag mit lucidity 0 an — das Datenmodell unterstützte „keine
+  Erinnerung" bereits, jetzt gibt's dafür einen Ein-Klick-Weg) und „nicht
+  mehr erinnern" (blendet die Karte für den Rest des Tages aus, kein Druck).
+  `journal.js::renderStreakNachtrag/bindStreakNachtrag`.
 - **🛡️ Albtraum-Umschreiben (IRT):** Nach einem Albtraum bietet die App an,
   **ein anderes Ende zu schreiben** — Imagery Rehearsal Therapy (nach Barry
   Krakow), die am besten belegte Selbsthilfe-Technik gegen wiederkehrende

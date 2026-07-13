@@ -373,6 +373,14 @@ button.danger { color: var(--danger); }
   font-size: 0.9rem;
 }
 
+/* Streak-Nachtrag: bewusst zurückhaltend gestaltet, kein Alarm-Ton */
+.streak-nachtrag {
+  border: 1px solid var(--bg-input);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.streak-nachtrag p { margin: 0 0 0.5rem; color: var(--text); }
+
 .entry-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
 .entry-actions button { padding: 0.3rem 0.8rem; font-size: 0.85rem; }
 

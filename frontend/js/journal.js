@@ -274,7 +274,7 @@ const journal = {
       return;
     }
     const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
-    this.list.innerHTML = offlineHint + pendingHtml + this.dreams
+    this.list.innerHTML = offlineHint + this.renderStreakNachtrag() + pendingHtml + this.dreams
       .map(
         (d) => `<article class="card dream-entry" id="dream-${d.id}">
           <div class="entry-head">
@@ -316,6 +316,56 @@ const journal = {
       this.loadAnalysis(d.id);
     });
     this.updateTraumfadenButton();
+    this.bindStreakNachtrag();
+  },
+
+  // ---- Streak-Nachtrag: sanfter Hinweis, wenn gestern kein Eintrag existiert ----
+  renderStreakNachtrag() {
+    if (this.search.value.trim()) return ""; // nur in der unbefilterten Ansicht sinnvoll
+    const yesterday = yesterdayISO();
+    if (localStorage.getItem("streak-nachtrag-dismissed") === todayISO()) return "";
+    const hasYesterday = this.dreams.some((d) => d.date === yesterday);
+    if (hasYesterday) return "";
+    return `<div class="card streak-nachtrag">
+      <p>🕯️ Für gestern (${formatDate(yesterday)}) fehlt noch ein Eintrag. Auch
+      „keine Erinnerung" zählt.</p>
+      <div class="chip-row">
+        <button class="chip primary" id="streak-add-btn">Traum eintragen</button>
+        <button class="chip" id="streak-no-memory-btn">Weiß ich nicht mehr</button>
+        <button class="hint" id="streak-dismiss-btn">nicht mehr erinnern</button>
+      </div>
+    </div>`;
+  },
+
+  bindStreakNachtrag() {
+    document.getElementById("streak-add-btn")?.addEventListener("click", () => {
+      this.startNewDream();
+      document.getElementById("dream-date").value = yesterdayISO();
+    });
+    document.getElementById("streak-no-memory-btn")?.addEventListener("click", async () => {
+      try {
+        await api.createDream({
+          date: yesterdayISO(),
+          title: "Keine Erinnerung",
+          content: "",
+          lucidity: 0,
+          sleep_quality: null,
+          beifuss: false,
+          big_dream: false,
+          emotions: [],
+          notes_analysis: null,
+          tags: [], dream_signs: [], places: [], persons: [],
+        });
+        showToast("Nachgetragen — auch das zählt 🕯️");
+        this.load();
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+    document.getElementById("streak-dismiss-btn")?.addEventListener("click", () => {
+      localStorage.setItem("streak-nachtrag-dismissed", todayISO());
+      this.render();
+    });
   },
 
   // ---- H.4: Der Traumfaden — Sternenknopf mit Lebenszyklus ----
@@ -764,6 +814,13 @@ function splitList(value) {
 function todayISO() {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 10);
+}
+
+function yesterdayISO() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  now.setDate(now.getDate() - 1);
   return now.toISOString().slice(0, 10);
 }
 
