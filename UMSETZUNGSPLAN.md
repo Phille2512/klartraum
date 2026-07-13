@@ -87,6 +87,11 @@ frontend/sw.js       – Service Worker, Netz-zuerst, Cache-Name `klartraum-vN`
     (Konfiguration in `tests/conftest.py`, läuft gegen eine Temp-DB, nie
     gegen echte Daten). Jede Stufe jedes Plans endet mit grüner Testsuite;
     neue Endpunkte bringen ihre Tests mit.
+11. **Zweisprachigkeit (seit I.1 des I18N-Plans):** Jeder neue UI-Text läuft
+    über `t()` (`frontend/js/i18n.js`) mit Eintrag in BEIDEN Sprachen —
+    niemals hart kodieren. Nutzerdaten (Traumtexte, Tags, Orte, Personen,
+    Notizen) werden NIEMALS übersetzt. Pläne liefern neue Texte künftig
+    deutsch und englisch.
 
 ### Bestehende API (Kurzreferenz)
 

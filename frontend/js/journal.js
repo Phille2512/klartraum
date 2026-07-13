@@ -920,7 +920,7 @@ function yesterdayISO() {
 }
 
 function formatDate(iso) {
-  return new Date(iso + "T00:00:00").toLocaleDateString("de-DE", {
+  return new Date(iso + "T00:00:00").toLocaleDateString(localeForLang(), {
     weekday: "short", day: "2-digit", month: "2-digit", year: "numeric",
   });
 }

@@ -739,6 +739,20 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 .login-error { color: var(--danger); }
 
 /* --- Abendritual --- */
+.lang-header-btn {
+  position: absolute;
+  right: 8.5rem;
+  top: 0.65rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 8px;
+}
+
+.lang-header-btn:hover { background: var(--bg-input); }
+
 .theme-btn {
   position: absolute;
   right: 3.5rem;
