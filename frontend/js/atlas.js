@@ -14,6 +14,11 @@ const atlas = {
   // "perfekte Verwirrungsmaschine". Startet bei jedem Seitenaufruf neu bei "heute".
   timelapseDate: "",
 
+  // Traumtakt: Knoten, die schon einmal gerendert wurden, "keimen" nicht
+  // erneut (nur echt neue bzw. per Zeitraffer neu auftauchende Knoten sollen
+  // aus dem Nebel wachsen, nicht jeder Knoten bei jedem Filter-Klick).
+  _knownNodeIds: new Set(),
+
   // ---- Filter-Zustand (B.1) ----
   get activeKinds() {
     const raw = localStorage.getItem("atlas-kinds");
@@ -303,11 +308,15 @@ const atlas = {
     // H.1: Bei wenigen sichtbaren Knoten (≤15) alle Namen zeigen — erst
     // darüber greift die Hygiene-Regel gegen das Knäuel (B.1).
     const showAllLabels = nodes.length <= 15;
+    // Traumtakt-Microinteraction: nur wirklich neue Knoten (noch nie gesehen,
+    // z. B. beim Zeitraffer-Vorlauf) "keimen" aus dem Nebel — nicht jeder
+    // Knoten bei jedem Filter-Wechsel.
     const circles = nodes.map((n) => {
       const showLabel = showAllLabels || n.count >= 2 || radius(n) > 15;
       const highlighted = this.searchHighlight === n.id;
+      const isNew = !this._knownNodeIds.has(n.id);
       return `
-      <g class="atlas-node" data-id="${escapeHtml(n.id)}" data-name="${escapeHtml(n.name)}" data-kind="${n.kind}">
+      <g class="atlas-node${isNew ? " atlas-node-keimen" : ""}" data-id="${escapeHtml(n.id)}" data-name="${escapeHtml(n.name)}" data-kind="${n.kind}" style="--keim-x:${n.x}px;--keim-y:${n.y}px">
         <title>${escapeHtml(n.name)} (${n.count}×)</title>
         <circle cx="${n.x}" cy="${n.y}" r="${radius(n)}"
           fill="${this.COLORS[n.kind]}" fill-opacity="0.85"
@@ -323,6 +332,7 @@ const atlas = {
     el.querySelectorAll(".atlas-node").forEach((g) => {
       g.addEventListener("click", () => this.showSeries(g.dataset.name, g.dataset.kind, g.dataset.id));
     });
+    nodes.forEach((n) => this._knownNodeIds.add(n.id));
     this.searchHighlight = null;
   },
 

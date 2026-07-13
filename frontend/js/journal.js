@@ -54,6 +54,16 @@ const journal = {
     const bigDreamLabel = document.getElementById("dream-bigdream")?.closest("label");
     if (bigDreamLabel) wissen.attach(bigDreamLabel, "grosser-traum");
 
+    // Traumtakt-Microinteraction: der Stern funkelt einmal kurz beim Setzen
+    document.getElementById("dream-bigdream")?.addEventListener("change", (e) => {
+      if (!e.target.checked) return;
+      const star = document.getElementById("bigdream-star");
+      if (!star) return;
+      star.classList.remove("sparkle");
+      void star.offsetWidth; // Animation neu starten können
+      star.classList.add("sparkle");
+    });
+
     // Traum-Echos: Debounced bei Texteingabe
     let echoDebounce;
     document.getElementById("dream-content").addEventListener("input", (e) => {
@@ -194,7 +204,9 @@ const journal = {
         showToast("Traum gespeichert 🌙");
       }
       this.closeForm();
-      this.load();
+      await this.load();
+      // Traumtakt-Microinteraction: der Eintrag "legt sich" sanft in die Liste
+      document.getElementById(`dream-${savedDream.id}`)?.classList.add("settle-in");
       if (!id) this.showReflection(savedDream);
     } catch (err) {
       if (!id && err.isNetworkError) {

@@ -11,10 +11,11 @@
   --danger: #e06c75;
   --radius: 12px;
 
-  /* Traumtakt (Navigation, Prinzip 1+2): treiben statt schnappen */
+  /* Traumtakt: zentrale Choreographie-Tokens (Backlog "Traumtakt") */
   --ease-traum: cubic-bezier(0.22, 1, 0.36, 1); /* langer, weicher Auslauf */
-  --dur-touch: 200ms;
-  --dur-drift: 550ms;
+  --dur-touch: 200ms;   /* Mikrointeraktionen: 150-250ms */
+  --dur-drift: 550ms;   /* Übergänge: 400-700ms */
+  --dur-breath: 4s;     /* Atem-Takt für alles Dauerhaft-Pulsierende */
 }
 
 [data-theme="night"] {
@@ -260,6 +261,20 @@ button.danger { color: var(--danger); }
 
 .dream-entry { cursor: default; }
 
+/* Traumtakt-Microinteraction: der gespeicherte Eintrag "legt sich" sanft
+   in die Liste, statt einfach dazustehen */
+.dream-entry.settle-in {
+  animation: eintrag-legt-sich var(--dur-drift) var(--ease-traum);
+}
+
+@keyframes eintrag-legt-sich {
+  from { transform: translateY(10px) scale(0.98); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dream-entry.settle-in { animation: none; }
+}
+
 .dream-entry .entry-head {
   display: flex;
   justify-content: space-between;
@@ -296,6 +311,23 @@ button.danger { color: var(--danger); }
 .atlas-node { cursor: pointer; }
 .atlas-node:hover circle { stroke: #fff; stroke-width: 2; }
 
+/* Traumtakt-Microinteraction: neue Knoten (auch beim Zeitraffer-Vorlauf)
+   "keimen" aus dem Nebel statt einfach dazustehen */
+.atlas-node-keimen {
+  transform-origin: var(--keim-x) var(--keim-y);
+  animation: knoten-keimen var(--dur-drift) var(--ease-traum);
+}
+
+@keyframes knoten-keimen {
+  0% { transform: scale(0); opacity: 0; }
+  65% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-node-keimen { animation: none; }
+}
+
 .series-entry {
   border-top: 1px solid var(--bg-input);
   padding: 0.75rem 0;
@@ -311,6 +343,27 @@ button.danger { color: var(--danger); }
 }
 
 .checkbox-label input { width: auto; margin: 0; accent-color: var(--accent); }
+
+/* Traumtakt-Microinteraction: der Stern funkelt einmal kurz beim Setzen */
+#bigdream-star.sparkle,
+.star-sparkle {
+  display: inline-block;
+  animation: stern-funkeln 0.5s var(--ease-traum);
+}
+
+@keyframes stern-funkeln {
+  0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+  35% { transform: scale(1.35) rotate(-8deg); filter: brightness(1.6); }
+  60% { transform: scale(1.1) rotate(4deg); filter: brightness(1.3); }
+  100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bigdream-star.sparkle,
+  .star-sparkle {
+    animation: none;
+  }
+}
 
 .pending-entry { border: 1px dashed var(--lucid); opacity: 0.85; }
 
@@ -328,7 +381,7 @@ button.danger { color: var(--danger); }
   color: var(--text-dim);
   padding: 2rem 1rem;
   /* Traumtakt (Prinzip 4): Leerzustände atmen leise statt starr zu stehen */
-  animation: leerzustand-atem 4s ease-in-out infinite;
+  animation: leerzustand-atem var(--dur-breath) ease-in-out infinite;
 }
 
 @keyframes leerzustand-atem {
@@ -374,7 +427,7 @@ button.danger { color: var(--danger); }
 /* Traumtakt (Prinzip 4, "Atem als Metrum"): ~4s-Takt statt scharfem Ring-Ping —
    ruhig wie Schlaf, nie blinkend. */
 .traumfaden-btn.traumfaden-pulse {
-  animation: traumfaden-atem 4s ease-in-out infinite;
+  animation: traumfaden-atem var(--dur-breath) ease-in-out infinite;
 }
 
 @keyframes traumfaden-atem {
@@ -874,7 +927,7 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 
 /* Traumtakt (Prinzip 4): der Nebel des Unerforschten atmet leise */
 .wm-fog {
-  animation: nebel-atem 4s ease-in-out infinite;
+  animation: nebel-atem var(--dur-breath) ease-in-out infinite;
 }
 @keyframes nebel-atem {
   0%, 100% { opacity: 0.75; }
@@ -919,13 +972,25 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   color: var(--text-dim);
   font-size: 0.82rem;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--dur-touch) var(--ease-traum), background var(--dur-touch) var(--ease-traum);
 }
 
 .emotion-chip.selected {
-  border-color: var(--emotion-color, var(--accent));
-  background: color-mix(in srgb, var(--emotion-color, var(--accent)) 20%, var(--bg-card));
+  /* Bugfix: JS setzt --emo-color (nicht --emotion-color) inline auf jedem Chip */
+  border-color: var(--emo-color, var(--accent));
+  background: color-mix(in srgb, var(--emo-color, var(--accent)) 20%, var(--bg-card));
   color: var(--text);
+  /* Traumtakt-Microinteraction: weiches Aufleuchten beim Auswählen */
+  animation: chip-aufleuchten var(--dur-touch) var(--ease-traum);
+}
+
+@keyframes chip-aufleuchten {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--emo-color, var(--accent)) 45%, transparent); }
+  100% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--emo-color, var(--accent)) 0%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emotion-chip.selected { animation: none; }
 }
 
 .emotion-badge {
@@ -1411,13 +1476,25 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   position: fixed;
   bottom: 1.5rem;
   left: 50%;
-  transform: translateX(-50%);
   background: var(--accent);
   color: #fff;
   padding: 0.6rem 1.2rem;
   border-radius: 999px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   z-index: 100;
+  /* Traumtakt-Microinteraction: gleitet wie eine Feder ein statt zu poppen.
+     forwards, damit transform nach der Animation bei translate(-50%,0)
+     bleibt (zentriert) statt auf "none" zurückzuspringen. */
+  animation: toast-feder var(--dur-drift) var(--ease-traum) forwards;
+}
+
+@keyframes toast-feder {
+  from { transform: translate(-50%, 16px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
 }
 
 .modal-overlay {

@@ -70,9 +70,22 @@ Wird bei Umsetzung ein eigener Umsetzungsplan; hier Konzept + Vokabular.)*
 >   automatisch seine eigenen Akzent-/Gold-Farbtöne (bestehende
 >   CSS-Variablen).
 >
-> Noch offen: weitere Microinteractions-Kandidaten unten (Speichern-Animation,
-> ⭐-Funkeln, Atlas-Knoten-Keimen, …) — kein Kernstück des Konzepts, eher
-> Feinschliff für später.
+> ✅ **Alle Microinteractions-Kandidaten umgesetzt, Juli 2026:**
+> - Speichern → der Eintrag legt sich sanft in die Liste (`.dream-entry.settle-in`)
+> - ⭐-Stern funkelt einmal kurz beim Setzen (`#bigdream-star.sparkle`,
+>   ausgelöst beim Ankreuzen im Formular)
+> - Emotions-Chips leuchten beim Auswählen weich in ihrer eigenen Farbe auf
+>   (dabei einen bestehenden Bug behoben: CSS erwartete `--emotion-color`,
+>   JS setzte aber `--emo-color` — jeder Chip war bisher immer lila statt
+>   in seiner eigenen Emotionsfarbe)
+> - Neue Atlas-Knoten "keimen" (Scale 0→1 mit Überschwingen) — inkl.
+>   Zeitraffer: nur wirklich neue Knoten keimen, bereits gesehene nicht
+>   erneut bei jedem Filter-Wechsel (Tracking über `_knownNodeIds`)
+> - Toast gleitet wie eine Feder von unten ein statt zu poppen
+> - Choreographie-Token `--dur-breath` (4s) ergänzt, alle drei Atem-
+>   Animationen aus Prinzip 4 darauf umgestellt
+>
+> Damit ist das komplette Traumtakt-Konzept aus diesem Abschnitt umgesetzt.
 
 **Leitidee:** Traumader bewegt sich, wie Träume sich anfühlen — **nichts
 schnappt, alles treibt.** Sechs Prinzipien:
