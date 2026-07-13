@@ -113,8 +113,13 @@ Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
 - **Frontend-Update wird nicht sichtbar:** Cache-Version in `sw.js` bumpen
   (Konvention!) und zweimal neu laden.
 - **Bekannte Grenzen:** Statistik/Atlas laden alle Träume in den Speicher
-  (unkritisch bis ~10.000 Einträge); keine Nutzertrennung; keine Testsuite
-  (Verifikation manuell im Browser).
+  (unkritisch bis ~10.000 Einträge); keine Nutzertrennung.
+- **Testsuite (S.2):** `pytest` unter `tests/` (92 Tests, Laufzeit < 10 s).
+  `tests/conftest.py` setzt `KLARTRAUM_DATA` auf ein Temp-Verzeichnis, bevor
+  Backend-Module importiert werden — die echte Datenbank ist damit für Tests
+  physisch unerreichbar. Ausführen: `.venv/bin/pytest` (Projektwurzel).
+  Vor jedem Test wird das Schema frisch aufgesetzt (keine Reihenfolge-
+  Abhängigkeiten zwischen Tests).
 
 Weitere Pflichtlektüre für Implementierer: `UMSETZUNGSPLAN.md` Teil A
 (Konventionen & Fallstricke), `ROADMAP.md` (Vision).

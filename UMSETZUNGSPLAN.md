@@ -65,9 +65,16 @@ frontend/sw.js       – Service Worker, Netz-zuerst, Cache-Name `klartraum-vN`
 7. **Nutzerdaten sind heilig:** `backend/dreams.db` enthält echte Träume.
    Testeinträge mit erkennbarem Titel anlegen (z. B. `TEST-…`) und danach
    restlos löschen. `dreams.db` und `auth.json` sind git-ignoriert — nie committen.
-8. **Verifikation:** Es gibt keine Testsuite. Jede Stufe im Browser
-   durchspielen (auch mobiler Viewport 412 px) und erst dann committen.
-   Ein Commit pro Stufe, Nachrichten auf Deutsch.
+8. **Verifikation:** Jede Stufe zusätzlich im Browser durchspielen (auch
+   mobiler Viewport 412 px) und erst dann committen. Ein Commit pro Stufe,
+   Nachrichten auf Deutsch.
+9. **Testeinträge in `dreams.db` gehören NICHT in die automatisierte Suite** —
+   das ist manuelle Verifikation im Browser gegen die echte Datenbank. Für
+   automatisierte Backend-Tests siehe Punkt 10.
+10. **Testsuite (seit S.2 des Sicherheitsnetz-Plans):** `.venv/bin/pytest`
+    (Konfiguration in `tests/conftest.py`, läuft gegen eine Temp-DB, nie
+    gegen echte Daten). Jede Stufe jedes Plans endet mit grüner Testsuite;
+    neue Endpunkte bringen ihre Tests mit.
 
 ### Bestehende API (Kurzreferenz)
 

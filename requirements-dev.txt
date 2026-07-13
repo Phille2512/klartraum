@@ -1,2 +1,4 @@
 -r requirements.txt
 pyinstaller
+pytest==8.*
+httpx==0.28.*

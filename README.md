@@ -18,7 +18,28 @@ python3 -m venv .venv
 
 Dann im Browser: <http://localhost:8000>
 
-Die Datenbank (`backend/dreams.db`) wird beim ersten Start automatisch angelegt.
+Die Datenbank (standardmäßig `~/Traumader/dreams.db`) wird beim ersten Start
+automatisch angelegt; bei jedem Start entsteht zusätzlich ein automatisches
+Backup (siehe `docs/ARCHITEKTUR.md`, Betriebs-Wissen).
+
+## Testsuite
+
+```bash
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/pytest
+```
+
+Läuft komplett gegen eine temporäre Datenbank (`tests/conftest.py` setzt
+`KLARTRAUM_DATA` auf ein Temp-Verzeichnis, bevor Backend-Module geladen
+werden) — die echten Traumdaten werden dabei nie angefasst.
+
+## Update-Routine
+
+```bash
+git pull
+.venv/bin/pytest          # grün? erst dann weiter
+# Server neu starten (Backup läuft automatisch beim Start)
+```
 
 ## Zugriff vom Google Pixel (gleiches WLAN)
 
