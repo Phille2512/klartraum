@@ -1,33 +1,36 @@
+// label ist ein Getter statt eines festen Strings: so bleiben alle bestehenden
+// Zugriffe (e.label, s.label, ...) in journal.js/stats.js/lesezimmer.js
+// unverändert lauffähig, liefern aber automatisch den übersetzten Text.
 const EMOTIONS = {
-  angst:     { icon: "😰", label: "Angst",      color: "#8b5e5e" },
-  freude:    { icon: "😊", label: "Freude",      color: "#f5c66a" },
-  staunen:   { icon: "🤩", label: "Staunen",     color: "#a78bfa" },
-  trauer:    { icon: "😢", label: "Trauer",      color: "#6b8dad" },
-  wut:       { icon: "😤", label: "Wut",         color: "#e06c75" },
-  liebe:     { icon: "💗", label: "Liebe",       color: "#f0a0b0" },
-  neugier:   { icon: "🔍", label: "Neugier",     color: "#8fd49a" },
-  verwirrung:{ icon: "😵‍💫", label: "Verwirrung", color: "#c9a060" },
-  frieden:   { icon: "🕊️", label: "Frieden",     color: "#a0c4e8" },
-  ekel:      { icon: "🤢", label: "Ekel",        color: "#7a9a6a" },
-  sehnsucht: { icon: "🌅", label: "Sehnsucht",   color: "#d4a070" },
-  scham:     { icon: "😳", label: "Scham",        color: "#c97a8a" },
+  angst:     { icon: "😰", get label() { return t("emotion.angst"); },      color: "#8b5e5e" },
+  freude:    { icon: "😊", get label() { return t("emotion.freude"); },      color: "#f5c66a" },
+  staunen:   { icon: "🤩", get label() { return t("emotion.staunen"); },     color: "#a78bfa" },
+  trauer:    { icon: "😢", get label() { return t("emotion.trauer"); },      color: "#6b8dad" },
+  wut:       { icon: "😤", get label() { return t("emotion.wut"); },         color: "#e06c75" },
+  liebe:     { icon: "💗", get label() { return t("emotion.liebe"); },       color: "#f0a0b0" },
+  neugier:   { icon: "🔍", get label() { return t("emotion.neugier"); },     color: "#8fd49a" },
+  verwirrung:{ icon: "😵‍💫", get label() { return t("emotion.verwirrung"); }, color: "#c9a060" },
+  frieden:   { icon: "🕊️", get label() { return t("emotion.frieden"); },     color: "#a0c4e8" },
+  ekel:      { icon: "🤢", get label() { return t("emotion.ekel"); },        color: "#7a9a6a" },
+  sehnsucht: { icon: "🌅", get label() { return t("emotion.sehnsucht"); },   color: "#d4a070" },
+  scham:     { icon: "😳", get label() { return t("emotion.scham"); },       color: "#c97a8a" },
 };
 
 // Phänomen-Tracking: Feld-Id ↔ Checkbox-Id ↔ Badge-Icon/Label
 const PHENOMENA = [
-  { field: "falsches_erwachen", inputId: "dream-falsches-erwachen", icon: "🔁", label: "Falsches Erwachen" },
-  { field: "schlafparalyse", inputId: "dream-schlafparalyse", icon: "🧊", label: "Schlafparalyse" },
-  { field: "traum_im_traum", inputId: "dream-traum-im-traum", icon: "🪆", label: "Traum-im-Traum" },
-  { field: "wiederkehrend", inputId: "dream-wiederkehrend", icon: "♻️", label: "Wiederkehrender Traum" },
-  { field: "albtraum", inputId: "dream-albtraum", icon: "😱", label: "Albtraum" },
+  { field: "falsches_erwachen", inputId: "dream-falsches-erwachen", icon: "🔁", get label() { return t("phenomenon.falschesErwachen"); } },
+  { field: "schlafparalyse", inputId: "dream-schlafparalyse", icon: "🧊", get label() { return t("phenomenon.schlafparalyse"); } },
+  { field: "traum_im_traum", inputId: "dream-traum-im-traum", icon: "🪆", get label() { return t("phenomenon.traumImTraum"); } },
+  { field: "wiederkehrend", inputId: "dream-wiederkehrend", icon: "♻️", get label() { return t("phenomenon.wiederkehrend"); } },
+  { field: "albtraum", inputId: "dream-albtraum", icon: "😱", get label() { return t("phenomenon.albtraum"); } },
 ];
 
 // Substanzen vor dem Schlafen: Preset-Key ↔ Checkbox-Id ↔ Badge-Icon/Label
 const SUBSTANCES = [
-  { key: "beifuss", inputId: "dream-substance-beifuss", icon: "🌿", label: "Beifuß" },
-  { key: "melatonin", inputId: "dream-substance-melatonin", icon: "💊", label: "Melatonin" },
-  { key: "alkohol", inputId: "dream-substance-alkohol", icon: "🍷", label: "Alkohol" },
-  { key: "weed", inputId: "dream-substance-weed", icon: "🌱", label: "Weed" },
+  { key: "beifuss", inputId: "dream-substance-beifuss", icon: "🌿", get label() { return t("substance.beifuss"); } },
+  { key: "melatonin", inputId: "dream-substance-melatonin", icon: "💊", get label() { return t("substance.melatonin"); } },
+  { key: "alkohol", inputId: "dream-substance-alkohol", icon: "🍷", get label() { return t("substance.alkohol"); } },
+  { key: "weed", inputId: "dream-substance-weed", icon: "🌱", get label() { return t("substance.weed"); } },
 ];
 
 // Tagebuch: Erfassen, Liste, Suche, Bearbeiten, Löschen
@@ -196,7 +199,7 @@ const journal = {
 
   async openForm(dream = null) {
     this.form.classList.remove("hidden");
-    document.getElementById("form-title").textContent = dream ? "Traum bearbeiten" : "Neuer Traum";
+    document.getElementById("form-title").textContent = dream ? t("journal.formTitleEdit") : t("journal.formTitleNew");
     document.getElementById("dream-id").value = dream ? dream.id : "";
     document.getElementById("dream-date").value = dream ? dream.date : todayISO();
     document.getElementById("dream-title").value = dream ? dream.title : "";
@@ -232,21 +235,21 @@ const journal = {
         if (intention) {
           prompt.classList.remove("hidden");
           prompt.innerHTML = `
-            <p>🎯 Deine Absicht war: "<strong>${escapeHtml(intention.text)}</strong>" — hat es geklappt?</p>
+            <p>${t("journal.intentionPrompt", { text: `<strong>${escapeHtml(intention.text)}</strong>` })}</p>
             <div class="form-actions">
-              <button type="button" class="primary" data-answer="yes">Ja ✓</button>
-              <button type="button" data-answer="no">Nein ✗</button>
-              <button type="button" data-answer="later">Später</button>
+              <button type="button" class="primary" data-answer="yes">${t("common.yes")}</button>
+              <button type="button" data-answer="no">${t("common.no")}</button>
+              <button type="button" data-answer="later">${t("common.later")}</button>
             </div>`;
           prompt.querySelector('[data-answer="yes"]').addEventListener("click", async () => {
             await api.fulfillIntention(intention.id, true);
             prompt.classList.add("hidden");
-            showToast("Glückwunsch! Absicht erfüllt ✨");
+            showToast(t("journal.toastIntentionYes"));
           });
           prompt.querySelector('[data-answer="no"]').addEventListener("click", async () => {
             await api.fulfillIntention(intention.id, false);
             prompt.classList.add("hidden");
-            showToast("Nächstes Mal klappt's 💪");
+            showToast(t("journal.toastIntentionNo"));
           });
           prompt.querySelector('[data-answer="later"]').addEventListener("click", () => {
             prompt.classList.add("hidden");
@@ -290,10 +293,10 @@ const journal = {
       let savedDream;
       if (id) {
         savedDream = await api.updateDream(id, payload);
-        showToast("Traum aktualisiert");
+        showToast(t("journal.toastUpdated"));
       } else {
         savedDream = await api.createDream(payload);
-        showToast("Traum gespeichert 🌙");
+        showToast(t("journal.toastSaved"));
       }
       this.closeForm();
       await this.load();
@@ -304,11 +307,11 @@ const journal = {
       if (!id && err.isNetworkError) {
         // Server nicht erreichbar: Traum in die Offline-Warteschlange legen
         await offline.enqueue(payload);
-        showToast("Offline gespeichert – wird übertragen, sobald der Server erreichbar ist 📥");
+        showToast(t("journal.toastSavedOffline"));
         this.closeForm();
         this.load();
       } else if (err.isNetworkError) {
-        showToast("Bearbeiten geht nur mit Verbindung zum Server");
+        showToast(t("journal.toastEditNeedsServer"));
       } else {
         showToast(err.message);
       }
@@ -316,10 +319,10 @@ const journal = {
   },
 
   async remove(id) {
-    if (!confirm("Diesen Traum wirklich löschen?")) return;
+    if (!confirm(t("journal.confirmDelete"))) return;
     try {
       await api.deleteDream(id);
-      showToast("Traum gelöscht");
+      showToast(t("journal.toastDeleted"));
       this.load();
     } catch (err) {
       showToast(err.message);
@@ -328,8 +331,7 @@ const journal = {
 
   render() {
     const offlineHint = this.serverOffline
-      ? `<div class="card offline-hint">📡 Server nicht erreichbar – neue Träume werden auf diesem Gerät
-         zwischengespeichert und automatisch übertragen.</div>`
+      ? `<div class="card offline-hint">${t("journal.offlineHint")}</div>`
       : "";
 
     const pendingHtml = this.pending
@@ -340,9 +342,9 @@ const journal = {
             <span class="entry-date">${formatDate(p.payload.date)}</span>
           </div>
           ${p.payload.content ? `<p>${escapeHtml(p.payload.content)}</p>` : ""}
-          <div><span class="badge pending">⏳ wartet auf Übertragung</span></div>
+          <div><span class="badge pending">${t("journal.pendingBadge")}</span></div>
           <div class="entry-actions">
-            <button class="danger" onclick="journal.removePending(${p.queueId})">Verwerfen</button>
+            <button class="danger" onclick="journal.removePending(${p.queueId})">${t("journal.discard")}</button>
           </div>
         </article>`
       )
@@ -350,7 +352,7 @@ const journal = {
 
     if (!this.dreams.length && !this.pending.length) {
       if (this.search.value || this.hasActiveFilters()) {
-        this.list.innerHTML = offlineHint + `<div class="empty-state">Keine Träume gefunden.</div>`;
+        this.list.innerHTML = offlineHint + `<div class="empty-state">${t("journal.emptyResults")}</div>`;
         this.updateTraumfadenButton();
         return;
       }
@@ -359,13 +361,13 @@ const journal = {
       this.list.innerHTML = offlineHint + `<div class="card path-welcome">
         <h2>${TRAUMFADEN.title}</h2>
         ${TRAUMFADEN.short}
-        <button class="primary" id="path-welcome-btn">Ersten Traum festhalten</button>
+        <button class="primary" id="path-welcome-btn">${t("journal.firstDreamBtn")}</button>
       </div>`;
       document.getElementById("path-welcome-btn")?.addEventListener("click", () => this.startNewDream());
       document.getElementById("traumfaden-btn")?.classList.add("hidden");
       return;
     }
-    const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
+    const lucidityLabels = [0, 1, 2, 3, 4].map((i) => t(`journal.lucidityBadge.${i}`));
     this.list.innerHTML = offlineHint + this.renderStreakNachtrag() + pendingHtml + this.dreams
       .map(
         (d) => `<article class="card dream-entry" id="dream-${d.id}">
@@ -379,7 +381,7 @@ const journal = {
             ${d.dream_signs.map((s) => `<span class="badge sign">🔮 ${escapeHtml(s)}</span>`).join("")}
             ${d.places.map((p) => `<span class="badge place">📍 ${escapeHtml(p)}</span>`).join("")}
             ${d.persons.map((p) => `<span class="badge person">👤 ${escapeHtml(p)}</span>`).join("")}
-            ${d.tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join("")}
+            ${d.tags.map((tag) => `<span class="badge">${escapeHtml(tag)}</span>`).join("")}
             ${(d.emotions || []).map((e) => EMOTIONS[e] ? `<span class="badge emotion-badge" style="--emo-color:${EMOTIONS[e].color}">${EMOTIONS[e].icon} ${EMOTIONS[e].label}</span>` : "").join("")}
             ${SUBSTANCES.filter((s) => d.substances.includes(s.key)).map((s) => `<span class="badge herb">${s.icon} ${s.label}</span>`).join("")}
             ${d.substance_other ? `<span class="badge herb">🧪 ${escapeHtml(d.substance_other)}</span>` : ""}
@@ -393,12 +395,12 @@ const journal = {
             <div class="expand-analysis" id="analysis-${d.id}"></div>
           </div>
           <div class="entry-actions">
-            <button onclick="journal.edit(${d.id})">Bearbeiten</button>
-            <button onclick="journal.showReflection(journal.dreams.find(x=>x.id===${d.id}))">🪞 Reflexion</button>
-            <button onclick="journal.openImagination(${d.id})">🔮 Weiterträumen</button>
-            <button onclick="journal.openSyncForm(${d.id})">🔗 Synchronizität</button>
-            <button onclick="journal.openAnalysis(${d.id})">🧭 Jung-Analyse</button>
-            <button class="danger" onclick="journal.remove(${d.id})">Löschen</button>
+            <button onclick="journal.edit(${d.id})">${t("common.edit")}</button>
+            <button onclick="journal.showReflection(journal.dreams.find(x=>x.id===${d.id}))">${t("journal.actionReflection")}</button>
+            <button onclick="journal.openImagination(${d.id})">${t("journal.actionImagination")}</button>
+            <button onclick="journal.openSyncForm(${d.id})">${t("journal.actionSync")}</button>
+            <button onclick="journal.openAnalysis(${d.id})">${t("journal.actionAnalysis")}</button>
+            <button class="danger" onclick="journal.remove(${d.id})">${t("common.delete")}</button>
           </div>
         </article>`
       )
@@ -421,12 +423,11 @@ const journal = {
     const hasYesterday = this.dreams.some((d) => d.date === yesterday);
     if (hasYesterday) return "";
     return `<div class="card streak-nachtrag">
-      <p>🕯️ Für gestern (${formatDate(yesterday)}) fehlt noch ein Eintrag. Auch
-      „keine Erinnerung" zählt.</p>
+      <p>${t("journal.streakMissing", { date: formatDate(yesterday) })}</p>
       <div class="chip-row">
-        <button class="chip primary" id="streak-add-btn">Traum eintragen</button>
-        <button class="chip" id="streak-no-memory-btn">Weiß ich nicht mehr</button>
-        <button class="hint" id="streak-dismiss-btn">nicht mehr erinnern</button>
+        <button class="chip primary" id="streak-add-btn">${t("journal.streakAdd")}</button>
+        <button class="chip" id="streak-no-memory-btn">${t("journal.streakNoMemory")}</button>
+        <button class="hint" id="streak-dismiss-btn">${t("journal.streakDismiss")}</button>
       </div>
     </div>`;
   },
@@ -440,7 +441,7 @@ const journal = {
       try {
         await api.createDream({
           date: yesterdayISO(),
-          title: "Keine Erinnerung",
+          title: t("journal.noMemoryTitle"),
           content: "",
           lucidity: 0,
           sleep_quality: null,
@@ -451,7 +452,7 @@ const journal = {
           notes_analysis: null,
           tags: [], dream_signs: [], places: [], persons: [],
         });
-        showToast("Nachgetragen — auch das zählt 🕯️");
+        showToast(t("journal.toastStreakAdded"));
         this.load();
       } catch (err) {
         showToast(err.message);
@@ -549,9 +550,8 @@ const journal = {
         el.classList.add("hidden");
         return;
       }
-      const lucidityLabels = ["", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
       el.classList.remove("hidden");
-      el.innerHTML = `<p class="hint">🔁 <strong>Traum-Echos</strong> — erinnert an:</p>
+      el.innerHTML = `<p class="hint">${t("journal.echoesHeading")}</p>
         ${echoes.map((e) => `<div class="echo-entry">
           <span>${escapeHtml(e.title)}</span>
           <span class="hint">${formatDate(e.date)}${e.lucidity >= 3 ? " ✨" : ""}</span>
@@ -596,7 +596,7 @@ const journal = {
       if (!answer) { close(); return; }
       try {
         await api.createReflection(dream.id, question, answer);
-        showToast("Reflexion gespeichert 🪞");
+        showToast(t("journal.toastReflectionSaved"));
         this.load();
       } catch (err) { showToast(err.message); }
       close();
@@ -610,7 +610,7 @@ const journal = {
     try {
       const refs = await api.listReflections(dreamId);
       if (!refs.length) return;
-      el.innerHTML = `<details class="expand-detail"><summary>🪞 ${refs.length} Reflexion${refs.length > 1 ? "en" : ""}</summary>
+      el.innerHTML = `<details class="expand-detail"><summary>🪞 ${refs.length} ${refs.length > 1 ? t("journal.reflectionMany") : t("journal.reflectionOne")}</summary>
         ${refs.map((r) => `<div class="ref-entry">
           <p class="ref-q">${escapeHtml(r.question)}</p>
           <p>${escapeHtml(r.answer)}</p>
@@ -634,10 +634,10 @@ const journal = {
     try {
       const imgs = await api.listImaginations(dreamId);
       if (!imgs.length) return;
-      el.innerHTML = `<details class="expand-detail"><summary>🔮 ${imgs.length} Aktive Imagination${imgs.length > 1 ? "en" : ""}</summary>
+      el.innerHTML = `<details class="expand-detail"><summary>🔮 ${imgs.length} ${imgs.length > 1 ? t("journal.imaginationMany") : t("journal.imaginationOne")}</summary>
         ${imgs.map((i) => `<div class="ref-entry">
           <p>${escapeHtml(i.text)}</p>
-          <span class="hint">${new Date(i.created_at).toLocaleDateString("de-DE")}</span>
+          <span class="hint">${new Date(i.created_at).toLocaleDateString(localeForLang())}</span>
           <button class="ref-del hint" onclick="journal.deleteImagination(${i.id},${dreamId})">✕</button>
         </div>`).join("")}
       </details>`;
@@ -688,7 +688,7 @@ const journal = {
       if (!text) { close(); return; }
       try {
         await api.createImagination(dreamId, text);
-        showToast("Imagination gespeichert 🔮");
+        showToast(t("journal.toastImaginationSaved"));
         const el = document.getElementById(`imgs-${dreamId}`);
         if (el) { el.dataset.loaded = ""; el.innerHTML = ""; }
         this.loadImaginations(dreamId);
@@ -702,13 +702,13 @@ const journal = {
     if (!el) return;
     const today = todayISO();
     el.innerHTML = `<div class="sync-form card" style="margin-top:0.5rem">
-      <h4>🔗 Ist etwas dazu passiert?</h4>
-      <p class="hint">Bedeutsame Koinzidenz zwischen Traum und Wachleben.</p>
-      <label>Datum <input type="date" class="sync-date" value="${today}"></label>
-      <label>Was geschah? <textarea class="sync-text" rows="2" placeholder="Was im Wachleben passiert ist ..."></textarea></label>
+      <h4>${t("journal.syncFormTitle")}</h4>
+      <p class="hint">${t("journal.syncFormHint")}</p>
+      <label>${t("journal.dateLabel")} <input type="date" class="sync-date" value="${today}"></label>
+      <label>${t("journal.syncTextLabel")} <textarea class="sync-text" rows="2" placeholder="${t("journal.syncTextPlaceholder")}"></textarea></label>
       <div class="form-actions">
-        <button class="primary sync-save-btn">Speichern</button>
-        <button class="sync-cancel-btn">Abbrechen</button>
+        <button class="primary sync-save-btn">${t("common.save")}</button>
+        <button class="sync-cancel-btn">${t("common.cancel")}</button>
       </div>
     </div>`;
 
@@ -721,7 +721,7 @@ const journal = {
       if (!text) return;
       try {
         await api.createSyncEvent(dreamId, date, text);
-        showToast("Synchronizität gespeichert 🔗");
+        showToast(t("journal.toastSyncSaved"));
         el.innerHTML = "";
         el.dataset.loaded = "";
         this.loadSyncEvents(dreamId);
@@ -738,11 +738,11 @@ const journal = {
       const events = await api.listSyncEvents();
       const dreamEvents = events.filter((e) => e.dream_id === dreamId);
       if (!dreamEvents.length) return;
-      el.innerHTML = `<details class="expand-detail"><summary>🔗 ${dreamEvents.length} Synchronizität${dreamEvents.length > 1 ? "en" : ""}</summary>
+      el.innerHTML = `<details class="expand-detail"><summary>🔗 ${dreamEvents.length} ${dreamEvents.length > 1 ? t("journal.syncMany") : t("journal.syncOne")}</summary>
         ${dreamEvents.map((e) => {
           const dreamDate = this.dreams.find((d) => d.id === dreamId)?.date;
           const daysDiff = dreamDate ? Math.round((new Date(e.date) - new Date(dreamDate)) / 86400000) : null;
-          const timeHint = daysDiff !== null && daysDiff > 0 ? `${daysDiff} Tag${daysDiff > 1 ? "e" : ""} später` : formatDate(e.date);
+          const timeHint = daysDiff !== null && daysDiff > 0 ? `${daysDiff} ${daysDiff > 1 ? t("journal.daysLater") : t("journal.dayLater")}` : formatDate(e.date);
           return `<div class="ref-entry">
             <p>🔗 ${timeHint}: ${escapeHtml(e.text)}</p>
             <button class="ref-del hint" onclick="journal.deleteSyncEvent(${e.id},${dreamId})">&#x2715;</button>
@@ -760,9 +760,9 @@ const journal = {
   },
 
   async removePending(queueId) {
-    if (!confirm("Diesen noch nicht übertragenen Traum verwerfen?")) return;
+    if (!confirm(t("journal.confirmDiscardPending"))) return;
     await offline.remove(queueId);
-    showToast("Offline-Eintrag verworfen");
+    showToast(t("journal.toastPendingDiscarded"));
     this.load();
   },
 
@@ -787,12 +787,12 @@ const journal = {
     const overlay = document.createElement("div");
     overlay.className = "overlay analysis-overlay";
     overlay.innerHTML = `<div class="overlay-content analysis-content">
-      <h3>🧭 Jung-Analyse: ${escapeHtml(dream.title)}</h3>
-      <p class="hint">Sechs Perspektiven auf deinen Traum. Du kannst jederzeit abbrechen — bereits Gespeichertes bleibt erhalten.</p>
+      <h3>${t("journal.analysisTitle", { title: escapeHtml(dream.title) })}</h3>
+      <p class="hint">${t("journal.analysisHint")}</p>
       <div class="analysis-stations"></div>
       <div class="analysis-step"></div>
       <div class="form-actions" style="margin-top:1rem">
-        <button class="analysis-close">Schließen</button>
+        <button class="analysis-close">${t("common.close")}</button>
       </div>
     </div>`;
     document.body.appendChild(overlay);
@@ -810,7 +810,7 @@ const journal = {
     const renderStep = async () => {
       renderDots();
       if (currentIdx >= this.ANALYSIS_STATIONS.length) {
-        stepEl.innerHTML = '<p style="text-align:center;padding:1rem">✅ Alle Stationen beantwortet!</p>';
+        stepEl.innerHTML = `<p style="text-align:center;padding:1rem">${t("journal.analysisAllDone")}</p>`;
         setTimeout(() => { overlay.remove(); this.load(); }, 1200);
         return;
       }
@@ -824,11 +824,11 @@ const journal = {
       stepEl.innerHTML = `<div class="analysis-step-inner">
         <h4>${station.icon} ${station.title}</h4>
         <p class="analysis-question">${station.q}</p>
-        <textarea class="analysis-answer" rows="4" placeholder="Deine Gedanken ...">${escapeHtml(existing)}</textarea>
+        <textarea class="analysis-answer" rows="4" placeholder="${t("journal.thoughtsPlaceholder")}">${escapeHtml(existing)}</textarea>
         <div class="form-actions">
-          ${currentIdx > 0 ? '<button class="analysis-prev">Zurück</button>' : ''}
-          <button class="primary analysis-save">Speichern & weiter</button>
-          <button class="analysis-skip hint">Überspringen</button>
+          ${currentIdx > 0 ? `<button class="analysis-prev">${t("journal.back")}</button>` : ''}
+          <button class="primary analysis-save">${t("journal.saveAndNext")}</button>
+          <button class="analysis-skip hint">${t("journal.skip")}</button>
         </div>
       </div>`;
 
@@ -837,7 +837,7 @@ const journal = {
         if (!answer) { currentIdx++; renderStep(); return; }
         try {
           await api.createDreamAnalysis(dreamId, station.key, answer);
-          showToast(station.title + " gespeichert");
+          showToast(t("journal.toastStationSaved", { station: station.title }));
         } catch (err) { showToast(err.message); return; }
         currentIdx++;
         renderStep();
@@ -881,7 +881,7 @@ const journal = {
       if (!entries.length) return;
       const stationMap = {};
       this.ANALYSIS_STATIONS.forEach((s) => stationMap[s.key] = s);
-      el.innerHTML = `<details class="expand-detail"><summary>🧭 Jung-Analyse (${entries.length}/6)</summary>
+      el.innerHTML = `<details class="expand-detail"><summary>${t("journal.jungAnalysisSummary", { done: entries.length })}</summary>
         ${entries.map((e) => {
           const s = stationMap[e.station] || { icon: "?", title: e.station };
           return `<div class="ref-entry analysis-entry">

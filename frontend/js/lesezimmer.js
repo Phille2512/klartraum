@@ -141,7 +141,7 @@ const lesezimmer = {
 
     document.getElementById("lesezimmer-date").textContent = formatDate(d.date);
     document.getElementById("lesezimmer-title").textContent = (d.big_dream ? "⭐ " : "") + d.title;
-    document.getElementById("lesezimmer-text").textContent = d.content || "(kein Text festgehalten)";
+    document.getElementById("lesezimmer-text").textContent = d.content || t("lesezimmer.noContent");
 
     const details = document.getElementById("lesezimmer-details");
     details.classList.add("hidden");
@@ -152,13 +152,13 @@ const lesezimmer = {
   },
 
   renderDetails(d) {
-    const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
+    const lucidityLabels = [0, 1, 2, 3, 4].map((i) => t(`journal.lucidityBadge.${i}`));
     const parts = [
       `<span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${lucidityLabels[d.lucidity]}</span>`,
       ...d.dream_signs.map((s) => `<span class="badge sign">🔮 ${escapeHtml(s)}</span>`),
       ...d.places.map((p) => `<span class="badge place">📍 ${escapeHtml(p)}</span>`),
       ...d.persons.map((p) => `<span class="badge person">👤 ${escapeHtml(p)}</span>`),
-      ...d.tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`),
+      ...d.tags.map((tag) => `<span class="badge">${escapeHtml(tag)}</span>`),
       ...(d.emotions || []).map((e) =>
         EMOTIONS[e]
           ? `<span class="badge emotion-badge" style="--emo-color:${EMOTIONS[e].color}">${EMOTIONS[e].icon} ${EMOTIONS[e].label}</span>`
@@ -181,7 +181,7 @@ const lesezimmer = {
       const echoes = await api.dreamEchoes(d.content.trim(), d.id);
       if (!echoes.length) return;
       el.innerHTML =
-        `<p class="hint">Ähnliche Träume:</p>` +
+        `<p class="hint">${t("lesezimmer.echoesHeading")}</p>` +
         echoes.map((e) => `<button type="button" class="chip echo-jump" data-id="${e.id}">${escapeHtml(e.title)}</button>`).join("");
       el.querySelectorAll(".echo-jump").forEach((btn) => {
         btn.addEventListener("click", () => this.jumpTo(Number(btn.dataset.id)));

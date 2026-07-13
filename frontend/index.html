@@ -30,103 +30,103 @@
     <!-- ===== Tagebuch ===== -->
     <section id="tab-journal" class="tab active">
       <div class="journal-toolbar">
-        <input type="search" id="search-input" placeholder="Träume durchsuchen …">
-        <button id="new-dream-btn" class="primary">+ Neuer Traum</button>
+        <input type="search" id="search-input" data-i18n-placeholder="journal.searchPlaceholder" placeholder="Träume durchsuchen …">
+        <button id="new-dream-btn" class="primary" data-i18n="journal.newDream">+ Neuer Traum</button>
       </div>
 
-      <button type="button" id="journal-filter-toggle" class="chip">🔎 Filter</button>
+      <button type="button" id="journal-filter-toggle" class="chip" data-i18n="journal.filterToggle">🔎 Filter</button>
       <div id="journal-filter-bar" class="journal-filter-bar hidden">
-        <button type="button" id="filter-bigdream-chip" class="chip">⭐ Große Träume</button>
+        <button type="button" id="filter-bigdream-chip" class="chip" data-i18n="journal.filterBigDreams">⭐ Große Träume</button>
         <div id="filter-emotion-chips" class="chip-row"></div>
-        <input type="text" id="filter-tag-input" list="filter-tag-list" placeholder="Nach Tag/Zeichen/Ort/Person filtern …">
+        <input type="text" id="filter-tag-input" list="filter-tag-list" data-i18n-placeholder="journal.filterTagPlaceholder" placeholder="Nach Tag/Zeichen/Ort/Person filtern …">
         <datalist id="filter-tag-list"></datalist>
-        <button type="button" id="filter-reset-btn" class="hint">Filter zurücksetzen</button>
+        <button type="button" id="filter-reset-btn" class="hint" data-i18n="journal.filterReset">Filter zurücksetzen</button>
       </div>
 
       <div id="intention-prompt" class="card intention-prompt hidden"></div>
 
       <form id="dream-form" class="card hidden">
-        <h2 id="form-title">Neuer Traum</h2>
+        <h2 id="form-title" data-i18n="journal.formTitleNew">Neuer Traum</h2>
         <input type="hidden" id="dream-id">
-        <label>Was hast du geträumt?
+        <label><span data-i18n="journal.contentLabel">Was hast du geträumt?</span>
           <textarea id="dream-content" rows="6"
-            placeholder="Schreibe alles auf, woran du dich erinnerst – auch Fragmente."></textarea>
+            data-i18n-placeholder="journal.contentPlaceholder" placeholder="Schreibe alles auf, woran du dich erinnerst – auch Fragmente."></textarea>
         </label>
         <div id="dream-echoes" class="dream-echoes hidden"></div>
-        <label>Titel
-          <input type="text" id="dream-title" required placeholder="Kurzer Titel">
+        <label><span data-i18n="journal.titleLabel">Titel</span>
+          <input type="text" id="dream-title" required data-i18n-placeholder="journal.titlePlaceholder" placeholder="Kurzer Titel">
         </label>
         <div class="form-row">
-          <label>Datum
+          <label><span data-i18n="journal.dateLabel">Datum</span>
             <input type="date" id="dream-date" required>
           </label>
-          <label>Erinnerung / Luzidität
+          <label><span data-i18n="journal.lucidityLabel">Erinnerung / Luzidität</span>
             <select id="dream-lucidity">
-              <option value="0">0 – keine Erinnerung</option>
-              <option value="1">1 – Fragment</option>
-              <option value="2" selected>2 – normaler Traum</option>
-              <option value="3">3 – kurz luzide</option>
-              <option value="4">4 – voll luzide</option>
+              <option value="0" data-i18n="journal.lucidityOption.0">0 – keine Erinnerung</option>
+              <option value="1" data-i18n="journal.lucidityOption.1">1 – Fragment</option>
+              <option value="2" selected data-i18n="journal.lucidityOption.2">2 – normaler Traum</option>
+              <option value="3" data-i18n="journal.lucidityOption.3">3 – kurz luzide</option>
+              <option value="4" data-i18n="journal.lucidityOption.4">4 – voll luzide</option>
             </select>
           </label>
-          <label>Schlafqualität
+          <label><span data-i18n="journal.sleepLabel">Schlafqualität</span>
             <select id="dream-sleep">
               <option value="">–</option>
-              <option value="1">1 – sehr schlecht</option>
+              <option value="1" data-i18n="journal.sleep.1">1 – sehr schlecht</option>
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
-              <option value="5">5 – sehr gut</option>
+              <option value="5" data-i18n="journal.sleep.5">5 – sehr gut</option>
             </select>
           </label>
         </div>
-        <label>Substanzen vor dem Schlafen <small>(falls zutreffend)</small></label>
+        <label><span data-i18n="journal.substancesLabel">Substanzen vor dem Schlafen</span> <small data-i18n="journal.optionalHint">(falls zutreffend)</small></label>
         <div class="substance-picker">
-          <label class="checkbox-label"><input type="checkbox" id="dream-substance-beifuss"> 🌿 Beifuß</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-substance-melatonin"> 💊 Melatonin</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-substance-alkohol"> 🍷 Alkohol</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-substance-weed"> 🌱 Weed</label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-substance-beifuss"> 🌿 <span data-i18n="substance.beifuss">Beifuß</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-substance-melatonin"> 💊 <span data-i18n="substance.melatonin">Melatonin</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-substance-alkohol"> 🍷 <span data-i18n="substance.alkohol">Alkohol</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-substance-weed"> 🌱 <span data-i18n="substance.weed">Weed</span></label>
         </div>
-        <label>Sonstiges <small>(z. B. anderes Schlafmittel, kurz)</small>
-          <input type="text" id="dream-substance-other" placeholder="z. B. Baldrian, CBD-Öl">
+        <label><span data-i18n="journal.otherLabel">Sonstiges</span> <small data-i18n="journal.otherHint">(z. B. anderes Schlafmittel, kurz)</small>
+          <input type="text" id="dream-substance-other" data-i18n-placeholder="journal.otherPlaceholder" placeholder="z. B. Baldrian, CBD-Öl">
         </label>
         <label class="checkbox-label">
-          <input type="checkbox" id="dream-bigdream"> <span id="bigdream-star">⭐</span> Großer Traum <small>(numinos, aufwühlend, bleibt im Gedächtnis — nach C. G. Jung)</small>
+          <input type="checkbox" id="dream-bigdream"> <span id="bigdream-star">⭐</span> <span data-i18n="journal.bigDreamLabel">Großer Traum</span> <small data-i18n="journal.bigDreamHint">(numinos, aufwühlend, bleibt im Gedächtnis — nach C. G. Jung)</small>
         </label>
-        <label>Phänomene <small>(falls zutreffend)</small></label>
+        <label><span data-i18n="journal.phenomenaLabel">Phänomene</span> <small data-i18n="journal.optionalHint">(falls zutreffend)</small></label>
         <div class="phenomena-picker">
-          <label class="checkbox-label"><input type="checkbox" id="dream-falsches-erwachen"> 🔁 Falsches Erwachen</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-schlafparalyse"> 🧊 Schlafparalyse</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-traum-im-traum"> 🪆 Traum-im-Traum</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-wiederkehrend"> ♻️ Wiederkehrender Traum</label>
-          <label class="checkbox-label"><input type="checkbox" id="dream-albtraum"> 😱 Albtraum</label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-falsches-erwachen"> 🔁 <span data-i18n="phenomenon.falschesErwachen">Falsches Erwachen</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-schlafparalyse"> 🧊 <span data-i18n="phenomenon.schlafparalyse">Schlafparalyse</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-traum-im-traum"> 🪆 <span data-i18n="phenomenon.traumImTraum">Traum-im-Traum</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-wiederkehrend"> ♻️ <span data-i18n="phenomenon.wiederkehrend">Wiederkehrender Traum</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dream-albtraum"> 😱 <span data-i18n="phenomenon.albtraum">Albtraum</span></label>
         </div>
-        <label>Emotionen <small>(was hast du im Traum gefühlt?)</small></label>
+        <label><span data-i18n="journal.emotionsLabel">Emotionen</span> <small data-i18n="journal.emotionsHint">(was hast du im Traum gefühlt?)</small></label>
         <div id="emotion-picker" class="emotion-picker"></div>
-        <label>Traumzeichen <small>(wiederkehrende Muster, kommagetrennt)</small>
-          <input type="text" id="dream-signs" list="signs-list" placeholder="z. B. fliegen, verstorbene Person, Zähne">
+        <label><span data-i18n="journal.signsLabel">Traumzeichen</span> <small data-i18n="journal.signsHint">(wiederkehrende Muster, kommagetrennt)</small>
+          <input type="text" id="dream-signs" list="signs-list" data-i18n-placeholder="journal.signsPlaceholder" placeholder="z. B. fliegen, verstorbene Person, Zähne">
           <datalist id="signs-list"></datalist>
         </label>
         <div class="form-row">
-          <label>📍 Orte <small>(kommagetrennt)</small>
-            <input type="text" id="dream-places" list="places-list" placeholder="z. B. alte schule, meer">
+          <label><span data-i18n="journal.placesLabel">📍 Orte</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
+            <input type="text" id="dream-places" list="places-list" data-i18n-placeholder="journal.placesPlaceholder" placeholder="z. B. alte schule, meer">
             <datalist id="places-list"></datalist>
           </label>
-          <label>👤 Personen <small>(kommagetrennt)</small>
-            <input type="text" id="dream-persons" list="persons-list" placeholder="z. B. papa, freundin">
+          <label><span data-i18n="journal.personsLabel">👤 Personen</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
+            <input type="text" id="dream-persons" list="persons-list" data-i18n-placeholder="journal.personsPlaceholder" placeholder="z. B. papa, freundin">
             <datalist id="persons-list"></datalist>
           </label>
         </div>
-        <label>Tags <small>(kommagetrennt)</small>
-          <input type="text" id="dream-tags" list="tags-list" placeholder="z. B. albtraum, arbeit">
+        <label><span data-i18n="journal.tagsLabel">Tags</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
+          <input type="text" id="dream-tags" list="tags-list" data-i18n-placeholder="journal.tagsPlaceholder" placeholder="z. B. albtraum, arbeit">
           <datalist id="tags-list"></datalist>
         </label>
-        <label>Eigene Analyse / Notizen
-          <textarea id="dream-notes" rows="2" placeholder="Deutung, Auffälligkeiten … (optional)"></textarea>
+        <label><span data-i18n="journal.notesLabel">Eigene Analyse / Notizen</span>
+          <textarea id="dream-notes" rows="2" data-i18n-placeholder="journal.notesPlaceholder" placeholder="Deutung, Auffälligkeiten … (optional)"></textarea>
         </label>
         <div class="form-actions">
-          <button type="submit" class="primary">Speichern</button>
-          <button type="button" id="cancel-btn">Abbrechen</button>
+          <button type="submit" class="primary" data-i18n="common.save">Speichern</button>
+          <button type="button" id="cancel-btn" data-i18n="common.cancel">Abbrechen</button>
         </div>
       </form>
 
@@ -525,16 +525,16 @@
   <!-- Lesezimmer-Overlay -->
   <div id="lesezimmer-overlay" class="lesezimmer-overlay hidden">
     <div class="lesezimmer-glow" aria-hidden="true"></div>
-    <button id="lesezimmer-close" class="ritual-close-btn lesezimmer-close-btn" aria-label="Lesezimmer schließen">✕</button>
+    <button id="lesezimmer-close" class="ritual-close-btn lesezimmer-close-btn" data-i18n-aria="lesezimmer.closeAria" aria-label="Lesezimmer schließen">✕</button>
     <div id="lesezimmer-sources" class="lesezimmer-sources">
-      <button type="button" class="chip" data-source="night">🌙 In dieser Nacht</button>
-      <button type="button" class="chip" data-source="random">🎲 Zufall</button>
-      <button type="button" class="chip" data-source="big">⭐ Große Träume</button>
-      <button type="button" class="chip" data-source="stale">🕰️ Lange nicht gelesen</button>
+      <button type="button" class="chip" data-source="night" data-i18n="lesezimmer.sourceNight">🌙 In dieser Nacht</button>
+      <button type="button" class="chip" data-source="random" data-i18n="lesezimmer.sourceRandom">🎲 Zufall</button>
+      <button type="button" class="chip" data-source="big" data-i18n="lesezimmer.sourceBig">⭐ Große Träume</button>
+      <button type="button" class="chip" data-source="stale" data-i18n="lesezimmer.sourceStale">🕰️ Lange nicht gelesen</button>
     </div>
     <div class="lesezimmer-body">
       <div id="lesezimmer-empty" class="lesezimmer-empty hidden">
-        <p>Noch keine passenden Träume zum Wiederlesen da.</p>
+        <p data-i18n="lesezimmer.empty">Noch keine passenden Träume zum Wiederlesen da.</p>
       </div>
       <article id="lesezimmer-dream" class="lesezimmer-dream hidden">
         <p class="lesezimmer-date" id="lesezimmer-date"></p>
@@ -545,9 +545,9 @@
     </div>
     <div id="lesezimmer-echoes" class="lesezimmer-echoes"></div>
     <div id="lesezimmer-nav" class="lesezimmer-nav hidden">
-      <button type="button" id="lesezimmer-prev" class="hint">← Zurück</button>
-      <button type="button" id="lesezimmer-reveal" class="hint">Details</button>
-      <button type="button" id="lesezimmer-next" class="hint">Weiter →</button>
+      <button type="button" id="lesezimmer-prev" class="hint" data-i18n="lesezimmer.prev">← Zurück</button>
+      <button type="button" id="lesezimmer-reveal" class="hint" data-i18n="lesezimmer.reveal">Details</button>
+      <button type="button" id="lesezimmer-next" class="hint" data-i18n="lesezimmer.next">Weiter →</button>
     </div>
   </div>
 
