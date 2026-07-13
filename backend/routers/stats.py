@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 
 from deps import get_session, require_auth
+from helpers import has_substance
 from models import Dream, Intention
 from stats_helpers import build_emotions_analysis, build_per_bucket, build_writing, split_groups
 
@@ -87,8 +88,8 @@ def stats(
             return None
         return round(sum(1 for d in group if d.lucidity >= 3) / len(group) * 100, 1)
 
-    with_beifuss = [d for d in dreams if d.beifuss]
-    without_beifuss = [d for d in dreams if not d.beifuss]
+    with_beifuss = [d for d in dreams if has_substance(d, "beifuss")]
+    without_beifuss = [d for d in dreams if not has_substance(d, "beifuss")]
 
     # Streak: an wie vielen Tagen in Folge (bis heute/gestern) wurde eingetragen?
     days = {d.date for d in dreams}

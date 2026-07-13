@@ -3,6 +3,7 @@ main.py (in eigenes Modul ausgelagert, damit routers/stats.py < 300 Zeilen bleib
 import datetime as dt
 from collections import Counter
 
+from helpers import has_substance
 from models import Dream
 
 # Valenz-Konstante für die Emotions-Analyse (A.5) — im Frontend per 💡 offengelegt
@@ -48,7 +49,11 @@ def build_per_bucket(dreams: list[Dream], granularity: str) -> list[dict]:
 
 def split_groups(dreams: list[Dream], split: str | None) -> tuple[str, str, list[Dream], list[Dream]] | None:
     if split == "beifuss":
-        return "🌿 Mit Beifuß", "Ohne Beifuß", [d for d in dreams if d.beifuss], [d for d in dreams if not d.beifuss]
+        return (
+            "🌿 Mit Beifuß", "Ohne Beifuß",
+            [d for d in dreams if has_substance(d, "beifuss")],
+            [d for d in dreams if not has_substance(d, "beifuss")],
+        )
     if split == "weekend":
         return "Wochenende", "Werktag", [d for d in dreams if d.date.weekday() >= 5], [d for d in dreams if d.date.weekday() < 5]
     if split == "big_dream":

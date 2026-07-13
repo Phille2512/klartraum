@@ -16,7 +16,7 @@ def test_unhandled_exception_returns_clean_json_500(auth_client, monkeypatch):
     # to_out aufruft) fehlschlagen statt nur das anschließende GET.
     auth_client.post("/api/dreams", json={
         "date": "2026-01-01", "title": "X", "content": "", "lucidity": 2,
-        "sleep_quality": None, "beifuss": False, "big_dream": False,
+        "sleep_quality": None, "substances": [], "substance_other": None, "big_dream": False,
         "emotions": [], "notes_analysis": None, "tags": [], "dream_signs": [],
         "places": [], "persons": [],
     })

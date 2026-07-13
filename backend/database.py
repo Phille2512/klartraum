@@ -35,6 +35,8 @@ def _migrate() -> None:
             or "archetype" not in tag_cols
             or "region_id" not in tag_cols
             or any(col not in dream_cols for col in phenomen_cols)
+            or "substances" not in dream_cols
+            or "substance_other" not in dream_cols
         )
         if pending:
             # S.1: vor jedem tatsächlichen ALTER TABLE einen Extra-Snapshot,
@@ -62,6 +64,17 @@ def _migrate() -> None:
                 conn.exec_driver_sql(
                     f"ALTER TABLE dream ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
                 )
+        if "substances" not in dream_cols:
+            conn.exec_driver_sql("ALTER TABLE dream ADD COLUMN substances VARCHAR")
+        if "substance_other" not in dream_cols:
+            conn.exec_driver_sql("ALTER TABLE dream ADD COLUMN substance_other VARCHAR")
+        # Beifuß-Ablösung: alte bool-Spalte einmalig in die neue Substanzen-Liste
+        # überführen (Abfrage bleibt für spätere Starts wirkungslos, da substances
+        # danach nicht mehr leer ist).
+        conn.exec_driver_sql(
+            "UPDATE dream SET substances = 'beifuss' "
+            "WHERE beifuss = 1 AND (substances IS NULL OR substances = '')"
+        )
         conn.commit()
 
 

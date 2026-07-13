@@ -7,15 +7,15 @@ def _seed_known_dataset(auth_client):
     kleinen, handverifizierten Datensatz')."""
     auth_client.post("/api/dreams", json=make_dream(
         title="D1", date="2026-01-06", lucidity=4, content="eins zwei drei",
-        beifuss=True, emotions=["freude"],
+        substances=["beifuss"], emotions=["freude"],
     ))
     auth_client.post("/api/dreams", json=make_dream(
         title="D2", date="2026-01-07", lucidity=1, content="vier fuenf",
-        beifuss=False, emotions=["angst"],
+        substances=[], emotions=["angst"],
     ))
     auth_client.post("/api/dreams", json=make_dream(
         title="D3", date="2026-01-08", lucidity=0, content="sechs",
-        beifuss=False, emotions=[],
+        substances=[], emotions=[],
     ))
 
 

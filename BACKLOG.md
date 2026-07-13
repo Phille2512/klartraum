@@ -140,6 +140,14 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
   eigene Analyse-Karte mit Zählern + Trainings-Hinweisen (z. B. ab 2 falschen
   Erwachen: Reality-Check-Tipp; ab 1 Traum-im-Traum: DILD-Hinweis). Neue
   Dream-Spalten per ALTER-TABLE-Migration (`database.py::_migrate`).
+- ~~**🌿 Substanzen statt nur Beifuß**~~ *(Juli 2026)*: die einzelne
+  Beifuß-Checkbox wurde zu einer Mehrfachauswahl erweitert (Beifuß,
+  Melatonin, Alkohol, Weed) + Freitext „Sonstiges". Bestehende
+  `beifuss=True`-Einträge wurden per Migration automatisch in die neue
+  `substances`-Liste übernommen; das „Mit/Ohne Beifuß"-Experiment in der
+  Analyse läuft unverändert weiter (liest jetzt aus `substances`). Bewusst
+  *nicht* auf alle Substanzen verallgemeinert — das bleibt für später, falls
+  genug Daten zu anderen Stoffen zusammenkommen.
 - **⚡ Zweistufiges Formular (30-Sekunden-Kern):** erst nur Text + Speichern,
   alle Details optional aufklappbar danach. Der meistgenutzte Weg der App
   verdient die meiste Politur.

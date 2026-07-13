@@ -43,12 +43,12 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
         writer = csv.writer(buf)
         writer.writerow([
             "id", "date", "title", "content", "lucidity", "sleep_quality",
-            "beifuss", "tags", "dream_signs", "places", "persons", "notes_analysis",
+            "substances", "substance_other", "tags", "dream_signs", "places", "persons", "notes_analysis",
         ])
         for r in rows:
             writer.writerow([
                 r["id"], r["date"], r["title"], r["content"], r["lucidity"],
-                r["sleep_quality"], int(r["beifuss"]),
+                r["sleep_quality"], "|".join(r["substances"]), r["substance_other"] or "",
                 "|".join(r["tags"]), "|".join(r["dream_signs"]),
                 "|".join(r["places"]), "|".join(r["persons"]),
                 r["notes_analysis"] or "",

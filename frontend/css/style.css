@@ -994,6 +994,15 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 }
 .phenomena-picker .checkbox-label { margin-bottom: 0; }
 
+/* --- Substanz-Picker --- */
+.substance-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.substance-picker .checkbox-label { margin-bottom: 0; }
+
 /* --- Emotion Picker --- */
 .emotion-picker {
   display: flex;

@@ -32,7 +32,9 @@ class Dream(SQLModel, table=True):
     # 3 = kurz luzide, 4 = voll luzide
     lucidity: int = Field(default=2, ge=0, le=4)
     sleep_quality: int | None = Field(default=None, ge=1, le=5)
-    beifuss: bool = Field(default=False)  # Beifuß(-Tee) vor dem Schlafen?
+    # kommagetrennte Schlüssel: beifuss,melatonin,alkohol,weed — Substanzen vor dem Schlafen
+    substances: str | None = None
+    substance_other: str | None = None  # Freitext für Substanzen außerhalb der Presets
     emotions: str | None = None  # kommagetrennte Schlüssel: angst,freude,...
     big_dream: bool = Field(default=False)
     # Phänomen-Tracking: klassische Traumphänomene für Muster-/Trainingshinweise

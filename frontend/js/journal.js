@@ -22,6 +22,14 @@ const PHENOMENA = [
   { field: "albtraum", inputId: "dream-albtraum", icon: "😱", label: "Albtraum" },
 ];
 
+// Substanzen vor dem Schlafen: Preset-Key ↔ Checkbox-Id ↔ Badge-Icon/Label
+const SUBSTANCES = [
+  { key: "beifuss", inputId: "dream-substance-beifuss", icon: "🌿", label: "Beifuß" },
+  { key: "melatonin", inputId: "dream-substance-melatonin", icon: "💊", label: "Melatonin" },
+  { key: "alkohol", inputId: "dream-substance-alkohol", icon: "🍷", label: "Alkohol" },
+  { key: "weed", inputId: "dream-substance-weed", icon: "🌱", label: "Weed" },
+];
+
 // Tagebuch: Erfassen, Liste, Suche, Bearbeiten, Löschen
 const journal = {
   dreams: [],
@@ -195,7 +203,10 @@ const journal = {
     document.getElementById("dream-content").value = dream ? dream.content : "";
     document.getElementById("dream-lucidity").value = dream ? dream.lucidity : "2";
     document.getElementById("dream-sleep").value = dream?.sleep_quality ?? "";
-    document.getElementById("dream-beifuss").checked = dream ? dream.beifuss : false;
+    SUBSTANCES.forEach((s) => {
+      document.getElementById(s.inputId).checked = dream ? dream.substances.includes(s.key) : false;
+    });
+    document.getElementById("dream-substance-other").value = dream?.substance_other ?? "";
     document.getElementById("dream-bigdream").checked = dream ? dream.big_dream : false;
     PHENOMENA.forEach((p) => {
       document.getElementById(p.inputId).checked = dream ? dream[p.field] : false;
@@ -264,7 +275,8 @@ const journal = {
       content: document.getElementById("dream-content").value.trim(),
       lucidity: Number(document.getElementById("dream-lucidity").value),
       sleep_quality: sleep ? Number(sleep) : null,
-      beifuss: document.getElementById("dream-beifuss").checked,
+      substances: SUBSTANCES.filter((s) => document.getElementById(s.inputId).checked).map((s) => s.key),
+      substance_other: document.getElementById("dream-substance-other").value.trim() || null,
       big_dream: document.getElementById("dream-bigdream").checked,
       ...Object.fromEntries(PHENOMENA.map((p) => [p.field, document.getElementById(p.inputId).checked])),
       emotions: this.selectedEmotions,
@@ -369,7 +381,8 @@ const journal = {
             ${d.persons.map((p) => `<span class="badge person">👤 ${escapeHtml(p)}</span>`).join("")}
             ${d.tags.map((t) => `<span class="badge">${escapeHtml(t)}</span>`).join("")}
             ${(d.emotions || []).map((e) => EMOTIONS[e] ? `<span class="badge emotion-badge" style="--emo-color:${EMOTIONS[e].color}">${EMOTIONS[e].icon} ${EMOTIONS[e].label}</span>` : "").join("")}
-            ${d.beifuss ? `<span class="badge herb">🌿 Beifuß</span>` : ""}
+            ${SUBSTANCES.filter((s) => d.substances.includes(s.key)).map((s) => `<span class="badge herb">${s.icon} ${s.label}</span>`).join("")}
+            ${d.substance_other ? `<span class="badge herb">🧪 ${escapeHtml(d.substance_other)}</span>` : ""}
             ${PHENOMENA.filter((p) => d[p.field]).map((p) => `<span class="badge phenomenon">${p.icon} ${p.label}</span>`).join("")}
           </div>
           ${d.notes_analysis ? `<p class="hint">📝 ${escapeHtml(d.notes_analysis)}</p>` : ""}
@@ -431,7 +444,8 @@ const journal = {
           content: "",
           lucidity: 0,
           sleep_quality: null,
-          beifuss: false,
+          substances: [],
+          substance_other: null,
           big_dream: false,
           emotions: [],
           notes_analysis: null,

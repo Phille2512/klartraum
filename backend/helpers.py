@@ -17,7 +17,8 @@ def to_out(dream: Dream) -> DreamOut:
         content=dream.content,
         lucidity=dream.lucidity,
         sleep_quality=dream.sleep_quality,
-        beifuss=dream.beifuss,
+        substances=[s.strip() for s in (dream.substances or "").split(",") if s.strip()],
+        substance_other=dream.substance_other,
         big_dream=dream.big_dream,
         falsches_erwachen=dream.falsches_erwachen,
         schlafparalyse=dream.schlafparalyse,
@@ -31,6 +32,10 @@ def to_out(dream: Dream) -> DreamOut:
         places=sorted(t.name for t in dream.tags if t.kind == "place"),
         persons=sorted(t.name for t in dream.tags if t.kind == "person"),
     )
+
+
+def has_substance(dream: Dream, key: str) -> bool:
+    return key in {s.strip() for s in (dream.substances or "").split(",") if s.strip()}
 
 
 def get_or_create_tag(session: Session, name: str, kind: str) -> Tag:

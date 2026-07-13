@@ -14,7 +14,8 @@ class DreamIn(BaseModel):
     content: str = ""
     lucidity: int = PField(default=2, ge=0, le=4)
     sleep_quality: int | None = PField(default=None, ge=1, le=5)
-    beifuss: bool = False
+    substances: list[str] = []
+    substance_other: str | None = None
     big_dream: bool = False
     falsches_erwachen: bool = False
     schlafparalyse: bool = False
@@ -36,7 +37,8 @@ class DreamOut(BaseModel):
     content: str
     lucidity: int
     sleep_quality: int | None
-    beifuss: bool
+    substances: list[str]
+    substance_other: str | None
     big_dream: bool
     falsches_erwachen: bool
     schlafparalyse: bool

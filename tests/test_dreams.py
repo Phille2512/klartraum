@@ -8,7 +8,8 @@ def make_dream(**overrides):
         "content": "Ein Inhalt",
         "lucidity": 2,
         "sleep_quality": None,
-        "beifuss": False,
+        "substances": [],
+        "substance_other": None,
         "big_dream": False,
         "emotions": [],
         "notes_analysis": None,
@@ -96,6 +97,28 @@ def test_phenomena_flags_default_false(auth_client):
     body = resp.json()
     for field in ("falsches_erwachen", "schlafparalyse", "traum_im_traum", "wiederkehrend", "albtraum"):
         assert body[field] is False
+
+
+def test_substances_roundtrip(auth_client):
+    resp = auth_client.post("/api/dreams", json=make_dream(
+        title="Substanzen",
+        substances=["beifuss", "melatonin"],
+        substance_other="Baldrian",
+    ))
+    assert resp.status_code == 201
+    body = resp.json()
+    assert sorted(body["substances"]) == ["beifuss", "melatonin"]
+    assert body["substance_other"] == "Baldrian"
+
+    resp = auth_client.get(f"/api/dreams/{body['id']}")
+    assert sorted(resp.json()["substances"]) == ["beifuss", "melatonin"]
+
+
+def test_substances_default_empty(auth_client):
+    resp = auth_client.post("/api/dreams", json=make_dream(title="Ohne Substanzen"))
+    body = resp.json()
+    assert body["substances"] == []
+    assert body["substance_other"] is None
 
 
 def test_list_dreams_filter_by_big_dream(auth_client):
