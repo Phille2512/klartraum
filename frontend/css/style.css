@@ -91,7 +91,7 @@ nav {
   flex: 1;
   background: none;
   border: none;
-  border-bottom: 3px solid transparent;
+  border-radius: 0; /* sonst krümmt sich border-bottom an den Ecken (globale button-Regel) */
   color: var(--text-dim);
   font-size: 1rem;
   padding: 0.6rem 0.5rem;
@@ -101,10 +101,8 @@ nav {
 
 .tab-btn.active {
   color: var(--text);
-  /* Die eigentliche Markierung übernimmt jetzt der Traumfaden (.nav-thread)
-     darunter; border-bottom-color bleibt als Fallback, falls JS/Animation
-     mal nicht greift (z. B. sehr altes Browser-Rendering). */
-  border-bottom-color: var(--accent);
+  /* Die Markierung selbst übernimmt allein der Faden (.nav-thread) darunter —
+     kein zusätzlicher border-bottom hier, sonst zwei Linien gleichzeitig. */
 }
 
 /* Traumtakt (Prinzip 2, "Der Faden führt"): statt dass die Markierung
