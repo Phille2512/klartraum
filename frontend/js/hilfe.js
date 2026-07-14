@@ -51,6 +51,13 @@ const HILFE = {
     wie: t("hilfe.zeitraffer.wie"),
     wozu: t("hilfe.zeitraffer.wozu"),
   },
+  "schlaf-analyse": {
+    title: t("hilfe.schlafAnalyse.title"),
+    was: t("hilfe.schlafAnalyse.was"),
+    wie: t("hilfe.schlafAnalyse.wie"),
+    wozu: t("hilfe.schlafAnalyse.wozu"),
+    extraLink: { label: t("hilfe.schlafAnalyse.extraLink"), anchor: "guide-schlaf" },
+  },
 };
 
 const hilfe = {

@@ -280,6 +280,7 @@ hilfe.attach(document.querySelector("#atlas-map-view h2"), "atlas-karte");
 hilfe.attach(document.getElementById("compass-heading"), "kompass");
 hilfe.attach(document.querySelector("#mandala-card h2"), "mandala");
 hilfe.attach(document.getElementById("atlas-timelapse-date").parentElement, "zeitraffer");
+hilfe.attach(document.getElementById("sleep-analysis-heading"), "schlaf-analyse");
 
 // Service Worker (funktioniert nur über HTTPS oder localhost)
 if ("serviceWorker" in navigator) {

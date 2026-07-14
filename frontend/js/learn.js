@@ -77,6 +77,8 @@ const learn = {
     { title: t("learn.guide.realityChecks.title"), body: t("learn.guide.realityChecks.body") },
     { title: t("learn.guide.mild.title"), body: t("learn.guide.mild.body") },
     { title: t("learn.guide.wbtb.title"), body: t("learn.guide.wbtb.body") },
+    // NX.1: id nötig, damit hilfe.js/wissen.js dorthin verlinken können
+    { id: "guide-schlaf", title: t("learn.sleepGuide.title"), body: t("learn.sleepGuide.body") },
     { title: t("learn.guide.diary.title"), body: t("learn.guide.diary.body") },
     { title: t("learn.guide.stabilize.title"), body: t("learn.guide.stabilize.body") },
   ],
@@ -91,7 +93,7 @@ const learn = {
 
     document.getElementById("guides").innerHTML = pathIntroHtml + this.guides
       .map(
-        (g) => `<details class="guide">
+        (g) => `<details class="guide" ${g.id ? `id="${g.id}"` : ""}>
           <summary>${g.title}</summary>
           <div class="guide-body">${g.body}</div>
         </details>`

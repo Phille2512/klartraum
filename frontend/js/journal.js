@@ -330,6 +330,9 @@ const journal = {
     el.querySelector('[data-night-mode="times"]').addEventListener("click", () => this.renderNightTimes(el, existingNight));
     el.querySelector('[data-night-mode="rough"]').addEventListener("click", () => this.renderNightRough(el));
     el.querySelector('[data-night-mode="unknown"]').addEventListener("click", () => this.saveNight(el, { unknown: true }));
+    // NX.1: 💡-Wissens-Moment an der Schlafzeit-Zeile — erscheint beim
+    // Erstkontakt automatisch einmal, danach nur noch über den Knopf.
+    wissen.attach(el.querySelector("label"), "schlafzeit");
   },
 
   async renderNightTimes(el, existingNight) {

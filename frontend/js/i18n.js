@@ -740,6 +740,12 @@ const I18N = {
     "hilfe.zeitraffer.wie": "Ziehen oder ▶ drücken für eine automatische Zeitreise bis heute.",
     "hilfe.zeitraffer.wozu": "Sehen, wie deine Traumwelt gewachsen ist — welche Orte und Personen zuerst da waren.",
 
+    "hilfe.schlafAnalyse.title": "😴 Schlaf & Erinnerung",
+    "hilfe.schlafAnalyse.was": "Schlafdauer und Erinnerung aus deinen eigenen Nächten — kein Lehrbuchwert, sondern deine Daten.",
+    "hilfe.schlafAnalyse.wie": "Deine Nächte werden nach dem Drittel-Prinzip in kurz/mittel/lang geteilt; grob geschätzte Nächte sind gekennzeichnet, unbekannte zählen nicht mit.",
+    "hilfe.schlafAnalyse.wozu": 'Deine eigene Frage beantworten: „Erinnere ich mehr, wenn ich länger schlafe?"',
+    "hilfe.schlafAnalyse.extraLink": "Mehr im Lernen-Reiter →",
+
     "wissen.momentTitle": "Wissens-Moment",
     "wissen.moreLink": "Mehr im Kompendium →",
 
@@ -751,6 +757,7 @@ const I18N = {
     "wissen.imagination": "Aktive Imagination (Jung): Den Traum im Wachzustand bewusst weiterführen und die inneren Figuren befragen. Nicht erfinden — zuhören.",
     "wissen.mandala": "Jung malte fast täglich Mandalas als Momentaufnahme seiner Psyche. Der Kreis mit Mitte symbolisiert Ganzheit — das Selbst.",
     "wissen.synchronizitaet": "Synchronizität (Jung): bedeutsame Koinzidenzen zwischen Traum und Wachleben. Ob Zufall oder nicht — das Bemerken selbst ist die Übung.",
+    "wissen.schlafzeit": "Schlafzeit erfasst du freiwillig zur Nacht, nicht zum einzelnen Traum — genaue Zeiten, grobe Schätzung oder ehrlich „weiß nicht mehr\", alles ist eine vollwertige Antwort. Ab neun Nächten zeigt die Analyse, ob du bei mehr Schlaf auch mehr erinnerst.",
 
     "mandala.empty": "Noch keine Träume in diesem Zeitraum.",
     "mandala.sparse": "Noch dünn — dein Mandala wächst mit jedem Traum.",
@@ -789,6 +796,9 @@ const I18N = {
     "err.event_not_found": "Ereignis nicht gefunden",
     "err.night_not_found": "Nacht nicht gefunden",
     "err.invalid_night_payload": "Ungültige Schlafzeit-Angabe",
+    "learn.sleepGuide.title": "😴 Schlaf & Träume",
+    "learn.sleepGuide.body": "<p><strong>Warum die Schlafzeit zählt:</strong> Traumreiche REM-Phasen werden im Lauf der Nacht immer länger — die ergiebigsten Träume liegen in den letzten Stunden vor dem Aufwachen. Wer länger schläft, träumt überproportional mehr; wer früher aufsteht, schneidet genau die traumreichsten Phasen ab. Ob das bei DIR so ist (»Erinnere ich mehr, wenn ich länger schlafe?«), beantwortet die App mit deinen eigenen Daten statt mit Lehrbuchwerten.</p>\n      <p><strong>So erfasst du sie</strong> (im Traumformular, immer freiwillig): 🕐 <strong>Zeiten</strong> — Zubettgehen und Aufwachen im Viertelstunden-Raster, für frische Nächte. · 🌫️ <strong>Nur grob</strong> — vier Dauer-Stufen für Nächte, die schon eine Weile her sind. · ❓ <strong>Weiß nicht mehr</strong> — eine ehrliche, vollwertige Antwort. Besser ehrlich lückenhaft als geraten.</p>\n      <p><strong>So liest du die Auswertung:</strong> Die App teilt deine Nächte in <strong>kurz / mittel / lang</strong> — nicht nach festen Grenzen, sondern relativ zu deinen eigenen Nächten (Drittel-Prinzip: dein kürzestes Drittel ist »kurz«, egal ob du generell viel oder wenig schläfst). Grob erfasste Nächte zählen mit und werden als »geschätzt« ausgewiesen; ❓-Nächte fließen nie in die Rechnung ein. Der Aufriss-Schalter (»kürzer/länger als deine typische Nacht«) teilt an deinem Median.</p>\n      <p><strong>Ehrlichkeit zum Schluss:</strong> Selbstauskunft ist Beobachtung, keine Messung — und eine Korrelation (»lange Nächte = mehr Wörter«) ist noch keine Ursache. Aber genau dafür führst du ja ein Tagebuch: um deine eigenen Muster zu finden statt fremde zu glauben.</p>",
+
   },
   en: {
     "nav.journal": "Diary",
@@ -1523,6 +1533,12 @@ const I18N = {
     "hilfe.zeitraffer.wie": "Drag it, or press ▶ for an automatic journey through time up to today.",
     "hilfe.zeitraffer.wozu": "See how your dream world has grown — which places and people were there first.",
 
+    "hilfe.schlafAnalyse.title": "😴 Sleep & Recall",
+    "hilfe.schlafAnalyse.was": "Sleep duration and recall from your own nights — not a textbook value, but your data.",
+    "hilfe.schlafAnalyse.wie": "Your nights are split into short/medium/long by the thirds principle; roughly estimated nights are marked, unknown ones don't count.",
+    "hilfe.schlafAnalyse.wozu": 'Answer your own question: "Do I remember more when I sleep longer?"',
+    "hilfe.schlafAnalyse.extraLink": "More in the Learn tab →",
+
     "wissen.momentTitle": "Knowledge moment",
     "wissen.moreLink": "More in the compendium →",
 
@@ -1534,6 +1550,7 @@ const I18N = {
     "wissen.imagination": "Active imagination (Jung): consciously continue the dream while awake and question the inner figures. Don't invent — listen.",
     "wissen.mandala": "Jung painted mandalas almost daily as a snapshot of his psyche. The circle with a center symbolizes wholeness — the Self.",
     "wissen.synchronizitaet": "Synchronicity (Jung): meaningful coincidences between dream and waking life. Coincidence or not — the noticing itself is the practice.",
+    "wissen.schlafzeit": "Sleep time is recorded voluntarily for the night, not the individual dream — exact times, a rough estimate, or an honest \"don't remember\" are all equally valid answers. From nine nights onward, the analysis shows whether more sleep means more recall for you.",
 
     "mandala.empty": "No dreams in this period yet.",
     "mandala.sparse": "Still thin — your mandala grows with every dream.",
@@ -1572,6 +1589,9 @@ const I18N = {
     "err.event_not_found": "Event not found",
     "err.night_not_found": "Night not found",
     "err.invalid_night_payload": "Invalid sleep time data",
+    "learn.sleepGuide.title": "😴 Sleep & Dreams",
+    "learn.sleepGuide.body": "<p><strong>Why sleep time matters:</strong> Dream-rich REM phases get longer over the course of the night — the richest dreams sit in the final hours before waking. Sleep longer and you dream disproportionately more; wake up earlier and you cut off exactly the most dream-rich phases. Whether that's true for YOU (\"Do I remember more when I sleep longer?\") is something the app answers with your own data instead of textbook values.</p>\n      <p><strong>How to record it</strong> (in the dream form, always optional): 🕐 <strong>Times</strong> — bedtime and wake time on a 15-minute grid, for fresh nights. · 🌫️ <strong>Just roughly</strong> — four duration levels for nights that happened a while ago. · ❓ <strong>Don't remember</strong> — an honest, fully valid answer. Better honestly incomplete than guessed.</p>\n      <p><strong>How to read the analysis:</strong> The app splits your nights into <strong>short / medium / long</strong> — not by fixed thresholds, but relative to your own nights (the thirds principle: your shortest third is \"short,\" regardless of whether you generally sleep a lot or a little). Roughly recorded nights count too and are marked as \"estimated\"; ❓ nights never enter the calculation. The breakdown toggle (\"shorter/longer than your typical night\") splits at your median.</p>\n      <p><strong>Honesty to close:</strong> Self-report is observation, not measurement — and a correlation (\"long nights = more words\") is not yet a cause. But that's exactly why you keep a journal: to find your own patterns instead of believing someone else's.</p>",
+
   },
 };
 
