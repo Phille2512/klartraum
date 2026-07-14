@@ -509,6 +509,12 @@ const I18N = {
     "innenwelt.sectorSubtitle.grosseMutter": "nährt, hält",
     "innenwelt.sectorSubtitle.persona": "die Maske",
 
+    "innenwelt.introTitle": "🌗 Was ist die Innenwelt-Bühne?",
+    "innenwelt.introP1": "<strong>Was du hier siehst:</strong> die Menschen aus deinen Träumen, angeordnet um\n        dein „Selbst\" in der Mitte. Jede Figur steht in dem Feld, das ihrer\n        <strong>Rolle in deinem Innenleben</strong> entspricht (nach C. G. Jung) — der\n        Schatten, der Weise, der Trickster …",
+    "innenwelt.introP2": "<strong>Was du hier tust:</strong> ① Figur antippen → ihre Geschichte lesen.\n        ② Ihr eine Rolle geben, wenn sie noch außen steht. ③ Über\n        „Gespräch fortsetzen\" mit ihr in Dialog gehen (Aktive Imagination).",
+    "innenwelt.introP3": "<strong>Warum:</strong> Wer seine inneren Figuren kennt, erkennt sie im Traum wieder —\n        und Wiedererkennen macht luzide.",
+    "innenwelt.introClose": "Verstanden",
+
     "learn.bucketListTitle": "🏆 Klartraum-Bucket-List",
     "learn.bucketListHint": "Was willst du im Klartraum erleben? Sammle Ziele und hake sie nach Erfolg ab.",
     "learn.goalPlaceholder": "Neues Ziel …",
@@ -1256,6 +1262,12 @@ const I18N = {
     "innenwelt.sectorSubtitle.held": "fights, overcomes",
     "innenwelt.sectorSubtitle.grosseMutter": "nurtures, holds",
     "innenwelt.sectorSubtitle.persona": "the mask",
+
+    "innenwelt.introTitle": "🌗 What is the Inner World Stage?",
+    "innenwelt.introP1": "<strong>What you see here:</strong> the people from your dreams, arranged around\n        your \"Self\" at the center. Each figure stands in the field that matches its\n        <strong>role in your inner life</strong> (after C. G. Jung) — the\n        Shadow, the Sage, the Trickster …",
+    "innenwelt.introP2": "<strong>What you do here:</strong> ① Tap a figure → read their story.\n        ② Give them a role if they're still standing outside. ③ Use\n        \"Continue conversation\" to enter dialogue with them (active imagination).",
+    "innenwelt.introP3": "<strong>Why:</strong> Whoever knows their inner figures recognizes them in a dream —\n        and recognizing makes you lucid.",
+    "innenwelt.introClose": "Got it",
 
     "learn.bucketListTitle": "🏆 Lucid dream bucket list",
     "learn.bucketListHint": "What do you want to experience in a lucid dream? Collect goals and check them off once achieved.",

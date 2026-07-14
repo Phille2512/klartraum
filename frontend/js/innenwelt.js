@@ -89,21 +89,13 @@ const innenwelt = {
     hilfe.attach(el.querySelector(".card h2"), "atlas-innenwelt");
   },
 
-  // Erklärungstext bewusst NICHT übersetzt (Inhalts-Übersetzung gehört zu I.3,
-  // s. UMSETZUNGSPLAN-I18N.md).
   introCard() {
     return `<div class="card innenwelt-intro">
-      <h2>🌗 Was ist die Innenwelt-Bühne?</h2>
-      <p><strong>Was du hier siehst:</strong> die Menschen aus deinen Träumen, angeordnet um
-        dein „Selbst" in der Mitte. Jede Figur steht in dem Feld, das ihrer
-        <strong>Rolle in deinem Innenleben</strong> entspricht (nach C. G. Jung) — der
-        Schatten, der Weise, der Trickster …</p>
-      <p><strong>Was du hier tust:</strong> ① Figur antippen → ihre Geschichte lesen.
-        ② Ihr eine Rolle geben, wenn sie noch außen steht. ③ Über
-        „Gespräch fortsetzen" mit ihr in Dialog gehen (Aktive Imagination).</p>
-      <p><strong>Warum:</strong> Wer seine inneren Figuren kennt, erkennt sie im Traum wieder —
-        und Wiedererkennen macht luzide.</p>
-      <button class="primary" id="innenwelt-intro-close">Verstanden</button>
+      <h2>${t("innenwelt.introTitle")}</h2>
+      <p>${t("innenwelt.introP1")}</p>
+      <p>${t("innenwelt.introP2")}</p>
+      <p>${t("innenwelt.introP3")}</p>
+      <button class="primary" id="innenwelt-intro-close">${t("innenwelt.introClose")}</button>
     </div>`;
   },
 

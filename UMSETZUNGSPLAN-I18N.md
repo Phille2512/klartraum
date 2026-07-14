@@ -1,9 +1,9 @@
 # 🌐 Umsetzungsplan „Zweisprachigkeit": Deutsch ⇄ Englisch
 
-> **Status (2026-07-14): Stufen I.1–I.4 komplett abgeschlossen.** Die App ist
-> vollständig zweisprachig. Offener Rest (kein Teil dieser Stufen):
-> `innenwelt.js` `introCard()`-Erklärtext, `docs/` und
-> `ANLEITUNG-FUER-FREUNDE.md` (bewusst zurückgestellt, s. I.3/I.4).
+> **Status (2026-07-14): Stufen I.1–I.4 komplett abgeschlossen**, inklusive
+> des `innenwelt.js` `introCard()`-Erklärtexts. Die App ist vollständig
+> zweisprachig. Offener Rest (bewusst außerhalb dieses Plans): `docs/` und
+> `ANLEITUNG-FUER-FREUNDE.md` (s. I.4, Punkt 3).
 
 > Eigenständige Spezifikation für einen beliebigen Implementierer.
 > **Zuerst lesen:** `UMSETZUNGSPLAN.md` Teil A (Konventionen, Fallstricke).
@@ -87,8 +87,8 @@ Modul für Modul alle sichtbaren Strings in Schlüssel umziehen — Checkliste:
 - [x] `atlas.js` / `worldmap.js` / `innenwelt.js` (Filterleiste, Bilanz-Zeile,
       Fokus, Werkzeuge, Hinweiszeilen, ARCHETYPES-Labels/-Hints, Dossier).
       `innenwelt.js`: SECTOR_SUBTITLES als Getter wie ARCHETYPES; introCard()-Inhalt
-      (Erklärtext „Was ist die Innenwelt-Bühne?") bewusst NICHT übersetzt — gehört
-      wie AMPLIFICATION_PROMPTS zu I.3.
+      (Erklärtext „Was ist die Innenwelt-Bühne?") zunächst zurückgestellt,
+      inzwischen in I.3 nachgeholt (s. dort).
 - [x] `learn.js` (Reminder/WBTB/Bucket-List-UI, „Deine Daten"-Karte,
       Erst-Start-Hinweis „Wo liegen deine Daten?", index.html-Tab). Guide-INHALTE
       (JUNG_GUIDES, ARCHETYPE_LEXICON, TRAUMFADEN, `learn.guides`) bewusst
@@ -128,9 +128,9 @@ Traumkompass-Überschrift in `index.html`), `hilfe.js` (`HILFE`), `wissen.js`
 (`WISSEN`). „Deine Daten"-Text wurde schon in I.2 mitübersetzt (`learn.js`).
 Keine dedizierte Disclaimer-Fußzeile im Code gefunden — die Funktion
 übernimmt das Kapitel „🔍 Ehrliche Einordnung" im Jung-Kompendium.
-Offen/nicht Teil dieser Stufe: `innenwelt.js` `introCard()` (Erklärtext
-„Was ist die Innenwelt-Bühne?", stand nicht explizit auf der Liste,
-Kandidat für einen kleinen Folge-Pass).
+Nachtrag (2026-07-14): `innenwelt.js` `introCard()` (Erklärtext „Was ist
+die Innenwelt-Bühne?", stand nicht explizit auf der Liste) ebenfalls
+übersetzt — kein offener Rest mehr aus I.2/I.3.
 Der `app.js`-Kommentar zum `Traumkompass`-Textabgleich ist erledigt:
 Überschrift hat jetzt `id="compass-heading"`, `hilfe.attach()` nutzt die ID
 statt Textvergleich.
