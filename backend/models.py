@@ -113,6 +113,17 @@ class JourneyStep(SQLModel, table=True):
     completed_at: dt.datetime | None = None
 
 
+class Night(SQLModel, table=True):
+    # N.1: Schlafzeit ist eine Eigenschaft der Nacht, nicht des einzelnen
+    # Traums (mehrere Träume pro Nacht möglich). date = Datum des
+    # Aufwachens = Traum-Datum.
+    date: dt.date = Field(primary_key=True)
+    bed_time: str | None = None  # "23:15" (HH:MM, Vorabend)
+    wake_time: str | None = None  # "06:45" (HH:MM)
+    sleep_minutes: int | None = None  # serverseitig abgeleitet, einzige Quelle der Wahrheit
+    confidence: str = "exact"  # exact | rough | unknown
+
+
 class DreamAnalysis(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     dream_id: int = Field(foreign_key="dream.id", index=True)

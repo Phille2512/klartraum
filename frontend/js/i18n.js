@@ -760,6 +760,8 @@ const I18N = {
     "err.unknown_station": "Unbekannte Station",
     "err.analysis_not_found": "Analyse nicht gefunden",
     "err.event_not_found": "Ereignis nicht gefunden",
+    "err.night_not_found": "Nacht nicht gefunden",
+    "err.invalid_night_payload": "Ungültige Schlafzeit-Angabe",
   },
   en: {
     "nav.journal": "Diary",
@@ -1514,6 +1516,8 @@ const I18N = {
     "err.unknown_station": "Unknown station",
     "err.analysis_not_found": "Analysis not found",
     "err.event_not_found": "Event not found",
+    "err.night_not_found": "Night not found",
+    "err.invalid_night_payload": "Invalid sleep time data",
   },
 };
 

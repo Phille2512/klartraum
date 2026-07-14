@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 import backup
 from database import init_db
 from paths import FRONTEND_DIR, frontend_version
-from routers import atlas, auth, cycle, dreams, export, jung, map as map_router, stats, tags
+from routers import atlas, auth, cycle, dreams, export, jung, map as map_router, nights, stats, tags
 
 # S.4: einmal beim Serverstart berechnet, siehe frontend_version() in paths.py
 FRONTEND_VERSION = frontend_version()
@@ -76,6 +76,7 @@ app.include_router(atlas.router)
 app.include_router(map_router.router)
 app.include_router(jung.router)
 app.include_router(export.router)
+app.include_router(nights.router)
 
 # Frontend zuletzt mounten (und /sw.js VOR dem Mount registriert, damit die
 # eigene Route Vorrang vor der statischen Datei hat); /api/* hat ohnehin Vorrang

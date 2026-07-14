@@ -120,3 +120,14 @@ class SyncEventIn(BaseModel):
     dream_id: int | None = None
     date: dt.date
     text: str = PField(min_length=1)
+
+
+class NightIn(BaseModel):
+    # Genau ein Modus pro Request: (bed_time + wake_time) | bucket | unknown.
+    # Validierung im Router (nicht hier), damit ungültige Kombinationen den
+    # einheitlichen "err.*"-Fehlercode "invalid_night_payload" bekommen statt
+    # einer generischen Pydantic-Fehlermeldung.
+    bed_time: str | None = None
+    wake_time: str | None = None
+    bucket: str | None = None
+    unknown: bool | None = None
