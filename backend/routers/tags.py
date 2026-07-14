@@ -24,9 +24,9 @@ def list_tags(session: Session = Depends(get_session)):
 def set_tag_category(tag_id: int, payload: CategoryIn, session: Session = Depends(get_session)):
     tag = session.get(Tag, tag_id)
     if not tag:
-        raise HTTPException(404, "Tag nicht gefunden")
+        raise HTTPException(404, "tag_not_found")
     if tag.kind != "dream_sign":
-        raise HTTPException(400, "Nur Traumzeichen haben eine Kompass-Kategorie")
+        raise HTTPException(400, "only_dream_signs_have_category")
     tag.category = payload.category
     session.add(tag)
     session.commit()
@@ -37,11 +37,11 @@ def set_tag_category(tag_id: int, payload: CategoryIn, session: Session = Depend
 def set_tag_archetype(tag_id: int, payload: ArchetypeIn, session: Session = Depends(get_session)):
     tag = session.get(Tag, tag_id)
     if not tag:
-        raise HTTPException(404, "Tag nicht gefunden")
+        raise HTTPException(404, "tag_not_found")
     if tag.kind != "person":
-        raise HTTPException(400, "Nur Personen können einen Archetyp bekommen")
+        raise HTTPException(400, "only_persons_have_archetype")
     if payload.archetype and payload.archetype not in VALID_ARCHETYPES:
-        raise HTTPException(422, f"Unbekannter Archetyp: {payload.archetype}")
+        raise HTTPException(422, "unknown_archetype")
     tag.archetype = payload.archetype
     session.add(tag)
     session.commit()
@@ -52,9 +52,9 @@ def set_tag_archetype(tag_id: int, payload: ArchetypeIn, session: Session = Depe
 def set_tag_region(tag_id: int, payload: TagRegionIn, session: Session = Depends(get_session)):
     tag = session.get(Tag, tag_id)
     if not tag:
-        raise HTTPException(404, "Tag nicht gefunden")
+        raise HTTPException(404, "tag_not_found")
     if payload.region_id is not None and not session.get(MapRegion, payload.region_id):
-        raise HTTPException(404, "Region nicht gefunden")
+        raise HTTPException(404, "region_not_found")
     tag.region_id = payload.region_id
     session.add(tag)
     session.commit()
@@ -65,7 +65,7 @@ def set_tag_region(tag_id: int, payload: TagRegionIn, session: Session = Depends
 def list_symbol_notes(tag_id: int, session: Session = Depends(get_session)):
     tag = session.get(Tag, tag_id)
     if not tag:
-        raise HTTPException(404, "Tag nicht gefunden")
+        raise HTTPException(404, "tag_not_found")
     notes = session.exec(
         select(SymbolNote).where(SymbolNote.tag_id == tag_id).order_by(SymbolNote.created_at)
     ).all()
@@ -76,9 +76,9 @@ def list_symbol_notes(tag_id: int, session: Session = Depends(get_session)):
 def create_symbol_note(tag_id: int, payload: SymbolNoteIn, session: Session = Depends(get_session)):
     tag = session.get(Tag, tag_id)
     if not tag:
-        raise HTTPException(404, "Tag nicht gefunden")
+        raise HTTPException(404, "tag_not_found")
     if tag.kind not in ("dream_sign", "place", "person"):
-        raise HTTPException(400, "Nur Traumzeichen, Orte und Personen können Assoziationen haben")
+        raise HTTPException(400, "associations_not_supported")
     note = SymbolNote(tag_id=tag_id, text=payload.text.strip())
     session.add(note)
     session.commit()
@@ -90,6 +90,6 @@ def create_symbol_note(tag_id: int, payload: SymbolNoteIn, session: Session = De
 def delete_symbol_note(note_id: int, session: Session = Depends(get_session)):
     note = session.get(SymbolNote, note_id)
     if not note:
-        raise HTTPException(404, "Notiz nicht gefunden")
+        raise HTTPException(404, "note_not_found")
     session.delete(note)
     session.commit()

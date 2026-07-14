@@ -15,7 +15,7 @@ def auth_status():
 @router.post("/setup")
 def auth_setup(payload: PasswordIn):
     if auth.is_configured():
-        raise HTTPException(409, "Passwort ist bereits festgelegt")
+        raise HTTPException(409, "password_already_set")
     auth.set_password(payload.password)
     return {"token": auth.create_token()}
 
@@ -23,5 +23,5 @@ def auth_setup(payload: PasswordIn):
 @router.post("/login")
 def auth_login(payload: PasswordIn):
     if not auth.verify_password(payload.password):
-        raise HTTPException(401, "Falsches Passwort")
+        raise HTTPException(401, "wrong_password")
     return {"token": auth.create_token()}

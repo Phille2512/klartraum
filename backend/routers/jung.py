@@ -58,7 +58,7 @@ def innenwelt(
 def list_reflections(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     refs = session.exec(
         select(Reflection).where(Reflection.dream_id == dream_id).order_by(Reflection.created_at)
     ).all()
@@ -69,7 +69,7 @@ def list_reflections(dream_id: int, session: Session = Depends(get_session)):
 def create_reflection(dream_id: int, payload: ReflectionIn, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     ref = Reflection(dream_id=dream_id, question=payload.question, answer=payload.answer)
     session.add(ref)
     session.commit()
@@ -81,7 +81,7 @@ def create_reflection(dream_id: int, payload: ReflectionIn, session: Session = D
 def delete_reflection(ref_id: int, session: Session = Depends(get_session)):
     ref = session.get(Reflection, ref_id)
     if not ref:
-        raise HTTPException(404, "Reflexion nicht gefunden")
+        raise HTTPException(404, "reflection_not_found")
     session.delete(ref)
     session.commit()
 
@@ -90,7 +90,7 @@ def delete_reflection(ref_id: int, session: Session = Depends(get_session)):
 def list_imaginations(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     imgs = session.exec(
         select(Imagination).where(Imagination.dream_id == dream_id).order_by(Imagination.created_at)
     ).all()
@@ -101,7 +101,7 @@ def list_imaginations(dream_id: int, session: Session = Depends(get_session)):
 def create_imagination(dream_id: int, payload: ImaginationIn, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     img = Imagination(dream_id=dream_id, text=payload.text.strip())
     session.add(img)
     session.commit()
@@ -113,7 +113,7 @@ def create_imagination(dream_id: int, payload: ImaginationIn, session: Session =
 def delete_imagination(img_id: int, session: Session = Depends(get_session)):
     img = session.get(Imagination, img_id)
     if not img:
-        raise HTTPException(404, "Imagination nicht gefunden")
+        raise HTTPException(404, "imagination_not_found")
     session.delete(img)
     session.commit()
 
@@ -127,7 +127,7 @@ def delete_imagination(img_id: int, session: Session = Depends(get_session)):
 def list_dream_analysis(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     entries = session.exec(
         select(DreamAnalysis).where(DreamAnalysis.dream_id == dream_id).order_by(DreamAnalysis.created_at)
     ).all()
@@ -138,9 +138,9 @@ def list_dream_analysis(dream_id: int, session: Session = Depends(get_session)):
 def create_dream_analysis(dream_id: int, payload: DreamAnalysisIn, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     if payload.station not in ANALYSIS_STATIONS:
-        raise HTTPException(422, f"Unbekannte Station: {payload.station}")
+        raise HTTPException(422, "unknown_station")
     existing = session.exec(
         select(DreamAnalysis).where(DreamAnalysis.dream_id == dream_id, DreamAnalysis.station == payload.station)
     ).first()
@@ -161,7 +161,7 @@ def create_dream_analysis(dream_id: int, payload: DreamAnalysisIn, session: Sess
 def delete_dream_analysis(entry_id: int, session: Session = Depends(get_session)):
     entry = session.get(DreamAnalysis, entry_id)
     if not entry:
-        raise HTTPException(404, "Analyse nicht gefunden")
+        raise HTTPException(404, "analysis_not_found")
     session.delete(entry)
     session.commit()
 
@@ -186,7 +186,7 @@ def create_sync_event(payload: SyncEventIn, session: Session = Depends(get_sessi
     if payload.dream_id:
         dream = session.get(Dream, payload.dream_id)
         if not dream:
-            raise HTTPException(404, "Traum nicht gefunden")
+            raise HTTPException(404, "dream_not_found")
     event = SyncEvent(dream_id=payload.dream_id, date=payload.date, text=payload.text.strip())
     session.add(event)
     session.commit()
@@ -198,6 +198,6 @@ def create_sync_event(payload: SyncEventIn, session: Session = Depends(get_sessi
 def delete_sync_event(event_id: int, session: Session = Depends(get_session)):
     event = session.get(SyncEvent, event_id)
     if not event:
-        raise HTTPException(404, "Ereignis nicht gefunden")
+        raise HTTPException(404, "event_not_found")
     session.delete(event)
     session.commit()

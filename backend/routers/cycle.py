@@ -35,7 +35,7 @@ def create_goal(payload: GoalIn, session: Session = Depends(get_session)):
 def update_goal(goal_id: int, payload: GoalToggle, session: Session = Depends(get_session)):
     goal = session.get(Goal, goal_id)
     if not goal:
-        raise HTTPException(404, "Ziel nicht gefunden")
+        raise HTTPException(404, "goal_not_found")
     goal.done = payload.done
     goal.done_at = dt.datetime.utcnow() if payload.done else None
     session.add(goal)
@@ -47,7 +47,7 @@ def update_goal(goal_id: int, payload: GoalToggle, session: Session = Depends(ge
 def delete_goal(goal_id: int, session: Session = Depends(get_session)):
     goal = session.get(Goal, goal_id)
     if not goal:
-        raise HTTPException(404, "Ziel nicht gefunden")
+        raise HTTPException(404, "goal_not_found")
     session.delete(goal)
     session.commit()
 
@@ -96,7 +96,7 @@ def create_intention(payload: IntentionIn, session: Session = Depends(get_sessio
 def update_intention(intention_id: int, payload: IntentionFulfill, session: Session = Depends(get_session)):
     intention = session.get(Intention, intention_id)
     if not intention:
-        raise HTTPException(404, "Intention nicht gefunden")
+        raise HTTPException(404, "intention_not_found")
     intention.fulfilled = payload.fulfilled
     session.add(intention)
     session.commit()

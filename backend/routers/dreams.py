@@ -92,7 +92,7 @@ def dream_echoes(text: str = Query(min_length=10), exclude_id: int | None = None
 def get_dream(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     return to_out(dream)
 
 
@@ -100,7 +100,7 @@ def get_dream(dream_id: int, session: Session = Depends(get_session)):
 def update_dream(dream_id: int, payload: DreamIn, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     for key, value in payload.model_dump(exclude={"tags", "dream_signs", "places", "persons", "emotions", "substances"}).items():
         setattr(dream, key, value)
     dream.emotions = ",".join(payload.emotions) if payload.emotions else None
@@ -116,7 +116,7 @@ def update_dream(dream_id: int, payload: DreamIn, session: Session = Depends(get
 def delete_dream(dream_id: int, session: Session = Depends(get_session)):
     dream = session.get(Dream, dream_id)
     if not dream:
-        raise HTTPException(404, "Traum nicht gefunden")
+        raise HTTPException(404, "dream_not_found")
     dream.tags = []
     session.delete(dream)
     session.commit()

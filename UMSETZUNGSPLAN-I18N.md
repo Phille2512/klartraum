@@ -1,5 +1,10 @@
 # 🌐 Umsetzungsplan „Zweisprachigkeit": Deutsch ⇄ Englisch
 
+> **Status (2026-07-14): Stufen I.1–I.4 komplett abgeschlossen.** Die App ist
+> vollständig zweisprachig. Offener Rest (kein Teil dieser Stufen):
+> `innenwelt.js` `introCard()`-Erklärtext, `docs/` und
+> `ANLEITUNG-FUER-FREUNDE.md` (bewusst zurückgestellt, s. I.3/I.4).
+
 > Eigenständige Spezifikation für einen beliebigen Implementierer.
 > **Zuerst lesen:** `UMSETZUNGSPLAN.md` Teil A (Konventionen, Fallstricke).
 >
@@ -174,23 +179,41 @@ sehnsucht→longing, scham→shame.
 Traumfaden, eine komplette Jung-Analyse an einem Testtraum); Glossar-Begriffe
 konsistent verwendet.
 
-## Stufe I.4: Backend-Meldungen & Feinschliff
+## Stufe I.4: Backend-Meldungen & Feinschliff — ✅ abgeschlossen (2026-07-14)
 
-1. **Fehler-Codes statt deutscher Texte:** `HTTPException(404, "not_found")`,
-   `401 → "wrong_password"` / `"not_authenticated"`, `409 → "duplicate"` usw.
-   `api.js` übersetzt: `t("err." + detail)`, unbekannte Codes werden roh
-   angezeigt. Alle `raise HTTPException` in `main.py` durchgehen (~25 Stück).
-2. **Manifest:** bleibt statisch — `name: "Traumader"`,
-   `description` englisch (internationaler kleinster Nenner),
-   `short_name: "Traumader"`. Kein Sprach-Manifest-Gefrickel.
+1. **Fehler-Codes statt deutscher Texte:** ✅ Alle 34 `raise HTTPException`
+   in `backend/deps.py` und `backend/routers/*.py` (der Code liegt inzwischen
+   in Routern, nicht mehr in `main.py`) auf Codes umgestellt (`dream_not_found`,
+   `wrong_password`, `not_authenticated`, `unknown_archetype`, `path_already_exists`
+   usw. — 23 verschiedene Codes). Neue Helper-Funktion `tErrCode(code)` in
+   `i18n.js` übersetzt über `"err.*"`-Schlüssel; unbekannte Codes werden roh
+   angezeigt (ohne `"err."`-Präfix). `api.js` (`request()`) und `auth.js`
+   (`submit()`) nutzen `tErrCode()`. Die beiden dynamischen Meldungen
+   (`f"Unbekannter Archetyp: {x}"`, `f"Unbekannte Station: {x}"`) wurden zu
+   statischen Codes vereinfacht (Wert nicht mehr im Fehlertext enthalten —
+   das sind ohnehin nur über direkte API-Aufrufe auslösbare Edge-Cases, die
+   UI schickt nie ungültige Werte).
+2. **Manifest:** ✅ `name` von "Traumader – Traumtagebuch & Traumwelt" auf
+   `"Traumader"` gekürzt, `description` ins Englische übersetzt,
+   `short_name` war schon `"Traumader"`.
 3. **Nicht in diesem Plan:** Übersetzung von `docs/` und
    `ANLEITUNG-FUER-FREUNDE.md` (kann später folgen, wenn englischsprachige
    Freunde real werden — dann als eigene kleine Stufe).
-4. `sw.js`: `i18n.js` in SHELL, Version bumpen.
+4. `sw.js`: ✅ `i18n.js` war schon in SHELL; Versionierung läuft automatisch
+   über den Datei-Hash in `backend/paths.py::frontend_version()`, kein
+   manuelles Hochzählen nötig.
 
-**Akzeptanz:** Falsches Passwort in EN-Modus zeigt „Wrong password“;
-Offline-/Auth-Fehlerpfade in beiden Sprachen geprüft; pytest (falls
-vorhanden) auf Codes statt Texte angepasst.
+**Akzeptanz:** ✅ Live im Browser geprüft (echter Login-Versuch mit falschem
+Passwort): DE zeigt „Falsches Passwort", EN zeigt „Wrong password". Komplette
+Testsuite (106 Tests) läuft weiterhin grün — keine Tests prüften auf die
+alten deutschen Texte, daher keine Anpassungen nötig.
+
+**Fund während der Arbeit:** Der laufende Dev-Server (uvicorn `--reload`)
+übernahm Backend-Änderungen nicht automatisch — der Auto-Reload beobachtete
+das falsche Arbeitsverzeichnis (Projekt-Root statt `backend/`). Nach
+Server-Neustart griffen die Änderungen. Bei künftigen Backend-Änderungen im
+laufenden Dev-Betrieb ggf. auf einen manuellen Neustart einstellen, falls
+`--reload` nicht zuverlässig greift.
 
 ---
 

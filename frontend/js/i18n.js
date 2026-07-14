@@ -730,6 +730,30 @@ const I18N = {
     "learn.inTheDream": "Im Traum:",
     "learn.questionForYou": "Frage an dich:",
     "learn.archetypeLensDisclaimer": "Reflexions-Linse nach C. G. Jung, keine Diagnose. Die Figur deines Traums ist immer mehr als die Rolle.",
+
+    "err.not_authenticated": "Nicht angemeldet",
+    "err.dream_not_found": "Traum nicht gefunden",
+    "err.goal_not_found": "Ziel nicht gefunden",
+    "err.intention_not_found": "Intention nicht gefunden",
+    "err.tag_not_found": "Tag nicht gefunden",
+    "err.only_dream_signs_have_category": "Nur Traumzeichen haben eine Kompass-Kategorie",
+    "err.only_persons_have_archetype": "Nur Personen können einen Archetyp bekommen",
+    "err.unknown_archetype": "Unbekannter Archetyp",
+    "err.region_not_found": "Region nicht gefunden",
+    "err.associations_not_supported": "Nur Traumzeichen, Orte und Personen können Assoziationen haben",
+    "err.note_not_found": "Notiz nicht gefunden",
+    "err.password_already_set": "Passwort ist bereits festgelegt",
+    "err.wrong_password": "Falsches Passwort",
+    "err.only_places_can_be_placed": "Nur Orte können auf der Karte platziert werden",
+    "err.node_not_found": "Knoten nicht gefunden",
+    "err.both_places_must_be_placed": "Beide Orte müssen platziert sein",
+    "err.path_already_exists": "Dieser Weg existiert bereits",
+    "err.path_not_found": "Weg nicht gefunden",
+    "err.reflection_not_found": "Reflexion nicht gefunden",
+    "err.imagination_not_found": "Imagination nicht gefunden",
+    "err.unknown_station": "Unbekannte Station",
+    "err.analysis_not_found": "Analyse nicht gefunden",
+    "err.event_not_found": "Ereignis nicht gefunden",
   },
   en: {
     "nav.journal": "Diary",
@@ -1454,6 +1478,30 @@ const I18N = {
     "learn.inTheDream": "In the dream:",
     "learn.questionForYou": "A question for you:",
     "learn.archetypeLensDisclaimer": "A lens for reflection after C. G. Jung, not a diagnosis. The figure in your dream is always more than the role.",
+
+    "err.not_authenticated": "Not logged in",
+    "err.dream_not_found": "Dream not found",
+    "err.goal_not_found": "Goal not found",
+    "err.intention_not_found": "Intention not found",
+    "err.tag_not_found": "Tag not found",
+    "err.only_dream_signs_have_category": "Only dreamsigns have a compass category",
+    "err.only_persons_have_archetype": "Only people can be assigned an archetype",
+    "err.unknown_archetype": "Unknown archetype",
+    "err.region_not_found": "Region not found",
+    "err.associations_not_supported": "Only dreamsigns, places and people can have associations",
+    "err.note_not_found": "Note not found",
+    "err.password_already_set": "Password is already set",
+    "err.wrong_password": "Wrong password",
+    "err.only_places_can_be_placed": "Only places can be placed on the map",
+    "err.node_not_found": "Node not found",
+    "err.both_places_must_be_placed": "Both places must be placed",
+    "err.path_already_exists": "This path already exists",
+    "err.path_not_found": "Path not found",
+    "err.reflection_not_found": "Reflection not found",
+    "err.imagination_not_found": "Imagination not found",
+    "err.unknown_station": "Unknown station",
+    "err.analysis_not_found": "Analysis not found",
+    "err.event_not_found": "Event not found",
   },
 };
 
@@ -1470,6 +1518,16 @@ function t(key, vars = {}) {
   let s = I18N[lang]?.[key] ?? I18N.de[key] ?? key;
   for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
   return s;
+}
+
+// I.4: Backend schickt Fehler-Codes statt deutscher Texte (z. B.
+// "dream_not_found") im HTTPException-detail-Feld. Übersetzt einen Code über
+// das "err.*"-Wörterbuch; unbekannte Codes werden roh angezeigt (der Code
+// selbst, ohne "err."-Präfix), statt eines kaputten "err.xyz"-Strings.
+function tErrCode(code) {
+  const key = "err." + code;
+  const s = t(key);
+  return s === key ? code : s;
 }
 
 // Datums-/Wochen-Formatierung: eigener kleiner Helfer statt Duplikation in

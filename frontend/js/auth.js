@@ -64,7 +64,7 @@ const auth = {
       });
       if (!res.ok) {
         const detail = await res.json().catch(() => ({}));
-        errorEl.textContent = detail.detail || t("auth.genericError", { status: res.status });
+        errorEl.textContent = detail.detail ? tErrCode(detail.detail) : t("auth.genericError", { status: res.status });
         return;
       }
       const data = await res.json();

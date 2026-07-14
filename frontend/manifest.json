@@ -1,7 +1,7 @@
 {
-  "name": "Traumader – Traumtagebuch & Traumwelt",
+  "name": "Traumader",
   "short_name": "Traumader",
-  "description": "Klarträumen lernen: Traumtagebuch, Traumzeichen-Analyse, Traumatlas und Reality-Check-Training",
+  "description": "Learn lucid dreaming: dream journal, dreamsign analysis, dream atlas and reality-check training",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#12131f",

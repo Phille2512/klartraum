@@ -7,19 +7,19 @@ const api = {
     try {
       res = await fetch(path, { headers, ...options });
     } catch {
-      const err = new Error("Server nicht erreichbar");
+      const err = new Error(t("auth.serverUnreachable"));
       err.isNetworkError = true;
       throw err;
     }
     if (res.status === 401) {
       auth.onUnauthorized();
-      const err = new Error("Nicht angemeldet");
+      const err = new Error(tErrCode("not_authenticated"));
       err.isAuthError = true;
       throw err;
     }
     if (!res.ok) {
       const detail = await res.json().catch(() => ({}));
-      throw new Error(detail.detail || `Fehler ${res.status}`);
+      throw new Error(detail.detail ? tErrCode(detail.detail) : t("auth.genericError", { status: res.status }));
     }
     return res.status === 204 ? null : res.json();
   },

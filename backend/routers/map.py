@@ -77,7 +77,7 @@ def create_map_region(payload: MapRegionIn, session: Session = Depends(get_sessi
 def delete_map_region(region_id: int, session: Session = Depends(get_session)):
     region = session.get(MapRegion, region_id)
     if not region:
-        raise HTTPException(404, "Region nicht gefunden")
+        raise HTTPException(404, "region_not_found")
     members = session.exec(select(Tag).where(Tag.region_id == region_id)).all()
     for tag in members:
         tag.region_id = None
@@ -90,7 +90,7 @@ def delete_map_region(region_id: int, session: Session = Depends(get_session)):
 def upsert_map_node(tag_id: int, payload: MapNodeIn, session: Session = Depends(get_session)):
     tag = session.get(Tag, tag_id)
     if not tag or tag.kind != "place":
-        raise HTTPException(400, "Nur Orte können auf der Karte platziert werden")
+        raise HTTPException(400, "only_places_can_be_placed")
     node = session.get(MapNode, tag_id)
     if node:
         node.x = payload.x
@@ -106,7 +106,7 @@ def upsert_map_node(tag_id: int, payload: MapNodeIn, session: Session = Depends(
 def delete_map_node(tag_id: int, session: Session = Depends(get_session)):
     node = session.get(MapNode, tag_id)
     if not node:
-        raise HTTPException(404, "Knoten nicht gefunden")
+        raise HTTPException(404, "node_not_found")
     paths = session.exec(
         select(MapPath).where((MapPath.from_tag_id == tag_id) | (MapPath.to_tag_id == tag_id))
     ).all()
@@ -119,7 +119,7 @@ def delete_map_node(tag_id: int, session: Session = Depends(get_session)):
 @router.post("/map/paths", status_code=201)
 def create_map_path(payload: MapPathIn, session: Session = Depends(get_session)):
     if not session.get(MapNode, payload.from_tag_id) or not session.get(MapNode, payload.to_tag_id):
-        raise HTTPException(400, "Beide Orte müssen platziert sein")
+        raise HTTPException(400, "both_places_must_be_placed")
     existing = session.exec(
         select(MapPath).where(
             ((MapPath.from_tag_id == payload.from_tag_id) & (MapPath.to_tag_id == payload.to_tag_id)) |
@@ -127,7 +127,7 @@ def create_map_path(payload: MapPathIn, session: Session = Depends(get_session))
         )
     ).first()
     if existing:
-        raise HTTPException(409, "Dieser Weg existiert bereits")
+        raise HTTPException(409, "path_already_exists")
     path = MapPath(from_tag_id=payload.from_tag_id, to_tag_id=payload.to_tag_id, note=payload.note)
     session.add(path)
     session.commit()
@@ -139,6 +139,6 @@ def create_map_path(payload: MapPathIn, session: Session = Depends(get_session))
 def delete_map_path(path_id: int, session: Session = Depends(get_session)):
     path = session.get(MapPath, path_id)
     if not path:
-        raise HTTPException(404, "Weg nicht gefunden")
+        raise HTTPException(404, "path_not_found")
     session.delete(path)
     session.commit()
