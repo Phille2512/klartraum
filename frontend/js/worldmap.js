@@ -15,11 +15,13 @@ const worldmap = {
   W: 1000,
   H: 700,
 
-  MODE_HINTS: {
-    move: "Bewegen-Modus: Ziehe einen Ort an eine neue Position.",
-    place: "Platzieren-Modus: Wähle unten einen Ort und tippe dann auf die Karte.",
-    path: "Weg-Modus: Tippe zwei Orte nacheinander an, um einen Weg zu ziehen (Tippe einen Weg an, um ihn zu löschen).",
-    remove: "Entfernen-Modus: Tippe einen Ort an, um ihn von der Karte zu nehmen.",
+  get MODE_HINTS() {
+    return {
+      move: t("wm.modeHint.move"),
+      place: t("wm.modeHint.place"),
+      path: t("wm.modeHint.path"),
+      remove: t("wm.modeHint.remove"),
+    };
   },
 
   async load() {
@@ -131,16 +133,16 @@ const worldmap = {
 
     if (!d.placed.length) {
       svg += `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="var(--text-dim)" font-size="14">
-        Tippe einen Ort in der Ablage an und dann auf die Karte —
+        ${t("wm.emptyLine1")}
       </text>
       <text x="${W / 2}" y="${H / 2 + 22}" text-anchor="middle" fill="var(--text-dim)" font-size="14">
-        deine Traumwelt beginnt hier.
+        ${t("wm.emptyLine2")}
       </text>`;
     }
 
     svg += `</svg>`;
 
-    const modeLabels = { move: "✋ Bewegen", place: "📍 Platzieren", path: "🚶 Weg", remove: "🗑️ Entfernen" };
+    const modeLabels = { move: t("wm.modeMove"), place: t("wm.modePlace"), path: t("wm.modePath"), remove: t("wm.modeRemove") };
     const toolbar = `<div class="wm-toolbar">
       <div class="chip-row">
         ${Object.entries(modeLabels).map(([m, label]) =>
@@ -152,23 +154,23 @@ const worldmap = {
         <button id="wm-zoom-out" class="chip">−</button>
         <button id="wm-zoom-reset" class="chip">⌂</button>
         <button id="wm-zoom-in" class="chip">+</button>
-        <button id="wm-undo" class="chip" ${this.undoStack.length ? "" : "disabled"}>↩️ Rückgängig</button>
-        <button id="wm-region-toggle" class="chip ${this.regionSelectMode ? "active" : ""}">🗺️ Region</button>
+        <button id="wm-undo" class="chip" ${this.undoStack.length ? "" : "disabled"}>${t("wm.undo")}</button>
+        <button id="wm-region-toggle" class="chip ${this.regionSelectMode ? "active" : ""}">${t("wm.region")}</button>
       </div>
       <div class="atlas-search-row">
-        <input type="text" id="wm-search" placeholder="Ort suchen …">
+        <input type="text" id="wm-search" placeholder="${t("wm.searchPlaceholder")}">
         <button id="wm-search-btn">🔍</button>
       </div>
       ${this.regionSelectMode ? `<div class="wm-region-bar">
-        <span>${this.regionSelection.size} ausgewählt</span>
-        <button id="wm-region-group" class="primary" ${this.regionSelection.size < 2 ? "disabled" : ""}>Als Region benennen</button>
-        <button id="wm-region-cancel" class="chip">Abbrechen</button>
+        <span>${t("wm.regionSelected", { count: this.regionSelection.size })}</span>
+        <button id="wm-region-group" class="primary" ${this.regionSelection.size < 2 ? "disabled" : ""}>${t("wm.regionNameIt")}</button>
+        <button id="wm-region-cancel" class="chip">${t("common.cancel")}</button>
       </div>` : ""}
     `;
 
     const chips = d.unplaced.length
       ? `<div class="wm-unplaced">
-          <p class="hint">📍 Unkartierte Orte — antippen, dann auf die Karte tippen:</p>
+          <p class="hint">${t("wm.unplacedHint")}</p>
           <div class="wm-chips">${d.unplaced.map((u) =>
             `<button class="badge place wm-chip ${this.selectedChip === u.tag_id ? "wm-chip-selected" : ""}" data-tag-id="${u.tag_id}">📍 ${escapeHtml(u.name)} (${u.dream_count}×)</button>`
           ).join("")}</div>
@@ -215,7 +217,7 @@ const worldmap = {
       const term = searchInput.value.trim().toLowerCase();
       if (!term) return;
       const hit = this.data.placed.find((n) => n.name.toLowerCase().includes(term));
-      if (!hit) { showToast(`„${term}" nicht gefunden`); return; }
+      if (!hit) { showToast(t("atlas.notFound", { term })); return; }
       this.centerOn(hit);
     };
     searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
@@ -330,7 +332,7 @@ const worldmap = {
         const y = Math.max(0, Math.min(1, pt.y / this.H));
         try {
           await api.placeNode(d.tagId, x, y);
-          this.pushUndo(`Verschieben von "${d.node.dataset.tagId}"`, () => api.placeNode(d.tagId, d.oldX, d.oldY));
+          this.pushUndo(t("wm.undoLabelMove", { name: d.node.dataset.tagId }), () => api.placeNode(d.tagId, d.oldX, d.oldY));
           this.load();
         } catch (err) { showToast(err.message); }
         return;
@@ -414,7 +416,7 @@ const worldmap = {
     if (!action) return;
     try {
       await action.inverse();
-      showToast(`Rückgängig: ${action.label}`);
+      showToast(t("wm.undoToast", { label: action.label }));
       this.load();
     } catch (err) { showToast(err.message); }
   },
@@ -422,7 +424,7 @@ const worldmap = {
   async placeChip(tagId, x, y) {
     try {
       await api.placeNode(tagId, x, y);
-      this.pushUndo("Platzieren", () => api.removeNode(tagId));
+      this.pushUndo(t("wm.undoLabelPlace"), () => api.removeNode(tagId));
       this.selectedChip = null;
       this.ghostPos = null;
       this.load();
@@ -432,7 +434,7 @@ const worldmap = {
   handlePathClick(tagId) {
     if (!this.pathFirst) {
       this.pathFirst = tagId;
-      showToast("Ersten Ort gewählt — tippe den zweiten an");
+      showToast(t("wm.pathFirstChosen"));
     } else {
       if (this.pathFirst === tagId) {
         this.pathFirst = null;
@@ -446,35 +448,35 @@ const worldmap = {
   async createPath(from, to) {
     try {
       const path = await api.createPath(from, to);
-      this.pushUndo("Weg erstellen", () => api.deletePath(path.id));
+      this.pushUndo(t("wm.undoLabelCreatePath"), () => api.deletePath(path.id));
       this.load();
     } catch (err) { showToast(err.message); }
   },
 
   async confirmDeletePath(pathId) {
-    if (!confirm("Diesen Weg löschen?")) return;
+    if (!confirm(t("wm.confirmDeletePath"))) return;
     const path = this.data.paths.find((p) => p.id === pathId);
     try {
       await api.deletePath(pathId);
-      if (path) this.pushUndo("Weg löschen", () => api.createPath(path.from_tag_id, path.to_tag_id, path.note));
+      if (path) this.pushUndo(t("wm.undoLabelDeletePath"), () => api.createPath(path.from_tag_id, path.to_tag_id, path.note));
       this.load();
     } catch (err) { showToast(err.message); }
   },
 
   confirmRemove(tagId) {
-    if (!confirm("Diesen Ort von der Karte entfernen?")) return;
+    if (!confirm(t("wm.confirmRemove"))) return;
     this.removeFromMap(tagId);
   },
 
   // ---- Regionen (B.2) ----
   async promptCreateRegion() {
-    const name = prompt("Name der Region (z. B. „Kindheitsland“):");
+    const name = prompt(t("wm.regionNamePrompt"));
     if (!name || !name.trim()) return;
     const palette = ["#8b7ff5", "#f5c66a", "#8fd49a", "#e06c75", "#c9bfff"];
     const color = palette[Math.floor(Math.random() * palette.length)];
     try {
       await api.createRegion(name.trim(), color, [...this.regionSelection]);
-      showToast(`🗺️ Region "${name.trim()}" erstellt`);
+      showToast(t("wm.regionCreated", { name: name.trim() }));
       this.regionSelectMode = false;
       this.regionSelection = new Set();
       this.load();
@@ -531,24 +533,30 @@ const worldmap = {
       dreams = await api.listDreams({ tag: node.name });
     } catch { /* ignore */ }
 
-    const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
+    const lucidityLabels = [
+      t("journal.lucidityBadge.0"),
+      t("journal.lucidityBadge.1"),
+      t("journal.lucidityBadge.2"),
+      t("journal.lucidityBadge.3"),
+      t("journal.lucidityBadge.4"),
+    ];
     const region = node.region_id ? (this.data.regions || []).find((r) => r.id === node.region_id) : null;
 
     el.innerHTML = `<div class="card wm-detail-card">
       <h3>📍 ${escapeHtml(node.name)}</h3>
       <div class="stat-cards">
-        <div class="stat-card"><div class="value">${node.dream_count}</div><div class="label">Träume</div></div>
-        <div class="stat-card"><div class="value gold">${node.lucid_count}</div><div class="label">davon luzide</div></div>
-        <div class="stat-card"><div class="value">${connectedPaths.length}</div><div class="label">Wege</div></div>
+        <div class="stat-card"><div class="value">${node.dream_count}</div><div class="label">${t("wm.dreamsLabel")}</div></div>
+        <div class="stat-card"><div class="value gold">${node.lucid_count}</div><div class="label">${t("journal.lucidCountLabel")}</div></div>
+        <div class="stat-card"><div class="value">${connectedPaths.length}</div><div class="label">${t("wm.pathsLabel")}</div></div>
       </div>
-      ${connectedNames.length ? `<p class="hint">Verbunden mit: ${connectedNames.map((n) => escapeHtml(n)).join(", ")}</p>` : ""}
-      ${region ? `<p class="hint">🗺️ Region: <strong>${escapeHtml(region.name)}</strong>
-        <button class="hint" id="wm-region-remove" data-tag-id="${tagId}">✕ aus Region entfernen</button></p>` : ""}
+      ${connectedNames.length ? `<p class="hint">${t("wm.connectedWith")} ${connectedNames.map((n) => escapeHtml(n)).join(", ")}</p>` : ""}
+      ${region ? `<p class="hint">${t("wm.regionLabel")} <strong>${escapeHtml(region.name)}</strong>
+        <button class="hint" id="wm-region-remove" data-tag-id="${tagId}">${t("wm.regionRemove")}</button></p>` : ""}
       ${dreams.map((d) => `<div class="series-entry">
         <h3>${escapeHtml(d.title)} ${d.lucidity >= 3 ? '<span class="badge lucid">' + lucidityLabels[d.lucidity] + "</span>" : ""}</h3>
         <p>${formatDate(d.date)}</p>
       </div>`).join("")}
-      <button class="danger" onclick="worldmap.removeFromMap(${tagId})">Von der Karte entfernen</button>
+      <button class="danger" onclick="worldmap.removeFromMap(${tagId})">${t("wm.removeFromMap")}</button>
     </div>`;
     document.getElementById("wm-region-remove")?.addEventListener("click", async () => {
       try {

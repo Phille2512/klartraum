@@ -22,7 +22,7 @@ const mandala = {
 
     const svgEl = container.querySelector(".mandala-svg-wrap");
     if (!data.dreams.length) {
-      svgEl.innerHTML = '<p class="hint">Noch keine Träume in diesem Zeitraum.</p>';
+      svgEl.innerHTML = `<p class="hint">${t("mandala.empty")}</p>`;
       return;
     }
 
@@ -123,7 +123,7 @@ const mandala = {
 
     // Thin message for sparse data
     const sparse = data.dreams.length < 5
-      ? '<p class="hint" style="text-align:center;margin-top:0.5rem">Noch dünn — dein Mandala wächst mit jedem Traum.</p>'
+      ? `<p class="hint" style="text-align:center;margin-top:0.5rem">${t("mandala.sparse")}</p>`
       : "";
 
     svgEl.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" class="mandala-svg">${svg}</svg>${sparse}`;

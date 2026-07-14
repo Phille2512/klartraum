@@ -58,10 +58,11 @@ sichtbar auf Deutsch zurück (kein leerer Text).
 
 Modul für Modul alle sichtbaren Strings in Schlüssel umziehen — Checkliste:
 
-- [~] `index.html` (Tabs, Formular-Labels, Buttons, Overlays → `data-i18n`) —
-      Tagebuch- und Analyse-Tab fertig; Atlas-, Lernen-Tab und die restlichen
-      Overlays (Reflexion/Imagination/Analyse-Stationstexte, Traumfaden) stehen
-      noch aus bzw. gehören zu I.3
+- [x] `index.html` (Tabs, Formular-Labels, Buttons, Overlays → `data-i18n`) —
+      Tagebuch-, Analyse-, Atlas- und Lernen-Tab sowie Login-/Abendritual-/
+      Morgen-Flow-Overlay fertig. Verbleibende Overlays (Reflexion, Aktive
+      Imagination, Analyse-Stationstexte, Traumfaden) sind Content und
+      gehören zu I.3.
 - [x] `journal.js` (Toasts, Leerzustände, Luzuditäts-Labels, confirm()-Texte,
       Echos, Morgen-Rückfrage; **EMOTIONS**: Schlüssel `angst`, `freude` …
       bleiben unverändert in der Datenbank — nur `label` wird `t()`-basiert).
@@ -78,13 +79,25 @@ Modul für Modul alle sichtbaren Strings in Schlüssel umziehen — Checkliste:
       `atlas.ARCHETYPES[key].label` wird referenziert, aber erst mit
       `atlas.js` übersetzt. Wochentags-Kürzel und Split-Gruppennamen kommen
       unübersetzt vom Backend (I.4).
-- [ ] `atlas.js` / `worldmap.js` / `innenwelt.js` (Filterleiste, Bilanz-Zeile,
-      Fokus, Werkzeuge, Hinweiszeilen, ARCHETYPES-Labels/-Hints, Dossier)
-- [ ] `learn.js` (Reminder/WBTB/Bucket-List-UI — die Guide-INHALTE kommen
-      in I.3)
-- [ ] `auth.js`, `offline.js`, `app.js` (Login/Setup, Offline-Hinweise,
-      Abendritual-UI), `mandala.js`, `hilfe.js`/`wissen.js` (nur UI-Rahmen)
-- [ ] `aria-label`s und `<title>`
+- [x] `atlas.js` / `worldmap.js` / `innenwelt.js` (Filterleiste, Bilanz-Zeile,
+      Fokus, Werkzeuge, Hinweiszeilen, ARCHETYPES-Labels/-Hints, Dossier).
+      `innenwelt.js`: SECTOR_SUBTITLES als Getter wie ARCHETYPES; introCard()-Inhalt
+      (Erklärtext „Was ist die Innenwelt-Bühne?") bewusst NICHT übersetzt — gehört
+      wie AMPLIFICATION_PROMPTS zu I.3.
+- [x] `learn.js` (Reminder/WBTB/Bucket-List-UI, „Deine Daten"-Karte,
+      Erst-Start-Hinweis „Wo liegen deine Daten?", index.html-Tab). Guide-INHALTE
+      (JUNG_GUIDES, ARCHETYPE_LEXICON, TRAUMFADEN, `learn.guides`) bewusst
+      NICHT übersetzt — kommen in I.3.
+- [x] `auth.js`, `offline.js`, `app.js` (Login/Setup, Offline-Hinweise,
+      Abendritual-UI), `mandala.js`, `hilfe.js`/`wissen.js` (nur UI-Rahmen).
+      HILFE- und WISSEN-Inhalte (was/wie/wozu, Wissens-Texte) bewusst NICHT
+      übersetzt — Content, kommt in I.3. Hinweis in `app.js` hinterlegt: der
+      `h2.textContent.includes("Traumkompass")`-Check funktioniert nur, weil
+      die Kompass-Überschrift ebenfalls unübersetzt bleibt.
+- [x] `aria-label`s und `<title>` — geprüft: alle dynamisch gesetzten
+      aria-labels/titles laufen über `t()`; verbleibend unübersetzt sind nur
+      `<title>Traumader</title>` (Eigenname) und `aria-label="Der Traumfaden"`
+      (Feature-Name, gehört zu TRAUMFADEN-Content, I.3).
 
 Schlüssel-Namenskonvention: `modul.zweck` (`journal.deleteConfirm`,
 `atlas.focus`). Bei Strings mit eingebautem `escapeHtml(...)`: Interpolation
@@ -94,12 +107,28 @@ Schlüssel-Namenskonvention: `modul.zweck` (`journal.deleteConfirm`,
 deutsches Wort mehr sichtbar (außer Nutzerdaten); Layout bricht nirgends
 (englische Strings sind mal kürzer, mal länger — 412 px prüfen).
 
-## Stufe I.3: Inhalts-Übersetzung (die großen Texte)
+## Stufe I.3: Inhalts-Übersetzung (die großen Texte) — ✅ abgeschlossen (2026-07-14)
 
 Betrifft: Klartraum-Guides, Jung-Kompendium (9 Kapitel), Archetypen-Lexikon,
 Traumfaden, ⓘ-Hilfe- und 💡-Wissens-Texte, Reflexionsfragen,
 Amplifikations-Impulse, Kompass-Missionen, Stationstexte der
 Traum-Jung-Analyse, „Deine Daten"-Text, Disclaimer-Fußzeile.
+
+**Stand:** Alle oben genannten Inhalte sind übersetzt und über `t()`
+verdrahtet — `learn.js` (`TRAUMFADEN`, `learn.guides`, `JUNG_GUIDES`,
+`ARCHETYPE_LEXICON`, Jung-Kompendium-/Lexikon-Überschriften), `journal.js`
+(`reflectionQuestions`, `ANALYSIS_STATIONS`), `atlas.js`
+(`AMPLIFICATION_PROMPTS`), `stats.js` (`COMPASS` + Mission/Sorter/Picker-UI,
+Traumkompass-Überschrift in `index.html`), `hilfe.js` (`HILFE`), `wissen.js`
+(`WISSEN`). „Deine Daten"-Text wurde schon in I.2 mitübersetzt (`learn.js`).
+Keine dedizierte Disclaimer-Fußzeile im Code gefunden — die Funktion
+übernimmt das Kapitel „🔍 Ehrliche Einordnung" im Jung-Kompendium.
+Offen/nicht Teil dieser Stufe: `innenwelt.js` `introCard()` (Erklärtext
+„Was ist die Innenwelt-Bühne?", stand nicht explizit auf der Liste,
+Kandidat für einen kleinen Folge-Pass).
+Der `app.js`-Kommentar zum `Traumkompass`-Textabgleich ist erledigt:
+Überschrift hat jetzt `id="compass-heading"`, `hilfe.attach()` nutzt die ID
+statt Textvergleich.
 
 **Qualitätsmaßstab:** Idiomatisches Englisch im selben warmen Du-Ton
 (englisch: direktes „you"), keine Wort-für-Wort-Übersetzung. Emojis und

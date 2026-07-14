@@ -27,11 +27,11 @@ const auth = {
   show(setupMode) {
     this.setupMode = setupMode;
     document.getElementById("login-title").textContent = setupMode
-      ? "🔒 Passwort festlegen"
-      : "🔒 Anmelden";
+      ? t("auth.setupTitle")
+      : t("auth.loginTitle");
     document.getElementById("login-hint").textContent = setupMode
-      ? "Schütze dein Traumtagebuch: Lege ein Passwort fest (mind. 4 Zeichen). Du brauchst es auf jedem Gerät einmal."
-      : "Gib dein Traumader-Passwort ein.";
+      ? t("auth.setupHint")
+      : t("auth.loginHint");
     document.getElementById("login-confirm-label").classList.toggle("hidden", !setupMode);
     document.getElementById("login-error").textContent = "";
     this.overlay.classList.remove("hidden");
@@ -51,7 +51,7 @@ const auth = {
     if (this.setupMode) {
       const confirm = document.getElementById("login-confirm").value;
       if (password !== confirm) {
-        errorEl.textContent = "Die Passwörter stimmen nicht überein.";
+        errorEl.textContent = t("auth.passwordMismatch");
         return;
       }
     }
@@ -64,18 +64,18 @@ const auth = {
       });
       if (!res.ok) {
         const detail = await res.json().catch(() => ({}));
-        errorEl.textContent = detail.detail || `Fehler ${res.status}`;
+        errorEl.textContent = detail.detail || t("auth.genericError", { status: res.status });
         return;
       }
       const data = await res.json();
       this.token = data.token;
       localStorage.setItem("auth-token", this.token);
       this.hide();
-      showToast(this.setupMode ? "Passwort festgelegt 🔒" : "Angemeldet ✓");
+      showToast(this.setupMode ? t("auth.passwordSet") : t("auth.loggedIn"));
       journal.load();
       offline.sync();
     } catch {
-      errorEl.textContent = "Server nicht erreichbar.";
+      errorEl.textContent = t("auth.serverUnreachable");
     }
   },
 

@@ -1,24 +1,24 @@
 // Analyse: Kennzahlen + Diagramme (Chart.js) + Traumkompass nach LaBerge
 const COMPASS = {
   awareness: {
-    icon: "💭", label: "Inneres Erleben",
-    hint: "Ungewöhnliche Gedanken oder Gefühle im Traum",
-    mission: 'Halte heute 5× inne und frag dich: „Fühlt sich dieser Moment wach an – oder wie ein Traum?“',
+    icon: "💭", get label() { return t("stats.compass.awareness.label"); },
+    get hint() { return t("stats.compass.awareness.hint"); },
+    get mission() { return t("stats.compass.awareness.mission"); },
   },
   action: {
-    icon: "⚡", label: "Handlung",
-    hint: "Du oder andere tun Unmögliches (fliegen, schweben …)",
-    mission: "Achte heute auf Bewegungen: Immer wenn etwas Überraschendes passiert → Reality Check!",
+    icon: "⚡", get label() { return t("stats.compass.action.label"); },
+    get hint() { return t("stats.compass.action.hint"); },
+    get mission() { return t("stats.compass.action.mission"); },
   },
   form: {
-    icon: "🌀", label: "Form",
-    hint: "Dinge, Orte oder Körper sind verformt oder verwandeln sich",
-    mission: "Sieh dir heute 5× deine Hände genau an: Stimmen Form und Fingerzahl?",
+    icon: "🌀", get label() { return t("stats.compass.form.label"); },
+    get hint() { return t("stats.compass.form.hint"); },
+    get mission() { return t("stats.compass.form.mission"); },
   },
   context: {
-    icon: "🗺️", label: "Kontext",
-    hint: "Falscher Ort, falsche Zeit, absurde Situation",
-    mission: 'Frag dich bei jedem Ortswechsel: „Wie genau bin ich hierhergekommen?"',
+    icon: "🗺️", get label() { return t("stats.compass.context.label"); },
+    get hint() { return t("stats.compass.context.hint"); },
+    get mission() { return t("stats.compass.context.mission"); },
   },
 };
 
@@ -598,7 +598,7 @@ const stats = {
       data: {
         labels: keys.map((k) => `${COMPASS[k].icon} ${COMPASS[k].label}`),
         datasets: [{
-          label: "Traumzeichen-Vorkommen",
+          label: t("stats.compassDataset"),
           data: keys.map((k) => compass[k]),
           backgroundColor: "rgba(139, 127, 245, 0.25)",
           borderColor: "#8b7ff5",
@@ -626,20 +626,17 @@ const stats = {
     const total = keys.reduce((sum, k) => sum + data.compass[k], 0);
 
     if (!total) {
-      el.innerHTML = `<div class="mission-card">🧭 Sortiere oben deine Traumzeichen ein –
-        dann erhältst du hier deine persönliche Reality-Check-Mission.</div>`;
+      el.innerHTML = `<div class="mission-card">${t("stats.missionEmpty")}</div>`;
       return;
     }
     const dominant = keys.reduce((a, b) => (data.compass[a] >= data.compass[b] ? a : b));
     const c = COMPASS[dominant];
     const focus = data.focus_sign
-      ? `<p>🎯 <strong>Fokus-Zeichen der Woche:</strong> "${escapeHtml(data.focus_sign.name)}"
-         (${data.focus_sign.count}×) – mach jedes Mal einen Reality Check, wenn es dir tagsüber
-         begegnet oder in den Sinn kommt.</p>`
+      ? `<p>${t("stats.missionFocusSign", { name: escapeHtml(data.focus_sign.name), count: data.focus_sign.count })}</p>`
       : "";
     el.innerHTML = `<div class="mission-card">
-      <h3>${c.icon} Deine Mission</h3>
-      <p>Deine Träume lehnen zu <strong>${c.label}</strong> (${c.hint.toLowerCase()}).</p>
+      <h3>${c.icon} ${t("stats.missionTitle")}</h3>
+      <p>${t("stats.missionLeaning", { label: c.label, hint: c.hint.toLowerCase() })}</p>
       <p>👉 ${c.mission}</p>
       ${focus}
     </div>`;
@@ -653,9 +650,11 @@ const stats = {
       el.innerHTML = "";
       return;
     }
+    const noun = unsorted.length === 1 ? t("stats.sorterNounOne") : t("stats.sorterNounMany");
+    const verb = unsorted.length === 1 ? t("stats.sorterVerbOne") : t("stats.sorterVerbMany");
+    const pronoun = unsorted.length === 1 ? t("stats.sorterPronounOne") : t("stats.sorterPronounMany");
     el.innerHTML = `
-      <p class="hint">🧩 <strong>${unsorted.length} Traumzeichen</strong> ${unsorted.length === 1 ? "wartet" : "warten"} aufs Einsortieren –
-        tippe ${unsorted.length === 1 ? "es" : "eines"} an und wähle, wozu es am besten passt:</p>
+      <p class="hint">${t("stats.sorterHint", { count: unsorted.length, noun, verb, pronoun })}</p>
       <div class="sorter-chips">
         ${unsorted.map((t) => `<button class="badge sign sorter-chip" data-id="${t.id}"
           data-name="${escapeHtml(t.name)}">🔮 ${escapeHtml(t.name)} (${t.count}×)</button>`).join("")}
@@ -671,7 +670,7 @@ const stats = {
     const picker = document.getElementById("sorter-picker");
     picker.classList.remove("hidden");
     picker.innerHTML = `
-      <p>"<strong>${name}</strong>" ist am ehesten …</p>
+      <p>${t("stats.pickerPrompt", { name: `<strong>${name}</strong>` })}</p>
       <div class="picker-grid">
         ${Object.entries(COMPASS).map(([key, c]) => `
           <button class="picker-btn" data-cat="${key}">
@@ -684,7 +683,7 @@ const stats = {
       btn.addEventListener("click", async () => {
         try {
           await api.setTagCategory(tagId, btn.dataset.cat);
-          showToast(`${COMPASS[btn.dataset.cat].icon} "${name}" einsortiert`);
+          showToast(t("stats.categorySorted", { icon: COMPASS[btn.dataset.cat].icon, name }));
           this.load();
         } catch (err) {
           showToast(err.message);

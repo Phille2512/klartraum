@@ -61,11 +61,11 @@ const offline = {
           if (err.isNetworkError || err.isAuthError) break;
           // Server hat den Eintrag abgelehnt (z. B. ungültige Daten): nicht endlos wiederholen
           await this.remove(item.queueId);
-          showToast(`Offline-Eintrag "${item.payload.title}" wurde abgelehnt: ${err.message}`);
+          showToast(t("offline.entryRejected", { title: item.payload.title, message: err.message }));
         }
       }
       if (synced) {
-        showToast(synced === 1 ? "1 Offline-Traum übertragen ✓" : `${synced} Offline-Träume übertragen ✓`);
+        showToast(synced === 1 ? t("offline.syncedOne") : t("offline.syncedMany", { count: synced }));
         journal.load();
       }
     } finally {

@@ -10,15 +10,17 @@ const innenwelt = {
     persona:       315,
   },
 
-  SECTOR_SUBTITLES: {
-    schatten: "das Abgelehnte",
-    anima_animus: "die Gegenstimme",
-    weiser: "der Rat",
-    kind: "Anfang, Spiel",
-    trickster: "bricht Regeln",
-    held: "kämpft, überwindet",
-    grosse_mutter: "nährt, hält",
-    persona: "die Maske",
+  get SECTOR_SUBTITLES() {
+    return {
+      schatten: t("innenwelt.sectorSubtitle.schatten"),
+      anima_animus: t("innenwelt.sectorSubtitle.animaAnimus"),
+      weiser: t("innenwelt.sectorSubtitle.weiser"),
+      kind: t("innenwelt.sectorSubtitle.kind"),
+      trickster: t("innenwelt.sectorSubtitle.trickster"),
+      held: t("innenwelt.sectorSubtitle.held"),
+      grosse_mutter: t("innenwelt.sectorSubtitle.grosseMutter"),
+      persona: t("innenwelt.sectorSubtitle.persona"),
+    };
   },
 
   MAX_PER_SECTOR: 4,
@@ -51,9 +53,8 @@ const innenwelt = {
 
     if (!figures.length) {
       el.innerHTML = `<div class="card">
-        <h2>🌗 Deine Innenwelt-Bühne <small>Deine Traumfiguren und ihre Rollen</small></h2>
-        <div class="empty-state">Deine Bühne ist noch leer. Gib den Menschen in deinen Träumen
-          eine Linse — im Atlas oder hier.</div>
+        <h2>${t("innenwelt.stageTitle")} <small>${t("innenwelt.stageSubtitle")}</small></h2>
+        <div class="empty-state">${t("innenwelt.emptyStage")}</div>
       </div>`;
       return;
     }
@@ -61,22 +62,22 @@ const innenwelt = {
     el.innerHTML = `
       ${this.introSeen ? "" : this.introCard()}
       <div class="card">
-        <h2>🌗 Deine Innenwelt-Bühne <small>Deine Traumfiguren und ihre Rollen</small>
+        <h2>${t("innenwelt.stageTitle")} <small>${t("innenwelt.stageSubtitle")}</small>
           ${this.introSeen ? `<button class="hint innenwelt-info-btn" id="innenwelt-info-btn">💡</button>` : ""}</h2>
-        <p class="hint">Wer spielt in deinen Träumen — und in welcher Rolle? Innen: Figuren mit Archetyp-Linse. Außen: noch ohne Linse.</p>
+        <p class="hint">${t("innenwelt.hint")}</p>
         <div class="chip-row">
-          <button class="chip iw-view-chip ${this.view === "stage" ? "active" : ""}" data-view="stage">🎭 Bühne</button>
-          <button class="chip iw-view-chip ${this.view === "list" ? "active" : ""}" data-view="list">☰ Liste</button>
+          <button class="chip iw-view-chip ${this.view === "stage" ? "active" : ""}" data-view="stage">${t("innenwelt.viewStage")}</button>
+          <button class="chip iw-view-chip ${this.view === "list" ? "active" : ""}" data-view="list">${t("innenwelt.viewList")}</button>
         </div>
         <div class="chip-row">
-          <button class="chip iw-active-chip ${this.activeOnly ? "active" : ""}" data-active="true">Letzte 12 Monate</button>
-          <button class="chip iw-active-chip ${!this.activeOnly ? "active" : ""}" data-active="false">Alle Zeiten</button>
-          <button class="chip iw-min-chip ${this.minCount === 1 ? "active" : ""}" data-min="1">alle</button>
+          <button class="chip iw-active-chip ${this.activeOnly ? "active" : ""}" data-active="true">${t("innenwelt.last12Months")}</button>
+          <button class="chip iw-active-chip ${!this.activeOnly ? "active" : ""}" data-active="false">${t("innenwelt.allTime")}</button>
+          <button class="chip iw-min-chip ${this.minCount === 1 ? "active" : ""}" data-min="1">${t("atlas.minAll")}</button>
           <button class="chip iw-min-chip ${this.minCount === 2 ? "active" : ""}" data-min="2">≥2×</button>
           <button class="chip iw-min-chip ${this.minCount === 3 ? "active" : ""}" data-min="3">≥3×</button>
         </div>
         <div class="atlas-search-row">
-          <input type="text" id="innenwelt-search" placeholder="Figur finden …">
+          <input type="text" id="innenwelt-search" placeholder="${t("innenwelt.searchPlaceholder")}">
           <button id="innenwelt-search-btn">🔍</button>
         </div>
         <div id="innenwelt-stage-wrap"></div>
@@ -88,6 +89,8 @@ const innenwelt = {
     hilfe.attach(el.querySelector(".card h2"), "atlas-innenwelt");
   },
 
+  // Erklärungstext bewusst NICHT übersetzt (Inhalts-Übersetzung gehört zu I.3,
+  // s. UMSETZUNGSPLAN-I18N.md).
   introCard() {
     return `<div class="card innenwelt-intro">
       <h2>🌗 Was ist die Innenwelt-Bühne?</h2>
@@ -137,7 +140,7 @@ const innenwelt = {
       const term = searchInput.value.trim().toLowerCase();
       if (!term) return;
       const hit = this.allFigures.find((f) => f.name.toLowerCase().includes(term));
-      if (!hit) { showToast(`„${term}" nicht gefunden`); return; }
+      if (!hit) { showToast(t("atlas.notFound", { term })); return; }
       this.showDossier(hit);
     };
     searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
@@ -168,13 +171,13 @@ const innenwelt = {
   renderList(wrap, figures) {
     const rows = [...figures].sort((a, b) => b.count - a.count);
     wrap.innerHTML = `<table class="innenwelt-table">
-      <thead><tr><th>Name</th><th>Rolle</th><th>Vorkommen</th><th>Zuletzt</th><th>Gespräch</th></tr></thead>
+      <thead><tr><th>${t("innenwelt.tableName")}</th><th>${t("innenwelt.tableRole")}</th><th>${t("innenwelt.tableCount")}</th><th>${t("innenwelt.tableLast")}</th><th>${t("innenwelt.tableConversation")}</th></tr></thead>
       <tbody>
         ${rows.map((f) => {
           const a = f.archetype ? atlas.ARCHETYPES[f.archetype] : null;
           return `<tr class="innenwelt-row" data-name="${escapeHtml(f.name)}">
             <td>${escapeHtml(f.name)}</td>
-            <td>${a ? `${a.icon} ${a.label}` : "<span class=\"hint\">– ohne Rolle –</span>"}</td>
+            <td>${a ? `${a.icon} ${a.label}` : `<span class="hint">${t("innenwelt.noRole")}</span>`}</td>
             <td>${f.count}×</td>
             <td>${formatDate(f.last_date)}</td>
             <td>${f.has_imaginations ? "✅" : "–"}</td>
@@ -205,7 +208,7 @@ const innenwelt = {
 
     let svgContent = "";
     svgContent += `<circle cx="${cx}" cy="${cy}" r="28" fill="var(--accent)" fill-opacity="0.2" stroke="var(--accent)" stroke-width="1.5"/>`;
-    svgContent += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="var(--accent)" font-size="16">&#x2B55; Selbst</text>`;
+    svgContent += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="var(--accent)" font-size="16">${t("innenwelt.self")}</text>`;
 
     for (const [arch, angle] of Object.entries(this.SECTOR_ANGLES)) {
       const a = atlas.ARCHETYPES[arch];
@@ -279,7 +282,7 @@ const innenwelt = {
     }
 
     wrap.innerHTML = `
-      <p class="hint" style="opacity:.7">Äußerer Ring: Noch ohne Rolle — antippen zum Einsortieren.</p>
+      <p class="hint" style="opacity:.7">${t("innenwelt.outerRingHint")}</p>
       <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" class="innenwelt-svg">
         ${svgContent}
       </svg>`;
@@ -310,7 +313,7 @@ const innenwelt = {
     if (!top) return;
     const banner = document.createElement("div");
     banner.className = "innenwelt-guided";
-    banner.innerHTML = `👉 Beginne mit „${escapeHtml(top.name)}" – welche Rolle spielt sie/er in deinen Träumen?`;
+    banner.innerHTML = t("innenwelt.guidedStart", { name: escapeHtml(top.name) });
     banner.addEventListener("click", () => this.showDossier(top));
     wrap.prepend(banner);
   },
@@ -320,7 +323,7 @@ const innenwelt = {
     const figs = isOuter
       ? figures.filter((f) => !f.archetype)
       : figures.filter((f) => f.archetype === arch);
-    const label = isOuter ? "Noch ohne Rolle" : `${atlas.ARCHETYPES[arch]?.icon || ""} ${atlas.ARCHETYPES[arch]?.label || arch}`;
+    const label = isOuter ? t("innenwelt.noRoleLabel") : `${atlas.ARCHETYPES[arch]?.icon || ""} ${atlas.ARCHETYPES[arch]?.label || arch}`;
 
     const width = 380, cols = 4;
     const rows = Math.ceil(figs.length / cols) || 1;
@@ -339,7 +342,7 @@ const innenwelt = {
 
     wrap.innerHTML = `
       <div class="innenwelt-sector-header">
-        <button class="chip" id="innenwelt-back-btn">‹ zurück zur Bühne</button>
+        <button class="chip" id="innenwelt-back-btn">${t("innenwelt.backToStage")}</button>
         <strong>${label}</strong> <span class="hint">(${figs.length})</span>
       </div>
       <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">${cells}</svg>`;
@@ -392,54 +395,54 @@ const innenwelt = {
     }
 
     el.innerHTML = `<div class="card">
-      <button class="hint innenwelt-back-link" id="innenwelt-dossier-back">‹ zurück zur Bühne</button>
+      <button class="hint innenwelt-back-link" id="innenwelt-dossier-back">${t("innenwelt.backToStage")}</button>
       <h3>${currentA ? currentA.icon : "👤"} ${escapeHtml(fig.name)}</h3>
       <div class="stat-cards" style="margin-bottom:0.75rem">
-        <div class="stat-card"><span class="stat-value">${fig.count}</span><span class="stat-label">${fig.count === 1 ? "Traum" : "Träume"}</span></div>
-        ${topEmos.length ? `<div class="stat-card"><span class="stat-value">${topEmos.map(([e]) => EMOTIONS[e]?.icon || e).join(" ")}</span><span class="stat-label">häufigste Gefühle</span></div>` : ""}
-        <div class="stat-card"><span class="stat-value">${formatDate(fig.last_date)}</span><span class="stat-label">zuletzt</span></div>
+        <div class="stat-card"><span class="stat-value">${fig.count}</span><span class="stat-label">${fig.count === 1 ? t("stats.dreamOne") : t("stats.dreamMany")}</span></div>
+        ${topEmos.length ? `<div class="stat-card"><span class="stat-value">${topEmos.map(([e]) => EMOTIONS[e]?.icon || e).join(" ")}</span><span class="stat-label">${t("stats.topEmotionsPrefix")}</span></div>` : ""}
+        <div class="stat-card"><span class="stat-value">${formatDate(fig.last_date)}</span><span class="stat-label">${t("innenwelt.lastLabel")}</span></div>
       </div>
 
       ${tagId ? `<div class="symbol-section">
-        <h4>🌗 Archetyp-Linse</h4>
+        <h4>${t("atlas.archetypeLensTitle")}</h4>
         <div class="archetype-picker" id="innenwelt-arch-picker">
-          <button class="arch-btn ${!current ? "selected" : ""}" data-arch="">Keine</button>
+          <button class="arch-btn ${!current ? "selected" : ""}" data-arch="">${t("atlas.archetypeNoneOption")}</button>
           ${Object.entries(atlas.ARCHETYPES).map(([key, a]) =>
             `<button class="arch-btn ${current === key ? "selected" : ""}" data-arch="${key}" title="${a.hint}">
               ${a.icon} ${a.label}
             </button>`
           ).join("")}
         </div>
-        <a href="#" class="archetype-lexicon-link">Was bedeuten die Rollen? →</a>
+        <a href="#" class="archetype-lexicon-link">${t("atlas.archetypeLexiconLink")}</a>
       </div>` : ""}
 
       ${imagTexts.length ? `<div class="symbol-section">
-        <h4>🔮 Gesprächsband</h4>
+        <h4>${t("innenwelt.conversationBand")}</h4>
         ${imagTexts.map((im) => `<blockquote class="imag-quote">
           <p>${escapeHtml(im.text)}</p>
           <cite>${escapeHtml(im.title)} — ${formatDate(im.date)}</cite>
         </blockquote>`).join("")}
       </div>` : ""}
 
-      ${tagId ? `<button class="primary imag-continue-btn" data-name="${escapeHtml(fig.name)}">🔮 Gespräch fortsetzen</button>` : ""}
+      ${tagId ? `<button class="primary imag-continue-btn" data-name="${escapeHtml(fig.name)}">${t("innenwelt.continueConversation")}</button>` : ""}
 
       ${tagId ? `<div class="symbol-section">
-        <h4>📖 Assoziationen</h4>
+        <h4>${t("innenwelt.associationsTitle")}</h4>
         <div id="innenwelt-notes"></div>
         <div class="symbol-input-row">
-          <input type="text" id="innenwelt-note-input" placeholder="Was verbindest du mit ${escapeHtml(fig.name)}?">
+          <input type="text" id="innenwelt-note-input" placeholder="${t("innenwelt.associationPlaceholder", { name: escapeHtml(fig.name) })}">
           <button id="innenwelt-note-add" class="primary">+</button>
         </div>
       </div>` : ""}
 
       <div class="symbol-section">
-        <h4>Traumliste</h4>
+        <h4>${t("innenwelt.dreamList")}</h4>
         ${dreams.map((d) => `<div class="series-entry">
           <div class="entry-head">
             <h3>${d.big_dream ? "⭐ " : ""}${escapeHtml(d.title)}</h3>
             <span class="entry-date">${formatDate(d.date)}</span>
           </div>
-          <span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"][d.lucidity]}</span>
+          <span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${t(`journal.lucidityBadge.${d.lucidity}`)}</span>
         </div>`).join("")}
       </div>
     </div>`;
@@ -460,7 +463,7 @@ const innenwelt = {
           await api.setArchetype(tagId, arch);
           document.querySelectorAll("#innenwelt-arch-picker .arch-btn").forEach((b) => b.classList.remove("selected"));
           btn.classList.add("selected");
-          showToast(arch ? `${atlas.ARCHETYPES[arch].icon} ${atlas.ARCHETYPES[arch].label} zugeordnet` : "Archetyp entfernt");
+          showToast(arch ? t("atlas.archetypeAssigned", { icon: atlas.ARCHETYPES[arch].icon, label: atlas.ARCHETYPES[arch].label }) : t("atlas.archetypeRemoved"));
           this.load();
         } catch (err) { showToast(err.message); }
       });
@@ -476,11 +479,11 @@ const innenwelt = {
         const loadNotes = async () => {
           try {
             const notes = await api.listSymbolNotes(tagId);
-            if (!notes.length) { notesEl.innerHTML = '<p class="hint">Noch keine Assoziationen.</p>'; return; }
+            if (!notes.length) { notesEl.innerHTML = `<p class="hint">${t("atlas.noAssociations")}</p>`; return; }
             notesEl.innerHTML = notes.map((n) => `
               <div class="symbol-note">
                 <span>${escapeHtml(n.text)}</span>
-                <span class="hint">${new Date(n.created_at).toLocaleDateString("de-DE")}</span>
+                <span class="hint">${new Date(n.created_at).toLocaleDateString(localeForLang())}</span>
                 <button class="ref-del hint" data-nid="${n.id}">&#x2715;</button>
               </div>`).join("");
             notesEl.querySelectorAll(".ref-del").forEach((btn) => {
@@ -495,7 +498,7 @@ const innenwelt = {
           const input = document.getElementById("innenwelt-note-input");
           const text = input.value.trim();
           if (!text) return;
-          try { await api.createSymbolNote(tagId, text); input.value = ""; loadNotes(); showToast("Assoziation gespeichert"); } catch (err) { showToast(err.message); }
+          try { await api.createSymbolNote(tagId, text); input.value = ""; loadNotes(); showToast(t("atlas.associationSaved")); } catch (err) { showToast(err.message); }
         });
       }
 
@@ -505,7 +508,7 @@ const innenwelt = {
         continueBtn.addEventListener("click", () => {
           const latestDream = dreams[0];
           if (!latestDream) return;
-          journal.openImagination(latestDream.id, `Wende dich ${fig.name} zu ...`);
+          journal.openImagination(latestDream.id, t("innenwelt.turnToFigure", { name: fig.name }));
         });
       }
     }

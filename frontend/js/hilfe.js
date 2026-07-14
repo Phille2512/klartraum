@@ -3,53 +3,53 @@
 // benutze ich es? Wozu? Nie automatisch, immer nur auf Abruf.
 const HILFE = {
   "atlas-netz": {
-    title: "🕸️ Traumatlas – Netz",
-    was: "Alle Elemente deiner Träume (📍 Orte, 👤 Personen, 🔮 Traumzeichen) als Netz. Verbunden ist, was im selben Traum vorkam; je öfter geträumt, desto größer der Knoten.",
-    wie: "Element antippen → alle Träume damit („Traumserie“). „🎯 Fokussieren“ zeigt nur ein Element und seine direkten Nachbarn. Oben kannst du nach Art, Häufigkeit und Zeitraum filtern; der Schieberegler unten ist eine Zeitreise durch deine Traumwelt.",
-    wozu: "Wiederkehrendes erkennen — deine besten Kandidaten für Reality Checks.",
+    title: t("hilfe.atlasNetz.title"),
+    was: t("hilfe.atlasNetz.was"),
+    wie: t("hilfe.atlasNetz.wie"),
+    wozu: t("hilfe.atlasNetz.wozu"),
   },
   "atlas-karte": {
-    title: "🗺️ Traumweltkarte",
-    was: "Deine Traumorte als selbst gelegte Landkarte. Nebel liegt über Unerforschtem.",
-    wie: "Werkzeug wählen: ✋ Bewegen · 📍 Platzieren · 🚶 Weg · 🗑️ Entfernen. Die Hinweiszeile unter der Werkzeugleiste sagt dir jeweils, was gerade zu tun ist. Unkartierte Orte warten in der Ablage darunter.",
-    wozu: "Eine mentale Karte deiner Traumwelt aufbauen — Orte, die man „kennt“, erkennt man im Traum wieder, und Wiedererkennen macht luzide.",
+    title: t("hilfe.atlasKarte.title"),
+    was: t("hilfe.atlasKarte.was"),
+    wie: t("hilfe.atlasKarte.wie"),
+    wozu: t("hilfe.atlasKarte.wozu"),
   },
   "atlas-innenwelt": {
-    title: "🌗 Innenwelt-Bühne",
-    was: "Die Menschen deiner Träume als Bühne um dein „Selbst“ in der Mitte. Die Felder entsprechen Rollen nach C. G. Jung (Archetypen).",
-    wie: "Figur antippen → ihre Geschichte, Gefühle und Gespräche. Figuren ohne Rolle stehen außen — antippen und einsortieren.",
-    wozu: "Sehen, wer dein Innenleben bevölkert und welche Rollen dominieren; über „Gespräch fortsetzen“ mit einer Figur in Dialog gehen (Aktive Imagination).",
-    extraLink: { label: "Was sind Archetypen? →", anchor: "archetypen-lexikon" },
+    title: t("hilfe.atlasInnenwelt.title"),
+    was: t("hilfe.atlasInnenwelt.was"),
+    wie: t("hilfe.atlasInnenwelt.wie"),
+    wozu: t("hilfe.atlasInnenwelt.wozu"),
+    extraLink: { label: t("hilfe.atlasInnenwelt.extraLink"), anchor: "archetypen-lexikon" },
   },
   kompass: {
-    title: "🧭 Traumkompass",
-    was: "Deine Traumzeichen, einsortiert in vier Kategorien nach Stephen LaBerge: Inneres Erleben, Handlung, Form, Kontext.",
-    wie: "Ein Traumzeichen antippen und die passende Kategorie wählen. Die App leitet daraus deine persönliche Reality-Check-Mission ab.",
-    wozu: "Wissen, worauf du im Alltag achten solltest, um im Traum aufzuwachen.",
+    title: t("hilfe.kompass.title"),
+    was: t("hilfe.kompass.was"),
+    wie: t("hilfe.kompass.wie"),
+    wozu: t("hilfe.kompass.wozu"),
   },
   mandala: {
-    title: "🌗 Traum-Mandala",
-    was: "Deine Traumdaten als Momentaufnahme-Bild nach C. G. Jung — der Kreis mit Mitte symbolisiert Ganzheit (das Selbst).",
-    wie: "Zeitraum wählen, das Bild betrachten, bei Bedarf als Bild sichern.",
-    wozu: "Eine symbolische Übersicht über eine Traumphase — gleiche Daten ergeben immer dasselbe Bild.",
+    title: t("hilfe.mandala.title"),
+    was: t("hilfe.mandala.was"),
+    wie: t("hilfe.mandala.wie"),
+    wozu: t("hilfe.mandala.wozu"),
   },
   "innenwelt-dossier": {
-    title: "👤 Figuren-Dossier",
-    was: "Die Akte einer einzelnen Traumfigur: alle gemeinsamen Träume, häufigste Gefühle, Archetyp-Rolle.",
-    wie: "Rolle zuweisen, Assoziationen sammeln, über „Gespräch fortsetzen“ Aktive Imagination betreiben.",
-    wozu: "Eine Figur über die Zeit verstehen lernen, statt sie nur einmal zu sehen.",
+    title: t("hilfe.innenweltDossier.title"),
+    was: t("hilfe.innenweltDossier.was"),
+    wie: t("hilfe.innenweltDossier.wie"),
+    wozu: t("hilfe.innenweltDossier.wozu"),
   },
   "analyse-aufriss": {
-    title: "🔬 Aufreißen nach …",
-    was: "Eine Vergleichs-Steuerung: teilt deine Träume in zwei Gruppen (z. B. mit/ohne Beifuß).",
-    wie: "Kategorie wählen — alle Diagramme dieser Sektion zeigen daraufhin zwei Serien im Vergleich statt einer.",
-    wozu: "Herausfinden, ob ein Faktor tatsächlich einen Unterschied macht, statt zu raten.",
+    title: t("hilfe.analyseAufriss.title"),
+    was: t("hilfe.analyseAufriss.was"),
+    wie: t("hilfe.analyseAufriss.wie"),
+    wozu: t("hilfe.analyseAufriss.wozu"),
   },
   zeitraffer: {
-    title: "🕰️ Zeitraffer",
-    was: "Der Schieberegler unter dem Atlas-Netz zeigt, wie deine Traumwelt zu einem früheren Zeitpunkt aussah.",
-    wie: "Ziehen oder ▶ drücken für eine automatische Zeitreise bis heute.",
-    wozu: "Sehen, wie deine Traumwelt gewachsen ist — welche Orte und Personen zuerst da waren.",
+    title: t("hilfe.zeitraffer.title"),
+    was: t("hilfe.zeitraffer.was"),
+    wie: t("hilfe.zeitraffer.wie"),
+    wozu: t("hilfe.zeitraffer.wozu"),
   },
 };
 
@@ -58,7 +58,7 @@ const hilfe = {
     if (!HILFE[key] || !headerEl || headerEl.querySelector(".hilfe-btn")) return;
     const btn = document.createElement("button");
     btn.className = "hilfe-btn";
-    btn.setAttribute("aria-label", "Hilfe");
+    btn.setAttribute("aria-label", t("hilfe.ariaLabel"));
     btn.textContent = "ⓘ";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -75,11 +75,11 @@ const hilfe = {
     overlay.className = "hilfe-overlay";
     overlay.innerHTML = `<div class="card hilfe-card">
       <h2>${data.title}</h2>
-      <h3>Was ist das?</h3>
+      <h3>${t("hilfe.whatIsIt")}</h3>
       <p>${data.was}</p>
-      <h3>Wie benutze ich es?</h3>
+      <h3>${t("hilfe.howToUse")}</h3>
       <p>${data.wie}</p>
-      <h3>Wozu?</h3>
+      <h3>${t("hilfe.whatFor")}</h3>
       <p>${data.wozu}</p>
       ${data.extraLink ? `<a href="#" class="hilfe-extra-link">${data.extraLink.label}</a>` : ""}
       <button class="hilfe-close ritual-close-btn">✕</button>

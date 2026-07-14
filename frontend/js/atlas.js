@@ -102,8 +102,7 @@ const atlas = {
     this.allLinks = data.links;
     document.getElementById("atlas-series").innerHTML = "";
     if (!this.canonicalNodes.length) {
-      graphEl.innerHTML = `<div class="empty-state">Noch keine Karte: Gib deinen Träumen
-        📍 Orte, 👤 Personen und 🔮 Traumzeichen – hier entsteht daraus deine Traumwelt.</div>`;
+      graphEl.innerHTML = `<div class="empty-state">${t("atlas.empty")}</div>`;
       return;
     }
     await this.buildTimelapseRange();
@@ -186,7 +185,7 @@ const atlas = {
     if (!term) return;
     const hit = this.allNodes.find((n) => n.name.toLowerCase().includes(term.toLowerCase()));
     if (!hit) {
-      showToast(`„${term}" nicht gefunden`);
+      showToast(t("atlas.notFound", { term }));
       return;
     }
     this.focus = { id: hit.id, name: hit.name, kind: hit.kind };
@@ -224,13 +223,13 @@ const atlas = {
   filterDescription() {
     const parts = [];
     if (this.minCount > 1) parts.push(`≥${this.minCount}×`);
-    if (this.range !== "all") parts.push(this.range === "30" ? "30 Tage" : this.range === "90" ? "90 Tage" : this.range);
+    if (this.range !== "all") parts.push(this.range === "30" ? t("stats.range30") : this.range === "90" ? t("stats.range90") : this.range);
     if (this.activeKinds.length < 3) {
-      const labels = { place: "Orte", person: "Personen", dream_sign: "Traumzeichen" };
-      parts.push(`nur ${this.activeKinds.map((k) => labels[k]).join("/")}`);
+      const labels = { place: t("atlas.kindPlace"), person: t("atlas.kindPerson"), dream_sign: t("atlas.kindDreamSign") };
+      parts.push(t("atlas.filterOnlyKinds", { kinds: this.activeKinds.map((k) => labels[k]).join("/") }));
     }
-    if (this.focus) parts.push(`Fokus: ${this.focus.name}`);
-    if (this.timelapseDate) parts.push("Zeitraffer in der Vergangenheit");
+    if (this.focus) parts.push(t("atlas.filterFocus", { name: this.focus.name }));
+    if (this.timelapseDate) parts.push(t("atlas.filterTimelapsePast"));
     return parts;
   },
 
@@ -239,12 +238,12 @@ const atlas = {
     if (!el) return;
     const filters = this.filterDescription();
     if (!filters.length) {
-      el.innerHTML = `<p class="hint">${rawTotal} ${rawTotal === 1 ? "Element" : "Elemente"} sichtbar</p>`;
+      el.innerHTML = `<p class="hint">${t("atlas.elementsVisibleSimple", { count: rawTotal, noun: rawTotal === 1 ? t("atlas.elementOne") : t("atlas.elementMany") })}</p>`;
       return;
     }
     el.innerHTML = `<p class="hint">
-      <strong>${filteredTotal} von ${rawTotal} Elementen sichtbar</strong> · Filter: ${filters.join(", ")} ·
-      <button class="hint atlas-reset-link" id="atlas-reset-filters">Filter zurücksetzen</button>
+      <strong>${t("atlas.balanceDetail", { filtered: filteredTotal, raw: rawTotal })}</strong> · ${t("atlas.filterPrefix")} ${filters.join(", ")} ·
+      <button class="hint atlas-reset-link" id="atlas-reset-filters">${t("journal.filterReset")}</button>
     </p>`;
     document.getElementById("atlas-reset-filters").addEventListener("click", () => this.resetFilters());
   },
@@ -257,7 +256,7 @@ const atlas = {
     const focusBar = document.getElementById("atlas-focus-bar");
     if (this.focus) {
       focusBar.classList.remove("hidden");
-      document.getElementById("atlas-focus-label").textContent = `Fokus: ${this.focus.name}`;
+      document.getElementById("atlas-focus-label").textContent = t("atlas.filterFocus", { name: this.focus.name });
     } else {
       focusBar.classList.add("hidden");
     }
@@ -265,7 +264,7 @@ const atlas = {
     const moreBtn = document.getElementById("atlas-more-btn");
     if (!this.focus && truncated) {
       moreBtn.classList.remove("hidden");
-      moreBtn.textContent = `+ ${total - nodes.length} weitere anzeigen`;
+      moreBtn.textContent = t("atlas.showMore", { n: total - nodes.length });
     } else {
       moreBtn.classList.add("hidden");
     }
@@ -273,9 +272,9 @@ const atlas = {
     if (!nodes.length) {
       // H.1: Freundlicher Leer-Zustand statt totem SVG, wenn Filter alles verstecken
       graphEl.innerHTML = rawTotal > 0
-        ? `<div class="empty-state">Deine Filter verstecken gerade alle ${rawTotal} Elemente.
-            <button class="chip" id="atlas-reset-filters-empty">Filter zurücksetzen</button></div>`
-        : `<div class="empty-state">Keine Elemente mit diesem Filter.</div>`;
+        ? `<div class="empty-state">${t("atlas.filtersHideAll", { raw: rawTotal })}
+            <button class="chip" id="atlas-reset-filters-empty">${t("journal.filterReset")}</button></div>`
+        : `<div class="empty-state">${t("atlas.noElementsFiltered")}</div>`;
       document.getElementById("atlas-reset-filters-empty")?.addEventListener("click", () => this.resetFilters());
       return;
     }
@@ -401,14 +400,14 @@ const atlas = {
     const slider = document.getElementById("atlas-timelapse-slider");
     slider.max = String(months.length - 1);
     slider.value = String(months.length - 1);
-    document.getElementById("atlas-timelapse-date").textContent = "Heute";
+    document.getElementById("atlas-timelapse-date").textContent = t("atlas.today");
   },
 
   onTimelapseInput(idx) {
     if (!this.timelapseDates) return;
     const isLast = idx === this.timelapseDates.length - 1;
     this.timelapseDate = isLast ? "" : this.timelapseDates[idx];
-    document.getElementById("atlas-timelapse-date").textContent = isLast ? "Heute" : this.timelapseDates[idx];
+    document.getElementById("atlas-timelapse-date").textContent = isLast ? t("atlas.today") : this.timelapseDates[idx];
     this.load();
   },
 
@@ -435,23 +434,25 @@ const atlas = {
     }, 800);
   },
 
+  // label/hint sind Getter statt fester Strings: bestehende Zugriffe
+  // (a.label, a.hint) bleiben unverändert, liefern aber übersetzten Text.
   ARCHETYPES: {
-    schatten:      { icon: "🌑", label: "Der Schatten",    hint: "verkörpert, was du an dir ablehnst oder nicht siehst" },
-    anima_animus:  { icon: "🌗", label: "Anima/Animus",    hint: "die innere Gegenstimme, oft gegengeschlechtlich" },
-    weiser:        { icon: "🧙", label: "Der/die Weise",   hint: "Rat, Führung, Wissen" },
-    kind:          { icon: "🧒", label: "Das Kind",        hint: "Anfang, Spiel, Verletzlichkeit, Potenzial" },
-    trickster:     { icon: "🃏", label: "Der Trickster",   hint: "bricht Regeln, stört, bringt Wandel" },
-    held:          { icon: "⚔️", label: "Held/in",         hint: "stellt sich, kämpft, überwindet" },
-    grosse_mutter: { icon: "🌳", label: "Große Mutter",    hint: "nährt, hält, verschlingt" },
-    persona:       { icon: "🎭", label: "Persona",         hint: "die gesellschaftliche Maske" },
+    schatten:      { icon: "🌑", get label() { return t("atlas.archetype.schatten.label"); },     get hint() { return t("atlas.archetype.schatten.hint"); } },
+    anima_animus:  { icon: "🌗", get label() { return t("atlas.archetype.animaAnimus.label"); },  get hint() { return t("atlas.archetype.animaAnimus.hint"); } },
+    weiser:        { icon: "🧙", get label() { return t("atlas.archetype.weiser.label"); },        get hint() { return t("atlas.archetype.weiser.hint"); } },
+    kind:          { icon: "🧒", get label() { return t("atlas.archetype.kind.label"); },          get hint() { return t("atlas.archetype.kind.hint"); } },
+    trickster:     { icon: "🃏", get label() { return t("atlas.archetype.trickster.label"); },     get hint() { return t("atlas.archetype.trickster.hint"); } },
+    held:          { icon: "⚔️", get label() { return t("atlas.archetype.held.label"); },          get hint() { return t("atlas.archetype.held.hint"); } },
+    grosse_mutter: { icon: "🌳", get label() { return t("atlas.archetype.grosseMutter.label"); },  get hint() { return t("atlas.archetype.grosseMutter.hint"); } },
+    persona:       { icon: "🎭", get label() { return t("atlas.archetype.persona.label"); },       get hint() { return t("atlas.archetype.persona.hint"); } },
   },
 
   AMPLIFICATION_PROMPTS: [
-    "Was verbindest du persönlich mit …?",
-    "Was war … für dich als Kind?",
-    "Wo ist dir … zuletzt im Wachleben begegnet?",
-    "Welche Redewendung fällt dir zu … ein?",
-    "Wenn … sprechen könnte — was würde es sagen?",
+    "atlas.amplify1",
+    "atlas.amplify2",
+    "atlas.amplify3",
+    "atlas.amplify4",
+    "atlas.amplify5",
   ],
 
   async showSeries(name, kind, nodeId) {
@@ -472,7 +473,7 @@ const atlas = {
     dreams.forEach((d) => (d.emotions || []).forEach((e) => emoCounts[e] = (emoCounts[e] || 0) + 1));
     const topEmos = Object.entries(emoCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
-    const lucidityLabels = ["keine Erinnerung", "Fragment", "Traum", "kurz luzide", "voll luzide ✨"];
+    const lucidityLabels = [0, 1, 2, 3, 4].map((i) => t(`journal.lucidityBadge.${i}`));
 
     // Archetyp section for persons
     let archetypeHtml = "";
@@ -480,43 +481,43 @@ const atlas = {
       const current = tag.archetype;
       const currentA = current ? this.ARCHETYPES[current] : null;
       archetypeHtml = `<div class="symbol-section">
-        <h3>🌗 Archetyp-Linse <small><em>nach C. G. Jung</em></small></h3>
-        <p class="hint">Reflexions-Linse, keine Diagnose — welche passt am ehesten?</p>
-        <div class="archetype-current">${currentA ? `${currentA.icon} ${currentA.label}` : "<em>noch keine</em>"}</div>
+        <h3>${t("atlas.archetypeLensTitle")} <small><em>${t("stats.afterJung")}</em></small></h3>
+        <p class="hint">${t("atlas.archetypeLensHint")}</p>
+        <div class="archetype-current">${currentA ? `${currentA.icon} ${currentA.label}` : `<em>${t("atlas.archetypeNone")}</em>`}</div>
         <div class="archetype-picker" id="archetype-picker">
-          <button class="arch-btn ${!current ? "selected" : ""}" data-arch="">Keine</button>
+          <button class="arch-btn ${!current ? "selected" : ""}" data-arch="">${t("atlas.archetypeNoneOption")}</button>
           ${Object.entries(this.ARCHETYPES).map(([key, a]) =>
             `<button class="arch-btn ${current === key ? "selected" : ""}" data-arch="${key}" title="${a.hint}">
               ${a.icon} ${a.label}
             </button>`
           ).join("")}
         </div>
-        <a href="#" class="archetype-lexicon-link">Was bedeuten die Rollen? →</a>
+        <a href="#" class="archetype-lexicon-link">${t("atlas.archetypeLexiconLink")}</a>
       </div>`;
     }
 
     // Amplification prompt
-    const prompt = this.AMPLIFICATION_PROMPTS[Math.floor(Math.random() * this.AMPLIFICATION_PROMPTS.length)]
-      .replace("…", `"${escapeHtml(name)}"`);
+    const promptKey = this.AMPLIFICATION_PROMPTS[Math.floor(Math.random() * this.AMPLIFICATION_PROMPTS.length)];
+    const prompt = t(promptKey, { name: escapeHtml(name) });
 
     el.innerHTML = `<div class="card">
-      <h2>${this.ICONS[kind]} Traumserie: "${escapeHtml(name)}"</h2>
+      <h2>${this.ICONS[kind]} ${t("atlas.seriesTitle", { name: escapeHtml(name) })}</h2>
       <div class="stat-cards" style="margin-bottom:0.75rem">
-        <div class="stat-card"><span class="stat-value">${dreams.length}</span><span class="stat-label">${dreams.length === 1 ? "Traum" : "Träume"}</span></div>
-        ${topEmos.length ? `<div class="stat-card"><span class="stat-value">${topEmos.map(([e]) => EMOTIONS[e]?.icon || e).join(" ")}</span><span class="stat-label">häufigste Gefühle</span></div>` : ""}
+        <div class="stat-card"><span class="stat-value">${dreams.length}</span><span class="stat-label">${dreams.length === 1 ? t("stats.dreamOne") : t("stats.dreamMany")}</span></div>
+        ${topEmos.length ? `<div class="stat-card"><span class="stat-value">${topEmos.map(([e]) => EMOTIONS[e]?.icon || e).join(" ")}</span><span class="stat-label">${t("stats.topEmotionsPrefix")}</span></div>` : ""}
       </div>
-      ${nodeId ? `<button id="atlas-focus-btn" class="chip">🎯 Fokussieren</button>` : ""}
+      ${nodeId ? `<button id="atlas-focus-btn" class="chip">${t("atlas.focusBtn")}</button>` : ""}
       ${archetypeHtml}
       ${tagId ? `<div class="symbol-section">
-        <h3>📖 Deine Assoziationen <small><em>Amplifikation nach C. G. Jung</em></small></h3>
-        <p class="hint">Das Symbol gehört dir — sammle, was es in dir anstößt. Es gibt keine falsche Antwort.</p>
+        <h3>${t("atlas.assocTitle")} <small><em>${t("atlas.assocSubtitle")}</em></small></h3>
+        <p class="hint">${t("atlas.assocHint")}</p>
         <div id="symbol-notes"></div>
         <div class="symbol-input-row">
           <input type="text" id="symbol-note-input" placeholder="${escapeHtml(prompt)}">
           <button id="symbol-note-add" class="primary">+</button>
         </div>
       </div>` : ""}
-      <p class="hint" style="margin-top:0.5rem">Taucht "${escapeHtml(name)}" wieder auf, ist das dein Stichwort für einen Reality Check.</p>
+      <p class="hint" style="margin-top:0.5rem">${t("atlas.reappearHint", { name: escapeHtml(name) })}</p>
       ${dreams.map((d) => `
         <div class="series-entry">
           <div class="entry-head">
@@ -556,8 +557,8 @@ const atlas = {
           document.querySelectorAll(".arch-btn").forEach((b) => b.classList.remove("selected"));
           btn.classList.add("selected");
           const a = arch ? this.ARCHETYPES[arch] : null;
-          document.querySelector(".archetype-current").innerHTML = a ? `${a.icon} ${a.label}` : "<em>noch keine</em>";
-          showToast(a ? `${a.icon} ${a.label} zugeordnet` : "Archetyp entfernt");
+          document.querySelector(".archetype-current").innerHTML = a ? `${a.icon} ${a.label}` : `<em>${t("atlas.archetypeNone")}</em>`;
+          showToast(a ? t("atlas.archetypeAssigned", { icon: a.icon, label: a.label }) : t("atlas.archetypeRemoved"));
         } catch (err) { showToast(err.message); }
       });
       el.querySelector(".archetype-lexicon-link")?.addEventListener("click", (e) => {
@@ -580,13 +581,13 @@ const atlas = {
     try {
       const notes = await api.listSymbolNotes(tagId);
       if (!notes.length) {
-        el.innerHTML = '<p class="hint">Noch keine Assoziationen.</p>';
+        el.innerHTML = `<p class="hint">${t("atlas.noAssociations")}</p>`;
         return;
       }
       el.innerHTML = notes.map((n) => `
         <div class="symbol-note">
           <span>${escapeHtml(n.text)}</span>
-          <span class="hint">${new Date(n.created_at).toLocaleDateString("de-DE")}</span>
+          <span class="hint">${new Date(n.created_at).toLocaleDateString(localeForLang())}</span>
           <button class="ref-del hint" onclick="atlas.removeSymbolNote(${n.id},${tagId})">✕</button>
         </div>`).join("");
     } catch {}
@@ -600,7 +601,7 @@ const atlas = {
       await api.createSymbolNote(tagId, text);
       input.value = "";
       this.loadSymbolNotes(tagId);
-      showToast("Assoziation gespeichert");
+      showToast(t("atlas.associationSaved"));
     } catch (err) { showToast(err.message); }
   },
 

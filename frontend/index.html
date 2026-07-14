@@ -132,7 +132,7 @@
 
       <div id="dream-list"></div>
 
-      <button id="traumfaden-btn" class="traumfaden-btn hidden" aria-label="Der Traumfaden">
+      <button id="traumfaden-btn" class="traumfaden-btn hidden" data-i18n-aria="traumfaden.shortTitle" aria-label="Der Traumfaden">
         <span class="traumfaden-icon">🌙✨</span>
         <span class="traumfaden-label">Der Faden</span>
       </button>
@@ -262,8 +262,8 @@
 
         <div class="stats-section hidden" data-section="compass">
           <div class="card chart-card">
-            <h2>🧭 Traumkompass <small>nach Stephen LaBerge</small></h2>
-            <p class="hint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
+            <h2 id="compass-heading">🧭 <span data-i18n="stats.compassTitle">Traumkompass</span> <small data-i18n="stats.compassSubtitle">nach Stephen LaBerge</small></h2>
+            <p class="hint" data-i18n="stats.compassHint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
               verrät, worauf sich deine Reality Checks lohnen.</p>
             <canvas id="chart-compass"></canvas>
             <div id="compass-sorter"></div>
@@ -319,44 +319,44 @@
     <!-- ===== Atlas ===== -->
     <section id="tab-atlas" class="tab">
       <div class="atlas-toggle">
-        <button class="atlas-toggle-btn active" data-view="net">🕸️ Netz</button>
-        <button class="atlas-toggle-btn" data-view="map">🗺️ Karte</button>
-        <button class="atlas-toggle-btn" data-view="innenwelt">🌗 Innenwelt</button>
+        <button class="atlas-toggle-btn active" data-view="net" data-i18n="atlas.toggleNet">🕸️ Netz</button>
+        <button class="atlas-toggle-btn" data-view="map" data-i18n="atlas.toggleMap">🗺️ Karte</button>
+        <button class="atlas-toggle-btn" data-view="innenwelt" data-i18n="atlas.toggleInnenwelt">🌗 Innenwelt</button>
       </div>
       <div id="atlas-net-view">
         <div class="card">
-          <h2>🗺️ Dein Traumatlas</h2>
-          <p class="hint">Die Landkarte deiner Traumwelt: Orte, Personen und Traumzeichen –
+          <h2 data-i18n="atlas.netTitle">🗺️ Dein Traumatlas</h2>
+          <p class="hint" data-i18n="atlas.netHint">Die Landkarte deiner Traumwelt: Orte, Personen und Traumzeichen –
             verbunden, wenn sie im selben Traum auftauchen. Je größer, desto öfter geträumt.
             Tippe einen Knoten an, um die ganze Traumserie zu sehen.</p>
           <div class="atlas-legend">
-            <span class="badge place atlas-kind-toggle active" data-kind="place">📍 Ort</span>
-            <span class="badge person atlas-kind-toggle active" data-kind="person">👤 Person</span>
-            <span class="badge sign atlas-kind-toggle active" data-kind="dream_sign">🔮 Traumzeichen</span>
+            <span class="badge place atlas-kind-toggle active" data-kind="place" data-i18n="atlas.legendPlace">📍 Ort</span>
+            <span class="badge person atlas-kind-toggle active" data-kind="person" data-i18n="atlas.legendPerson">👤 Person</span>
+            <span class="badge sign atlas-kind-toggle active" data-kind="dream_sign" data-i18n="atlas.legendSign">🔮 Traumzeichen</span>
           </div>
           <div class="chip-row">
-            <button class="chip atlas-min-chip active" data-min="1">alle</button>
+            <button class="chip atlas-min-chip active" data-min="1" data-i18n="atlas.minAll">alle</button>
             <button class="chip atlas-min-chip" data-min="2">≥2×</button>
             <button class="chip atlas-min-chip" data-min="3">≥3×</button>
             <button class="chip atlas-min-chip" data-min="5">≥5×</button>
           </div>
           <div class="chip-row">
-            <button class="chip atlas-range-chip active" data-range="all">Alles</button>
-            <button class="chip atlas-range-chip" data-range="90">90 Tage</button>
-            <button class="chip atlas-range-chip" data-range="30">30 Tage</button>
+            <button class="chip atlas-range-chip active" data-range="all" data-i18n="stats.rangeAll">Alles</button>
+            <button class="chip atlas-range-chip" data-range="90" data-i18n="stats.range90">90 Tage</button>
+            <button class="chip atlas-range-chip" data-range="30" data-i18n="stats.range30">30 Tage</button>
           </div>
           <div class="atlas-search-row">
-            <input type="text" id="atlas-search" placeholder="Element finden …">
+            <input type="text" id="atlas-search" data-i18n-placeholder="atlas.searchPlaceholder" placeholder="Element finden …">
             <button id="atlas-search-btn">🔍</button>
           </div>
           <div class="atlas-timelapse">
             <button id="atlas-timelapse-play" class="chip">▶</button>
             <input type="range" id="atlas-timelapse-slider" min="0" max="0" value="0">
-            <span class="hint">🕰️ <span id="atlas-timelapse-date">Heute</span></span>
+            <span class="hint">🕰️ <span id="atlas-timelapse-date" data-i18n="atlas.today">Heute</span></span>
           </div>
           <div id="atlas-focus-bar" class="hidden">
             <span id="atlas-focus-label"></span>
-            <button id="atlas-unfocus-btn" class="chip">‹ zurück zum Überblick</button>
+            <button id="atlas-unfocus-btn" class="chip" data-i18n="atlas.backToOverview">‹ zurück zum Überblick</button>
           </div>
           <div id="atlas-balance"></div>
           <div id="atlas-graph"></div>
@@ -366,8 +366,8 @@
       </div>
       <div id="atlas-map-view" class="hidden">
         <div class="card">
-          <h2>🗺️ Deine Traumweltkarte</h2>
-          <p class="hint">Platziere Orte aus deinen Träumen auf der Karte und verbinde sie mit Wegen.
+          <h2 data-i18n="atlas.mapTitle">🗺️ Deine Traumweltkarte</h2>
+          <p class="hint" data-i18n="atlas.mapHint">Platziere Orte aus deinen Träumen auf der Karte und verbinde sie mit Wegen.
             Der Nebel lichtet sich, wo du geträumt hast.</p>
           <div id="worldmap-container"></div>
         </div>
@@ -378,38 +378,38 @@
     <!-- ===== Lernen ===== -->
     <section id="tab-learn" class="tab">
       <div class="card">
-        <h2>🏆 Klartraum-Bucket-List</h2>
-        <p class="hint">Was willst du im Klartraum erleben? Sammle Ziele und hake sie nach Erfolg ab.</p>
+        <h2 data-i18n="learn.bucketListTitle">🏆 Klartraum-Bucket-List</h2>
+        <p class="hint" data-i18n="learn.bucketListHint">Was willst du im Klartraum erleben? Sammle Ziele und hake sie nach Erfolg ab.</p>
         <div class="goal-input-row">
-          <input type="text" id="goal-input" placeholder="Neues Ziel …">
+          <input type="text" id="goal-input" data-i18n-placeholder="learn.goalPlaceholder" placeholder="Neues Ziel …">
           <button id="goal-add-btn" class="primary">+</button>
         </div>
         <div id="goal-list"></div>
       </div>
       <div class="card">
-        <h2>⏰ Reality-Check-Erinnerung</h2>
-        <p class="hint">Erinnert dich in festen Abständen an einen Reality Check – solange die App geöffnet ist.</p>
+        <h2 data-i18n="learn.reminderTitle">⏰ Reality-Check-Erinnerung</h2>
+        <p class="hint" data-i18n="learn.reminderHint">Erinnert dich in festen Abständen an einen Reality Check – solange die App geöffnet ist.</p>
         <label class="checkbox-label">
-          <input type="checkbox" id="morning-flow-toggle"> 🧘 Morgen-Flow vor dem Eintragen
+          <input type="checkbox" id="morning-flow-toggle"> <span data-i18n="learn.morningFlowLabel">🧘 Morgen-Flow vor dem Eintragen</span>
         </label>
         <div class="form-row">
-          <label>Intervall
+          <label><span data-i18n="learn.intervalLabel">Intervall</span>
             <select id="reminder-interval">
-              <option value="0">Aus</option>
-              <option value="30">alle 30 Minuten</option>
-              <option value="60">jede Stunde</option>
-              <option value="120">alle 2 Stunden</option>
+              <option value="0" data-i18n="learn.intervalOff">Aus</option>
+              <option value="30" data-i18n="learn.interval30">alle 30 Minuten</option>
+              <option value="60" data-i18n="learn.interval60">jede Stunde</option>
+              <option value="120" data-i18n="learn.interval120">alle 2 Stunden</option>
             </select>
           </label>
         </div>
         <p id="reminder-status" class="hint"></p>
       </div>
       <div class="card">
-        <h2>🛏️ WBTB-Rechner</h2>
-        <p class="hint">Wake Back To Bed: Werde in den REM-reichen Morgenstunden kurz wach –
+        <h2 data-i18n="learn.wbtbTitle">🛏️ WBTB-Rechner</h2>
+        <p class="hint" data-i18n="learn.wbtbHint">Wake Back To Bed: Werde in den REM-reichen Morgenstunden kurz wach –
           der beste Moment für einen Klartraum-Versuch.</p>
         <div class="form-row">
-          <label>Ich schlafe ein gegen
+          <label><span data-i18n="learn.bedtimeLabel">Ich schlafe ein gegen</span>
             <input type="time" id="wbtb-bedtime">
           </label>
         </div>
@@ -425,13 +425,13 @@
     <form id="login-form" class="card login-card">
       <h2 id="login-title">🔒 Anmelden</h2>
       <p class="hint" id="login-hint"></p>
-      <label>Passwort
+      <label><span data-i18n="auth.passwordLabel">Passwort</span>
         <input type="password" id="login-password" required minlength="4" autocomplete="current-password">
       </label>
-      <label id="login-confirm-label" class="hidden">Passwort wiederholen
+      <label id="login-confirm-label" class="hidden"><span data-i18n="auth.passwordConfirmLabel">Passwort wiederholen</span>
         <input type="password" id="login-confirm" autocomplete="new-password">
       </label>
-      <button type="submit" class="primary">Weiter</button>
+      <button type="submit" class="primary" data-i18n="auth.submitBtn">Weiter</button>
       <p class="hint login-error" id="login-error"></p>
     </form>
   </div>
@@ -439,21 +439,21 @@
   <!-- Abendritual-Overlay -->
   <div id="ritual-overlay" class="login-overlay hidden">
     <div class="card login-card ritual-card">
-      <h2>🌙 Abendritual</h2>
+      <h2 data-i18n="app.ritualTitle">🌙 Abendritual</h2>
       <div id="ritual-focus"></div>
       <div id="ritual-place-suggestion"></div>
       <div id="ritual-goals"></div>
       <div id="ritual-content">
-        <label>Was willst du heute Nacht träumen?
-          <textarea id="ritual-text" rows="3" placeholder="Formuliere deine Traumabsicht …"></textarea>
+        <label><span data-i18n="app.ritualQuestionLabel">Was willst du heute Nacht träumen?</span>
+          <textarea id="ritual-text" rows="3" data-i18n-placeholder="app.ritualTextPlaceholder" placeholder="Formuliere deine Traumabsicht …"></textarea>
         </label>
-        <button id="ritual-save" class="primary">Absicht setzen</button>
+        <button id="ritual-save" class="primary" data-i18n="app.ritualSaveBtn">Absicht setzen</button>
       </div>
       <div id="ritual-done" class="hidden">
-        <p class="ritual-confirm">Absicht gesetzt. Guten Flug. 🌙</p>
+        <p class="ritual-confirm" data-i18n="app.ritualConfirm">Absicht gesetzt. Guten Flug. 🌙</p>
       </div>
-      <p class="hint"><a href="#" id="ritual-nightmode">🔴 Rotlicht an</a></p>
-      <p class="hint"><a href="#" id="ritual-lesezimmer-link">📖 Eine Geschichte aus deiner Welt lesen</a></p>
+      <p class="hint"><a href="#" id="ritual-nightmode" data-i18n="app.ritualNightModeOn">🔴 Rotlicht an</a></p>
+      <p class="hint"><a href="#" id="ritual-lesezimmer-link" data-i18n="app.ritualLesezimmerLink">📖 Eine Geschichte aus deiner Welt lesen</a></p>
       <button id="ritual-close" class="ritual-close-btn">✕</button>
     </div>
   </div>
@@ -474,7 +474,7 @@
   <!-- Morgen-Flow-Overlay -->
   <div id="morning-flow" class="login-overlay hidden">
     <div class="morning-flow-content">
-      <p class="morning-flow-text">Bleib still.<br>Geh den Traum rückwärts durch.</p>
+      <p class="morning-flow-text"><span data-i18n="journal.morningFlowLine1">Bleib still.</span><br><span data-i18n="journal.morningFlowLine2">Geh den Traum rückwärts durch.</span></p>
       <div class="morning-flow-ring">
         <svg viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="54" fill="none" stroke="var(--bg-input)" stroke-width="6"/>
@@ -484,7 +484,7 @@
         </svg>
         <span id="flow-seconds">60</span>
       </div>
-      <button id="flow-skip" class="primary">Ich bin bereit →</button>
+      <button id="flow-skip" class="primary" data-i18n="journal.morningFlowReady">Ich bin bereit →</button>
     </div>
   </div>
 

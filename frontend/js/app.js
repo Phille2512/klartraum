@@ -122,7 +122,7 @@ ritualBtn.addEventListener("click", async () => {
   try {
     const data = await api.stats();
     if (data.focus_sign) {
-      ritualFocus.innerHTML = `<p class="hint">🎯 Dein Fokus-Zeichen: <strong>${escapeHtml(data.focus_sign.name)}</strong> (${data.focus_sign.count}× in 14 Tagen)</p>`;
+      ritualFocus.innerHTML = `<p class="hint">${t("app.ritualFocusSign", { name: escapeHtml(data.focus_sign.name), count: data.focus_sign.count })}</p>`;
     } else {
       ritualFocus.innerHTML = "";
     }
@@ -137,7 +137,7 @@ ritualBtn.addEventListener("click", async () => {
     const open = goals.filter((g) => !g.done).slice(0, 3);
     const goalsEl = document.getElementById("ritual-goals");
     if (open.length) {
-      goalsEl.innerHTML = `<p class="hint">🏆 Nimm dir eins mit in den Traum:</p>
+      goalsEl.innerHTML = `<p class="hint">${t("app.ritualGoalsHint")}</p>
         <ul class="ritual-goals-list">${open.map((g) => `<li>${escapeHtml(g.text)}</li>`).join("")}</ul>`;
     } else {
       goalsEl.innerHTML = "";
@@ -176,15 +176,15 @@ async function renderPlaceSuggestion() {
 function renderPlaceSuggestionCard(place, places) {
   const el = document.getElementById("ritual-place-suggestion");
   el.innerHTML = `<div class="ritual-place-card">
-    <p>🌙 Heute Nacht: Besuch das 📍 <strong>${escapeHtml(place.name)}</strong>?</p>
+    <p>${t("app.ritualPlaceVisit", { name: escapeHtml(place.name) })}</p>
     <div class="chip-row">
-      <button class="chip primary" id="ritual-place-adopt">Als Absicht übernehmen</button>
-      <button class="chip" id="ritual-place-other">Anderer Vorschlag</button>
-      <button class="hint" id="ritual-place-hide">nicht mehr vorschlagen</button>
+      <button class="chip primary" id="ritual-place-adopt">${t("app.ritualPlaceAdopt")}</button>
+      <button class="chip" id="ritual-place-other">${t("app.ritualPlaceOther")}</button>
+      <button class="hint" id="ritual-place-hide">${t("app.ritualPlaceHide")}</button>
     </div>
   </div>`;
   document.getElementById("ritual-place-adopt").addEventListener("click", () => {
-    ritualText.value = `Ich besuche heute Nacht ${place.name} …`;
+    ritualText.value = t("app.ritualPlaceIntentionTemplate", { name: place.name });
   });
   document.getElementById("ritual-place-other").addEventListener("click", () => {
     const idx = places.findIndex((p) => p.tag_id === place.tag_id);
@@ -277,9 +277,7 @@ document.querySelector(".mandala-range")?.addEventListener("change", () => {
 // Klickbare Hilfe (H.2) an feste Überschriften anhängen
 hilfe.attach(document.querySelector("#atlas-net-view h2"), "atlas-netz");
 hilfe.attach(document.querySelector("#atlas-map-view h2"), "atlas-karte");
-document.querySelectorAll(".chart-card h2").forEach((h2) => {
-  if (h2.textContent.includes("Traumkompass")) hilfe.attach(h2, "kompass");
-});
+hilfe.attach(document.getElementById("compass-heading"), "kompass");
 hilfe.attach(document.querySelector("#mandala-card h2"), "mandala");
 hilfe.attach(document.getElementById("atlas-timelapse-date").parentElement, "zeitraffer");
 
