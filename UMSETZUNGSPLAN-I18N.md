@@ -2,8 +2,9 @@
 
 > **Status (2026-07-14): Stufen I.1–I.4 komplett abgeschlossen**, inklusive
 > des `innenwelt.js` `introCard()`-Erklärtexts. Die App ist vollständig
-> zweisprachig. Offener Rest (bewusst außerhalb dieses Plans): `docs/` und
-> `ANLEITUNG-FUER-FREUNDE.md` (s. I.4, Punkt 3).
+> zweisprachig, inklusive `GUIDE-FOR-FRIENDS.md` (englische Version von
+> `ANLEITUNG-FUER-FREUNDE.md`). Offener Rest (bewusst außerhalb dieses
+> Plans): `docs/` (interne Entwickler-Doku, s. I.4, Punkt 3).
 
 > Eigenständige Spezifikation für einen beliebigen Implementierer.
 > **Zuerst lesen:** `UMSETZUNGSPLAN.md` Teil A (Konventionen, Fallstricke).
@@ -196,9 +197,11 @@ konsistent verwendet.
 2. **Manifest:** ✅ `name` von "Traumader – Traumtagebuch & Traumwelt" auf
    `"Traumader"` gekürzt, `description` ins Englische übersetzt,
    `short_name` war schon `"Traumader"`.
-3. **Nicht in diesem Plan:** Übersetzung von `docs/` und
-   `ANLEITUNG-FUER-FREUNDE.md` (kann später folgen, wenn englischsprachige
-   Freunde real werden — dann als eigene kleine Stufe).
+3. **Nicht in diesem Plan:** Übersetzung von `docs/` (interne
+   Entwickler-Doku, bleibt Deutsch). `ANLEITUNG-FUER-FREUNDE.md` wurde am
+   2026-07-14 doch übersetzt (englische Freunde wurden real) —
+   `GUIDE-FOR-FRIENDS.md`, gegenseitig verlinkt, README.md verweist auf
+   beide.
 4. `sw.js`: ✅ `i18n.js` war schon in SHELL; Versionierung läuft automatisch
    über den Datei-Hash in `backend/paths.py::frontend_version()`, kein
    manuelles Hochzählen nötig.

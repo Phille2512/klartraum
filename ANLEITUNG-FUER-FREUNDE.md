@@ -1,5 +1,7 @@
 # 🫀 Traumader installieren — in 3 Minuten
 
+*(English version: [GUIDE-FOR-FRIENDS.md](GUIDE-FOR-FRIENDS.md))*
+
 Traumader ist ein privates Traumtagebuch zum Klarträumen-Lernen.
 Es läuft komplett auf deinem Computer — kostenlos, ohne Konto, ohne Cloud.
 

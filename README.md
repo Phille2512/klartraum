@@ -92,7 +92,8 @@ frontend/   Single-Page-App: index.html, css/, js/, manifest.json, sw.js
 ## Für Freunde: Desktop-App herunterladen
 
 → Siehe [ANLEITUNG-FUER-FREUNDE.md](ANLEITUNG-FUER-FREUNDE.md) — Download,
-Installation und Backup in 3 Minuten erklärt.
+Installation und Backup in 3 Minuten erklärt (englische Version:
+[GUIDE-FOR-FRIENDS.md](GUIDE-FOR-FRIENDS.md)).
 
 Die Desktop-App bündelt Server + Frontend in eine ausführbare Datei. Deine
 Träume liegen als echte Datei in `~/Traumader/dreams.db` (bestehende
