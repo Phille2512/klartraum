@@ -42,6 +42,17 @@ Einträge.
    Traumfigur eine Frage, folge einer Traumserie. Hier zahlt sich das
    Füttern aus.
 
+**😴 Schlafzeit — drei Wege, auch „weiß nicht mehr" ist eine Antwort:** Im
+Detail-Bereich des Formulars kannst du zur Nacht deines Traums (nicht zum
+einzelnen Traum, mehrere Träume pro Nacht teilen sich die Angabe) 🕐 genaue
+Zeiten eintragen, 🌫️ nur grob schätzen (vier Dauer-Stufen für Nächte, die
+schon länger her sind) oder ehrlich ❓ „Weiß nicht mehr" sagen — letzteres
+fließt bewusst nirgends in die Auswertung ein, ist aber genauso vollwertig
+wie eine genaue Angabe. Ab neun erfassten Nächten zeigt die Analyse
+(„😴 Schlaf & Erinnerung") deine persönlichen Terzile: schläfst du kurz,
+mittel oder lang im Vergleich zu dir selbst — und erinnerst du dich dann
+unterschiedlich?
+
 **Warum das funktioniert:** Traumader ist eine persönliche Traumlandschaft,
 die sich mit jedem Eintrag weiter ausbreitet — und dich dir selbst zeigt: wie
 du dich in diesen absurden Momenten verhältst, was wiederkehrt, was sich

@@ -203,6 +203,11 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
   kombinierbar; Emotion wird in Python statt fragilem SQL-LIKE gefiltert.
 - **😴 Schlafdaten-Import:** CSV aus Schlaftracker/Smartwatch (Schlafdauer,
   Phasen) → Korrelation mit Luzidität/Erinnerung. Data-Science-Spielplatz.
+  *(Juli 2026, UMSETZUNGSPLAN-SCHLAFZEIT.md)* Manuelle Schlafzeit-Erfassung
+  ist umgesetzt — die `night`-Tabelle ist für diesen Import vorbereitet:
+  ein Smartwatch-Import müsste nur Zeilen mit `confidence = "exact"`
+  einfügen/upserten, die komplette Analyse (Terzile, Aufriss-Split,
+  WBTB-Vorbelegung) funktioniert dann ohne weitere Änderungen mit.
 - **📓 Jupyter-Starter-Notebook** im Repo: lädt den CSV-Export, zeigt
   Korrelationen, Zeitreihen, Wortverläufe — Einladung zum Selbst-Forschen.
 - ~~**🆕 Wort-Neuheiten:**~~ *(Juli 2026)*: Karte „Neu in deiner Traumwelt"

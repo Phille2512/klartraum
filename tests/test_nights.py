@@ -132,6 +132,44 @@ def test_latest_exact_night_returns_most_recent_date(auth_client):
     assert resp.json()["date"] == "2026-07-14"
 
 
+def test_median_bedtime_is_null_without_exact_nights(auth_client):
+    resp = auth_client.get("/api/nights/median-bedtime")
+    assert resp.status_code == 200
+    assert resp.json() is None
+
+    auth_client.put("/api/nights/2026-07-10", json={"bucket": "7bis8"})
+    auth_client.put("/api/nights/2026-07-11", json={"unknown": True})
+    resp = auth_client.get("/api/nights/median-bedtime")
+    assert resp.json() is None
+
+
+def test_median_bedtime_odd_count(auth_client):
+    for date, bed in [("2026-07-01", "22:00"), ("2026-07-02", "23:00"), ("2026-07-03", "22:30")]:
+        auth_client.put(f"/api/nights/{date}", json={"bed_time": bed, "wake_time": "07:00"})
+
+    resp = auth_client.get("/api/nights/median-bedtime")
+    assert resp.json()["bed_time"] == "22:30"
+
+
+def test_median_bedtime_sorts_numerically_not_by_clock_wraparound(auth_client):
+    # Bewusste Vereinfachung (s. Kommentar im Router): "00:00" ist numerisch
+    # die kleinste Minutenzahl, wird also wie die früheste Zeit behandelt --
+    # nicht wie eine Zeit "nach Mitternacht, später als 23:00".
+    for date, bed in [("2026-07-01", "22:00"), ("2026-07-02", "23:00"), ("2026-07-03", "00:00")]:
+        auth_client.put(f"/api/nights/{date}", json={"bed_time": bed, "wake_time": "07:00"})
+
+    resp = auth_client.get("/api/nights/median-bedtime")
+    assert resp.json()["bed_time"] == "22:00"
+
+
+def test_median_bedtime_even_count_averages_middle_two(auth_client):
+    for date, bed in [("2026-07-01", "22:00"), ("2026-07-02", "23:00")]:
+        auth_client.put(f"/api/nights/{date}", json={"bed_time": bed, "wake_time": "07:00"})
+
+    resp = auth_client.get("/api/nights/median-bedtime")
+    assert resp.json()["bed_time"] == "22:30"
+
+
 def test_nights_require_authentication(client):
     resp = client.get("/api/nights/2026-07-14")
     assert resp.status_code == 401

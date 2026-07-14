@@ -57,6 +57,7 @@ Ein Prozess, keine externen Dienste. Start:
 | `journeystep` | *(T.2: aus der UI entfernt, Tabelle bleibt unangetastet)* ehem. Fortschritt der allgemeinen Individuationsreise | station, note, completed_at |
 | `dreamanalysis` | Individuationsreise auf Traumebene: Antwort je Station (aktive Variante) | dream_id, station, answer |
 | `syncevent` | Synchronizität: Wachereignis zu einem Traum | dream_id?, date, text |
+| `night` | Schlafzeit einer Nacht (N.1, eigene Entität — mehrere Träume pro Nacht möglich) | date (PK, = Traum-Datum), bed_time/wake_time (HH:MM, nur bei confidence="exact"), sleep_minutes (serverseitig abgeleitet), confidence (`exact` \| `rough` \| `unknown`) |
 
 **Emotions-Vokabular** (12, definiert in `journal.js::EMOTIONS`, als
 kommagetrennte Schlüssel in `dream.emotions`): angst, freude, staunen, trauer,
@@ -77,6 +78,7 @@ automatisch. Es gibt keine Down-Migrationen.
 | Atlas & Karte | `GET atlas`, `GET map`, `PUT/DELETE map/nodes/{tag_id}`, `POST/DELETE map/paths` |
 | Innenwelt (Jung) | `GET innenwelt`, `GET/POST dreams/{id}/reflections`, `GET/POST dreams/{id}/imaginations`, `GET/POST dreams/{id}/analysis`, `GET/POST sync-events` (+ DELETEs) |
 | Zyklus | `GET intentions/current`, `POST intentions`, `PATCH intentions/{id}`, `GET/POST/PATCH/DELETE goals` |
+| Schlafzeit | `GET/PUT/DELETE nights/{date}`, `GET nights/latest-exact` (Formular-Vorbelegung), `GET nights/median-bedtime` (WBTB-Vorbelegung) |
 
 Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
 (`DreamIn`/`DreamOut` sind die wichtigsten).
@@ -126,7 +128,7 @@ Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
   Traceback landet im Server-Log.
 - **Bekannte Grenzen:** Statistik/Atlas laden alle Träume in den Speicher
   (unkritisch bis ~10.000 Einträge); keine Nutzertrennung.
-- **Testsuite (S.2):** `pytest` unter `tests/` (92 Tests, Laufzeit < 10 s).
+- **Testsuite (S.2):** `pytest` unter `tests/` (135 Tests, Laufzeit < 12 s).
   `tests/conftest.py` setzt `KLARTRAUM_DATA` auf ein Temp-Verzeichnis, bevor
   Backend-Module importiert werden — die echte Datenbank ist damit für Tests
   physisch unerreichbar. Ausführen: `.venv/bin/pytest` (Projektwurzel).

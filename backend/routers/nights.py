@@ -54,6 +54,21 @@ def latest_exact_night(session: Session = Depends(get_session)):
     return _night_out(night) if night else None
 
 
+@router.get("/median-bedtime")
+def median_bedtime(session: Session = Depends(get_session)):
+    """N.4: Vorbelegung für den WBTB-Rechner. Median über alle exact-Nächte
+    (nur die haben bed_time); rough/unknown fließen nicht ein. Vereinfachung:
+    Median auf Minuten-seit-Mitternacht, keine Kreisstatistik über den
+    Mitternachts-Übergang — für eine grobe Vorbelegung ausreichend."""
+    exact = session.exec(select(Night).where(Night.confidence == "exact")).all()
+    minutes = sorted(_time_to_minutes(n.bed_time) for n in exact if n.bed_time)
+    if not minutes:
+        return None
+    n = len(minutes)
+    med = minutes[n // 2] if n % 2 else round((minutes[n // 2 - 1] + minutes[n // 2]) / 2)
+    return {"bed_time": f"{med // 60:02d}:{med % 60:02d}"}
+
+
 @router.get("/{date}")
 def get_night(date: dt.date, session: Session = Depends(get_session)):
     night = session.get(Night, date)

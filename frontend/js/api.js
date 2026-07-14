@@ -179,6 +179,9 @@ const api = {
   latestExactNight() {
     return this.request("/api/nights/latest-exact");
   },
+  medianBedtime() {
+    return this.request("/api/nights/median-bedtime");
+  },
 };
 
 function showToast(message) {

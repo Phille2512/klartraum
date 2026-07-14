@@ -142,6 +142,16 @@ const learn = {
     bedtime.value = localStorage.getItem("wbtb-bedtime") || "";
     bedtime.addEventListener("change", () => this.renderWbtb());
     this.renderWbtb();
+    // N.4: Ohne eigenen localStorage-Override den Median der erfassten
+    // Zubettgeh-Zeiten vorschlagen — überschreibt nie eine bewusste Wahl.
+    if (!localStorage.getItem("wbtb-bedtime")) {
+      api.medianBedtime().then((result) => {
+        if (result && !localStorage.getItem("wbtb-bedtime")) {
+          bedtime.value = result.bed_time;
+          this.renderWbtb();
+        }
+      }).catch(() => { /* offline oder noch keine Nächte — Feld bleibt leer */ });
+    }
   },
 
   renderWbtb() {

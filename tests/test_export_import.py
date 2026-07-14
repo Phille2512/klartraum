@@ -23,6 +23,35 @@ def test_export_csv(auth_client):
     assert "title" in header and "lucidity" in header
 
 
+def test_export_includes_night_fields_when_present(auth_client):
+    auth_client.put("/api/nights/2026-03-01", json={"bed_time": "23:00", "wake_time": "07:00"})
+    auth_client.post("/api/dreams", json=make_dream(title="Mit Nacht", date="2026-03-01"))
+
+    resp = auth_client.get("/api/export", params={"format": "json"})
+    row = resp.json()[0]
+    assert row["bed_time"] == "23:00"
+    assert row["wake_time"] == "07:00"
+    assert row["sleep_minutes"] == 480
+    assert row["sleep_confidence"] == "exact"
+
+    resp = auth_client.get("/api/export", params={"format": "csv"})
+    header = resp.text.splitlines()[0].split(",")
+    for col in ("bed_time", "wake_time", "sleep_minutes", "sleep_confidence"):
+        assert col in header
+    assert "23:00" in resp.text and "480" in resp.text
+
+
+def test_export_night_fields_empty_without_night_entry(auth_client):
+    auth_client.post("/api/dreams", json=make_dream(title="Ohne Nacht", date="2026-03-02"))
+
+    resp = auth_client.get("/api/export", params={"format": "json"})
+    row = resp.json()[0]
+    assert row["bed_time"] is None
+    assert row["wake_time"] is None
+    assert row["sleep_minutes"] is None
+    assert row["sleep_confidence"] is None
+
+
 def test_export_ordered_by_date(auth_client):
     auth_client.post("/api/dreams", json=make_dream(title="Spaeter", date="2026-06-01"))
     auth_client.post("/api/dreams", json=make_dream(title="Frueher", date="2026-01-01"))

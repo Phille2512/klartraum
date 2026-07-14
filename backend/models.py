@@ -117,6 +117,9 @@ class Night(SQLModel, table=True):
     # N.1: Schlafzeit ist eine Eigenschaft der Nacht, nicht des einzelnen
     # Traums (mehrere Träume pro Nacht möglich). date = Datum des
     # Aufwachens = Traum-Datum.
+    # N.4/BACKLOG: für einen späteren Schlaftracker-CSV-Import vorbereitet —
+    # der müsste hier nur Zeilen mit confidence="exact" einfügen/upserten,
+    # Terzil-Analyse/Aufriss-Split/WBTB-Vorbelegung funktionieren dann mit.
     date: dt.date = Field(primary_key=True)
     bed_time: str | None = None  # "23:15" (HH:MM, Vorabend)
     wake_time: str | None = None  # "06:45" (HH:MM)
