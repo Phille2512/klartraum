@@ -344,6 +344,15 @@ const I18N = {
     "stats.sleepTitle": "Schlafqualität × Luzidität",
     "stats.sleepHint": "Klartraum-Quote nach Schlafqualität (1=schlecht, 5=sehr gut)",
 
+    "stats.sleepAnalysisTitle": "😴 Schlaf & Erinnerung",
+    "stats.sleepTooFew": "Noch zu wenige Nächte erfasst ({n} von 9 nötig).",
+    "stats.sleepShortLabel": "kurz",
+    "stats.sleepMediumLabel": "mittel",
+    "stats.sleepLongLabel": "lang",
+    "stats.sleepFooter": "n = {total} Nächte · davon {estimated} geschätzt · {unknown} unbekannt (nicht gezählt)",
+    "stats.sleepDisclaimer": "Selbstauskunft, keine Messung — grobe Nächte zählen mit halber Beweiskraft. Korrelation ≠ Kausalität.",
+    "stats.splitSleep": "😴 Schlafdauer",
+
     "stats.topSignsTitle": "Deine häufigsten Traumzeichen",
     "stats.topSignsHint": "Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.",
     "stats.signsDataset": "Häufigkeit",
@@ -1117,6 +1126,15 @@ const I18N = {
     "stats.weekdayHint": "Lucid rate by weekday ({count} entries)",
     "stats.sleepTitle": "Sleep quality × lucidity",
     "stats.sleepHint": "Lucid rate by sleep quality (1=poor, 5=very good)",
+
+    "stats.sleepAnalysisTitle": "😴 Sleep & Recall",
+    "stats.sleepTooFew": "Not enough nights recorded yet ({n} of 9 needed).",
+    "stats.sleepShortLabel": "short",
+    "stats.sleepMediumLabel": "medium",
+    "stats.sleepLongLabel": "long",
+    "stats.sleepFooter": "n = {total} nights · {estimated} of them estimated · {unknown} unknown (not counted)",
+    "stats.sleepDisclaimer": "Self-report, not measurement — rough nights count with half the evidentiary weight. Correlation ≠ causation.",
+    "stats.splitSleep": "😴 Sleep duration",
 
     "stats.topSignsTitle": "Your most common dreamsigns",
     "stats.topSignsHint": "Link these signs to reality checks during the day – they're your ticket into the lucid dream.",

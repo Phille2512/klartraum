@@ -4,7 +4,7 @@ import datetime as dt
 from collections import Counter
 
 from helpers import has_substance
-from models import Dream
+from models import Dream, Night
 
 # Valenz-Konstante für die Emotions-Analyse (A.5) — im Frontend per 💡 offengelegt
 EMOTION_VALENCE = {
@@ -47,7 +47,9 @@ def build_per_bucket(dreams: list[Dream], granularity: str) -> list[dict]:
     ]
 
 
-def split_groups(dreams: list[Dream], split: str | None) -> tuple[str, str, list[Dream], list[Dream]] | None:
+def split_groups(
+    dreams: list[Dream], split: str | None, nights: list[Night] | None = None,
+) -> tuple[str, str, list[Dream], list[Dream]] | None:
     if split == "beifuss":
         return (
             "🌿 Mit Beifuß", "Ohne Beifuß",
@@ -58,7 +60,68 @@ def split_groups(dreams: list[Dream], split: str | None) -> tuple[str, str, list
         return "Wochenende", "Werktag", [d for d in dreams if d.date.weekday() >= 5], [d for d in dreams if d.date.weekday() < 5]
     if split == "big_dream":
         return "⭐ Große Träume", "Andere Träume", [d for d in dreams if d.big_dream], [d for d in dreams if not d.big_dream]
+    if split == "sleep":
+        # N.3: Split am persönlichen Median der Schlafdauer (alle erfassten Nächte,
+        # nicht nur der aktuell gefilterte Zeitraum — "deine typische Nacht" ist
+        # eine stabile Referenz). Nächte ohne sleep_minutes (unknown/nicht erfasst)
+        # fließen nirgends ein; Träume ohne zugehörige Nacht ebenfalls nicht.
+        scored = sorted(n.sleep_minutes for n in (nights or []) if n.sleep_minutes is not None)
+        if not scored:
+            return "😴 Länger als sonst", "😴 Kürzer als sonst", [], []
+        med = median(scored)
+        by_date = {n.date: n.sleep_minutes for n in (nights or []) if n.sleep_minutes is not None}
+        longer = [d for d in dreams if by_date.get(d.date) is not None and by_date[d.date] >= med]
+        shorter = [d for d in dreams if by_date.get(d.date) is not None and by_date[d.date] < med]
+        return "😴 Länger als sonst", "😴 Kürzer als sonst", longer, shorter
     return None
+
+
+def median(values: list[float]) -> float | None:
+    if not values:
+        return None
+    s = sorted(values)
+    n = len(s)
+    return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+
+def build_sleep_analysis(dreams: list[Dream], nights: list[Night]) -> dict:
+    """N.3: Terzil-Analyse Schlafdauer x Erinnerung, relativ zu den eigenen
+    Nächten (keine absoluten Grenzen). Rechnet erst ab >= 9 erfassten Nächten
+    (exact oder rough); unknown-Nächte zählen nirgends mit, tauchen aber in
+    der Fußzeile als "nicht gezählt" auf."""
+    scored = [n for n in nights if n.sleep_minutes is not None]
+    n_total = len(scored)
+    n_estimated = sum(1 for n in scored if n.confidence == "rough")
+    n_unknown = sum(1 for n in nights if n.confidence == "unknown")
+
+    if n_total < 9:
+        return {"available": False, "n_total": n_total, "n_estimated": n_estimated, "n_unknown": n_unknown}
+
+    dreams_by_date: dict[dt.date, list[Dream]] = {}
+    for d in dreams:
+        dreams_by_date.setdefault(d.date, []).append(d)
+
+    sorted_nights = sorted(scored, key=lambda n: n.sleep_minutes)
+    i1 = n_total // 3
+    i2 = (2 * n_total) // 3
+    terciles = {"kurz": sorted_nights[:i1], "mittel": sorted_nights[i1:i2], "lang": sorted_nights[i2:]}
+
+    def group_stats(night_group: list[Night]) -> dict:
+        group_dreams = [d for n in night_group for d in dreams_by_date.get(n.date, [])]
+        n_dreams = len(group_dreams)
+        avg_words = round(sum(len(d.content.split()) for d in group_dreams) / n_dreams, 1) if n_dreams else 0
+        lucid_rate = round(sum(1 for d in group_dreams if d.lucidity >= 3) / n_dreams * 100, 1) if n_dreams else 0
+        return {"n_nights": len(night_group), "n_dreams": n_dreams, "avg_words": avg_words, "lucid_rate": lucid_rate}
+
+    return {
+        "available": True,
+        "n_total": n_total,
+        "n_estimated": n_estimated,
+        "n_unknown": n_unknown,
+        "kurz": group_stats(terciles["kurz"]),
+        "mittel": group_stats(terciles["mittel"]),
+        "lang": group_stats(terciles["lang"]),
+    }
 
 
 def n_tagged(d: Dream) -> int:

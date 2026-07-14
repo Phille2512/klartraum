@@ -27,6 +27,7 @@ const SPLIT_OPTIONS = [
   { value: "beifuss", get label() { return t("stats.splitBeifuss"); } },
   { value: "weekend", get label() { return t("stats.splitWeekend"); } },
   { value: "big_dream", get label() { return t("journal.filterBigDreams"); } },
+  { value: "sleep", get label() { return t("stats.splitSleep"); } },
 ];
 
 const stats = {
@@ -508,7 +509,43 @@ const stats = {
   // ---- 🔬 Experimente ----
   renderExperiments(data) {
     this.renderBeifuss(data.beifuss);
+    this.renderSleepAnalysis(data.sleep);
     this.renderCorrelations(data.correlations);
+  },
+
+  // N.3: Terzil-Analyse Schlafdauer x Erinnerung — immer über alle Nächte
+  // gerechnet (nicht vom Zeitraum-Filter der Seite abhängig, s. Backend).
+  renderSleepAnalysis(sleep) {
+    const el = document.getElementById("sleep-analysis");
+    if (!sleep.available) {
+      el.innerHTML = `<p class="hint">${t("stats.sleepTooFew", { n: sleep.n_total })}</p>`;
+      return;
+    }
+    const groups = [
+      { key: "kurz", label: t("stats.sleepShortLabel") },
+      { key: "mittel", label: t("stats.sleepMediumLabel") },
+      { key: "lang", label: t("stats.sleepLongLabel") },
+    ];
+    const maxWords = Math.max(...groups.map((g) => sleep[g.key].avg_words), 1);
+
+    const bars = (valueFn, pctFn, color) => groups.map((g) => {
+      const s = sleep[g.key];
+      const lowN = s.n_dreams < 3;
+      const pct = pctFn(s);
+      return `<div class="corr-cell ${lowN ? "low-n" : ""}">
+        <div class="corr-bar" style="height:${Math.max(pct, 4)}%;background:${lowN ? "var(--bg-input)" : color}"></div>
+        <span class="corr-label">${g.label}</span>
+        <span class="corr-value">${valueFn(s)}</span>
+      </div>`;
+    }).join("");
+
+    el.innerHTML = `
+      <h3>${t("stats.avgWordsDataset")}</h3>
+      <div class="corr-grid corr-3">${bars((s) => s.avg_words, (s) => Math.round((s.avg_words / maxWords) * 100), "var(--accent)")}</div>
+      <h3>${t("stats.cardLucidRate")}</h3>
+      <div class="corr-grid corr-3">${bars((s) => s.lucid_rate + "%", (s) => s.lucid_rate, "var(--lucid)")}</div>
+      <p class="hint">${t("stats.sleepFooter", { total: sleep.n_total, estimated: sleep.n_estimated, unknown: sleep.n_unknown })}</p>
+      <p class="hint">${t("stats.sleepDisclaimer")}</p>`;
   },
 
   renderBeifuss(beifuss) {

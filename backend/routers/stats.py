@@ -7,8 +7,8 @@ from sqlmodel import Session, select
 
 from deps import get_session, require_auth
 from helpers import has_substance
-from models import Dream, Intention
-from stats_helpers import build_emotions_analysis, build_per_bucket, build_writing, split_groups
+from models import Dream, Intention, Night
+from stats_helpers import build_emotions_analysis, build_per_bucket, build_sleep_analysis, build_writing, split_groups
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
@@ -18,7 +18,7 @@ def stats(
     date_from: dt.date | None = Query(default=None, alias="from"),
     date_to: dt.date | None = Query(default=None, alias="to"),
     granularity: str = Query(default="week", pattern="^(day|week|month)$"),
-    split: str | None = Query(default=None, pattern="^(beifuss|weekend|big_dream)$"),
+    split: str | None = Query(default=None, pattern="^(beifuss|weekend|big_dream|sleep)$"),
     session: Session = Depends(get_session),
 ):
     stmt = select(Dream)
@@ -31,10 +31,17 @@ def stats(
     remembered = [d for d in dreams if d.lucidity >= 1]
     lucid = [d for d in dreams if d.lucidity >= 3]
 
+    # N.3: Nächte und die Terzil-Karte immer komplett (nicht datumsgefiltert) —
+    # "dein Median"/"deine Terzile" sind eine stabile persönliche Referenz, die
+    # nicht mit dem Analyse-Zeitraum wandern soll.
+    all_nights = session.exec(select(Night)).all()
+    all_dreams = session.exec(select(Dream)).all()
+    sleep_analysis = build_sleep_analysis(all_dreams, all_nights)
+
     per_bucket = build_per_bucket(dreams, granularity)
 
     split_data = None
-    groups = split_groups(dreams, split)
+    groups = split_groups(dreams, split, all_nights)
     if groups:
         label_a, label_b, group_a, group_b = groups
         split_data = {
@@ -211,6 +218,7 @@ def stats(
         "phenomena": {"counts": phenomena_counts, "hints": phenomena_hints},
         "emotions_analysis": emotions_analysis,
         "correlations": correlations,
+        "sleep": sleep_analysis,
     }
 
 
