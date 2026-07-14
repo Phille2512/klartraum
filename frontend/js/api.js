@@ -19,7 +19,10 @@ const api = {
     }
     if (!res.ok) {
       const detail = await res.json().catch(() => ({}));
-      throw new Error(detail.detail ? tErrCode(detail.detail) : t("auth.genericError", { status: res.status }));
+      const err = new Error(detail.detail ? tErrCode(detail.detail) : t("auth.genericError", { status: res.status }));
+      err.status = res.status;
+      err.code = detail.detail || null;
+      throw err;
     }
     return res.status === 204 ? null : res.json();
   },
@@ -166,6 +169,15 @@ const api = {
   },
   dataInfo() {
     return this.request("/api/datainfo");
+  },
+  getNight(date) {
+    return this.request(`/api/nights/${date}`);
+  },
+  putNight(date, payload) {
+    return this.request(`/api/nights/${date}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  latestExactNight() {
+    return this.request("/api/nights/latest-exact");
   },
 };
 

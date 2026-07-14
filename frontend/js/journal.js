@@ -33,6 +33,9 @@ const SUBSTANCES = [
   { key: "weed", inputId: "dream-substance-weed", icon: "🌱", get label() { return t("substance.weed"); } },
 ];
 
+// N.1: Bucket-Mitten in Minuten — muss mit backend/routers/nights.py::BUCKET_MINUTES übereinstimmen.
+const NIGHT_BUCKETS = { unter6: 330, "6bis7": 390, "7bis8": 450, ueber8: 510 };
+
 // Tagebuch: Erfassen, Liste, Suche, Bearbeiten, Löschen
 const journal = {
   dreams: [],
@@ -94,6 +97,12 @@ const journal = {
     document.getElementById("dream-content").addEventListener("input", (e) => {
       clearTimeout(echoDebounce);
       echoDebounce = setTimeout(() => this.loadEchoes(e.target.value), 1500);
+    });
+
+    // N.2: Schlafzeit-Erfassung hängt am Traum-Datum, nicht am Traum selbst —
+    // bei Datumswechsel im Formular neu laden.
+    document.getElementById("dream-date").addEventListener("change", (e) => {
+      this.loadNightSection(e.target.value);
     });
 
     let debounce;
@@ -202,6 +211,7 @@ const journal = {
     document.getElementById("form-title").textContent = dream ? t("journal.formTitleEdit") : t("journal.formTitleNew");
     document.getElementById("dream-id").value = dream ? dream.id : "";
     document.getElementById("dream-date").value = dream ? dream.date : todayISO();
+    this.loadNightSection(document.getElementById("dream-date").value);
     document.getElementById("dream-title").value = dream ? dream.title : "";
     document.getElementById("dream-content").value = dream ? dream.content : "";
     document.getElementById("dream-lucidity").value = dream ? dream.lucidity : "2";
@@ -266,6 +276,121 @@ const journal = {
   closeForm() {
     this.form.classList.add("hidden");
     this.form.reset();
+  },
+
+  // ---- N.2: Schlafzeit-Erfassung — eigene Entität, unabhängig vom Traum ----
+
+  async loadNightSection(date) {
+    const el = document.getElementById("night-section");
+    if (!el || !date) return;
+    this.nightDate = date;
+    try {
+      const night = await api.getNight(date);
+      if (this.nightDate === date) this.renderNightSummary(el, night);
+    } catch (err) {
+      if (this.nightDate !== date) return; // Datum wurde inzwischen weitergeklickt
+      if (err.status === 404) {
+        this.renderNightPicker(el);
+      } else {
+        el.innerHTML = ""; // still ausblenden statt das restliche Formular zu blockieren
+      }
+    }
+  },
+
+  // Lokalisierte Dezimalstunden ("7,5" statt "7.5" im Deutschen; "8" statt "8,0").
+  formatSleepHours(minutes) {
+    return (minutes / 60).toLocaleString(localeForLang(), { maximumFractionDigits: 1 });
+  },
+
+  renderNightSummary(el, night) {
+    let text;
+    if (night.confidence === "exact") {
+      const h = this.formatSleepHours(night.sleep_minutes);
+      text = t("night.summaryTimes", { bed: night.bed_time, wake: night.wake_time, h });
+    } else if (night.confidence === "rough") {
+      const bucketKey = Object.entries(NIGHT_BUCKETS).find(([, m]) => m === night.sleep_minutes)?.[0];
+      text = t("night.summaryRough", { bucket: bucketKey ? t(`night.b.${bucketKey}`) : "" });
+    } else {
+      text = t("night.summary.unknown");
+    }
+    el.innerHTML = `<p class="hint night-summary">😴 ${text} ·
+      <button type="button" class="hint night-change-link" id="night-change-btn">${t("night.change")}</button></p>`;
+    document.getElementById("night-change-btn").addEventListener("click", () => this.renderNightPicker(el, night));
+  },
+
+  renderNightPicker(el, existingNight = null) {
+    el.innerHTML = `
+      <label>${t("night.title")}</label>
+      <div class="chip-row">
+        <button type="button" class="chip" data-night-mode="times">${t("night.times")}</button>
+        <button type="button" class="chip" data-night-mode="rough">${t("night.rough")}</button>
+        <button type="button" class="chip" data-night-mode="unknown">${t("night.unknown")}</button>
+      </div>
+      <div id="night-mode-body"></div>`;
+    el.querySelector('[data-night-mode="times"]').addEventListener("click", () => this.renderNightTimes(el, existingNight));
+    el.querySelector('[data-night-mode="rough"]').addEventListener("click", () => this.renderNightRough(el));
+    el.querySelector('[data-night-mode="unknown"]').addEventListener("click", () => this.saveNight(el, { unknown: true }));
+  },
+
+  async renderNightTimes(el, existingNight) {
+    const body = el.querySelector("#night-mode-body");
+    let bed = existingNight?.bed_time || "";
+    let wake = existingNight?.wake_time || "";
+    if (!bed && !wake) {
+      try {
+        const latest = await api.latestExactNight();
+        if (latest) { bed = latest.bed_time; wake = latest.wake_time; }
+      } catch { /* offline oder keine vorherige exakte Nacht — Felder bleiben leer */ }
+    }
+    body.innerHTML = `
+      <div class="form-row">
+        <label><span>${t("night.bed")}</span><input type="time" step="900" id="night-bed-input" value="${bed}"></label>
+        <label><span>${t("night.wake")}</span><input type="time" step="900" id="night-wake-input" value="${wake}"></label>
+      </div>
+      <p class="hint" id="night-duration-hint"></p>
+      <button type="button" class="primary" id="night-apply-btn" disabled>${t("night.apply")}</button>`;
+    const bedInput = document.getElementById("night-bed-input");
+    const wakeInput = document.getElementById("night-wake-input");
+    const durationHint = document.getElementById("night-duration-hint");
+    const applyBtn = document.getElementById("night-apply-btn");
+    const updateDuration = () => {
+      applyBtn.disabled = !bedInput.value || !wakeInput.value;
+      if (bedInput.value && wakeInput.value) {
+        const minutes = this.computeSleepMinutes(bedInput.value, wakeInput.value);
+        durationHint.textContent = t("night.duration", { h: this.formatSleepHours(minutes) });
+      } else {
+        durationHint.textContent = "";
+      }
+    };
+    bedInput.addEventListener("input", updateDuration);
+    wakeInput.addEventListener("input", updateDuration);
+    updateDuration();
+    applyBtn.addEventListener("click", () => this.saveNight(el, { bed_time: bedInput.value, wake_time: wakeInput.value }));
+  },
+
+  computeSleepMinutes(bedTime, wakeTime) {
+    const [bh, bm] = bedTime.split(":").map(Number);
+    const [wh, wm] = wakeTime.split(":").map(Number);
+    return (((wh * 60 + wm) - (bh * 60 + bm)) % 1440 + 1440) % 1440;
+  },
+
+  renderNightRough(el) {
+    const body = el.querySelector("#night-mode-body");
+    body.innerHTML = `<div class="chip-row">
+      ${Object.keys(NIGHT_BUCKETS).map((b) => `<button type="button" class="chip" data-bucket="${b}">${t(`night.b.${b}`)}</button>`).join("")}
+    </div>`;
+    body.querySelectorAll("[data-bucket]").forEach((btn) => {
+      btn.addEventListener("click", () => this.saveNight(el, { bucket: btn.dataset.bucket }));
+    });
+  },
+
+  async saveNight(el, payload) {
+    try {
+      const night = await api.putNight(this.nightDate, payload);
+      this.renderNightSummary(el, night);
+    } catch (err) {
+      showToast(err.isNetworkError ? t("night.offline") : err.message);
+    }
   },
 
   async save(event) {
