@@ -30,6 +30,20 @@ const SPLIT_OPTIONS = [
   { value: "sleep", get label() { return t("stats.splitSleep"); } },
 ];
 
+// E.2: Statistische Ehrlichkeit -- kleines "n=X"-Badge neben jeder Quote;
+// unter threshold zusaetzlich grau + Tooltip ("Tendenz, kein Befund").
+function nBadge(n, threshold = 5) {
+  const low = n < threshold;
+  return `<span class="n-badge${low ? " n-badge-low" : ""}"${low ? ` title="${escapeHtml(t("stats.nBadgeLowTooltip"))}"` : ""}>n=${n}</span>`;
+}
+
+// E.2: Ab n<3 ist eine Prozentzahl reines Rauschen -- lieber ehrlich "--" zeigen.
+function rateOrDash(pctText, n, minN = 3) {
+  return n < minN
+    ? `<span class="dash-hint" title="${escapeHtml(t("stats.tooFewForRate"))}">—</span>`
+    : pctText;
+}
+
 const stats = {
   charts: {},
   data: null,
@@ -147,12 +161,14 @@ const stats = {
 
   // ---- Vergleichs-Aufriss (A.4) ----
   renderSplitControls() {
+    const split = this.data?.split;
     document.querySelectorAll(".split-control").forEach((el) => {
       el.innerHTML = `<label>${t("stats.splitLabel")}
         <select class="split-select">
           ${SPLIT_OPTIONS.map((o) => `<option value="${o.value}" ${o.value === this.split ? "selected" : ""}>${o.label}</option>`).join("")}
         </select>
-      </label>`;
+      </label>
+      ${split ? `<span class="split-n-badges">${nBadge(split.n_a)} · ${nBadge(split.n_b)}</span>` : ""}`;
       el.querySelector(".split-select").addEventListener("change", (e) => {
         this.split = e.target.value;
         this.load();
@@ -578,22 +594,23 @@ const stats = {
     ];
     const maxWords = Math.max(...groups.map((g) => sleep[g.key].avg_words), 1);
 
-    const bars = (valueFn, pctFn, color) => groups.map((g) => {
+    const bars = (valueFn, pctFn, color, isRate) => groups.map((g) => {
       const s = sleep[g.key];
       const lowN = s.n_dreams < 3;
       const pct = pctFn(s);
-      return `<div class="corr-cell ${lowN ? "low-n" : ""}">
+      const valueText = isRate ? rateOrDash(valueFn(s), s.n_dreams) : valueFn(s);
+      return `<div class="corr-cell ${lowN ? "low-n" : ""}" title="n=${s.n_dreams}">
         <div class="corr-bar" style="height:${Math.max(pct, 4)}%;background:${lowN ? "var(--bg-input)" : color}"></div>
         <span class="corr-label">${g.label}</span>
-        <span class="corr-value">${valueFn(s)}</span>
+        <span class="corr-value">${valueText}</span>
       </div>`;
     }).join("");
 
     el.innerHTML = `
-      <h3>${t("stats.avgWordsDataset")}</h3>
-      <div class="corr-grid corr-3">${bars((s) => s.avg_words, (s) => Math.round((s.avg_words / maxWords) * 100), "var(--accent)")}</div>
+      <h3>${t("stats.avgWordsDataset")} ${nBadge(sleep.n_total)}</h3>
+      <div class="corr-grid corr-3">${bars((s) => s.avg_words, (s) => Math.round((s.avg_words / maxWords) * 100), "var(--accent)", false)}</div>
       <h3>${t("stats.cardLucidRate")}</h3>
-      <div class="corr-grid corr-3">${bars((s) => s.lucid_rate + "%", (s) => s.lucid_rate, "var(--lucid)")}</div>
+      <div class="corr-grid corr-3">${bars((s) => s.lucid_rate + "%", (s) => s.lucid_rate, "var(--lucid)", true)}</div>
       <p class="hint">${t("stats.sleepFooter", { total: sleep.n_total, estimated: sleep.n_estimated, unknown: sleep.n_unknown })}</p>
       <p class="hint">${t("stats.sleepDisclaimer")}</p>`;
   },
@@ -604,13 +621,13 @@ const stats = {
       el.innerHTML = `<p class="hint">${t("stats.beifussEmpty")}</p>`;
       return;
     }
-    const fmt = (g) => (g.lucid_rate == null ? "–" : g.lucid_rate + "%");
+    const fmt = (g) => rateOrDash(g.lucid_rate == null ? "–" : g.lucid_rate + "%", g.count);
     const nightNoun = (count) => count === 1 ? t("stats.nightOne") : t("stats.nightMany");
     el.innerHTML = `<div class="stat-cards">
         <div class="stat-card"><div class="value gold">${fmt(beifuss.with)}</div>
-          <div class="label">${t("stats.beifussWithLabel", { count: beifuss.with.count, noun: nightNoun(beifuss.with.count) })}</div></div>
+          <div class="label">${t("stats.beifussWithLabel", { count: beifuss.with.count, noun: nightNoun(beifuss.with.count) })} ${nBadge(beifuss.with.count)}</div></div>
         <div class="stat-card"><div class="value">${fmt(beifuss.without)}</div>
-          <div class="label">${t("stats.beifussWithoutLabel", { count: beifuss.without.count, noun: nightNoun(beifuss.without.count) })}</div></div>
+          <div class="label">${t("stats.beifussWithoutLabel", { count: beifuss.without.count, noun: nightNoun(beifuss.without.count) })} ${nBadge(beifuss.without.count)}</div></div>
       </div>
       ${beifuss.with.count < 5 ? `<p class="hint">${t("stats.beifussLowN")}</p>` : ""}`;
   },
@@ -626,30 +643,32 @@ const stats = {
 
     const wdEl = document.getElementById("correlation-weekday");
     if (hasWeekday) {
-      wdEl.innerHTML = `<h3>${t("stats.weekdayTitle")}</h3>
+      const totalAll = corr.weekday.reduce((s, d) => s + d.total, 0);
+      wdEl.innerHTML = `<h3>${t("stats.weekdayTitle")} ${nBadge(totalAll)}</h3>
         <div class="corr-grid">
           ${corr.weekday.map((d) => {
             const rate = d.total ? Math.round(d.lucid / d.total * 100) : 0;
-            return `<div class="corr-cell">
+            return `<div class="corr-cell ${d.total < 3 ? "low-n" : ""}" title="n=${d.total}">
               <div class="corr-bar" style="height:${Math.max(rate, 4)}%;background:${rate > 0 ? "var(--lucid)" : "var(--bg-input)"}"></div>
               <span class="corr-label">${d.day}</span>
-              <span class="corr-value">${rate}%</span>
+              <span class="corr-value">${rateOrDash(rate + "%", d.total)}</span>
             </div>`;
           }).join("")}
         </div>
-        <p class="hint">${t("stats.weekdayHint", { count: corr.weekday.reduce((s, d) => s + d.total, 0) })}</p>`;
+        <p class="hint">${t("stats.weekdayHint", { count: totalAll })}</p>`;
     }
 
     const sqEl = document.getElementById("correlation-sleep");
     if (hasSleep) {
-      sqEl.innerHTML = `<h3>${t("stats.sleepTitle")}</h3>
+      const totalAllSq = corr.sleep_quality.reduce((s, d) => s + d.total, 0);
+      sqEl.innerHTML = `<h3>${t("stats.sleepTitle")} ${nBadge(totalAllSq)}</h3>
         <div class="corr-grid corr-5">
           ${corr.sleep_quality.map((d) => {
             const rate = d.total ? Math.round(d.lucid / d.total * 100) : 0;
-            return `<div class="corr-cell">
+            return `<div class="corr-cell ${d.total < 3 ? "low-n" : ""}" title="n=${d.total}">
               <div class="corr-bar" style="height:${Math.max(rate, 4)}%;background:${rate > 0 ? "var(--accent)" : "var(--bg-input)"}"></div>
               <span class="corr-label">Q${d.quality}</span>
-              <span class="corr-value">${rate}%</span>
+              <span class="corr-value">${rateOrDash(rate + "%", d.total)}</span>
             </div>`;
           }).join("")}
         </div>

@@ -337,6 +337,8 @@ const I18N = {
     "stats.beifussWithLabel": "mit Beifuß ({count} {noun})",
     "stats.beifussWithoutLabel": "ohne Beifuß ({count} {noun})",
     "stats.beifussLowN": "Für eine belastbare Aussage brauchst du mehrere Nächte in beiden Gruppen – als Data Scientist weißt du das besser als jede App. 😉",
+    "stats.nBadgeLowTooltip": "Noch wenig Daten — Tendenz, kein Befund",
+    "stats.tooFewForRate": "Zu wenige Träume (n<3) für eine belastbare Quote — reines Rauschen.",
 
     "stats.connectionsTitle": "🔗 Verbindungen",
     "stats.connectionsHint": "Welche Orte, Personen, Zeichen und Gefühle gehören zusammen?",
@@ -1136,6 +1138,8 @@ const I18N = {
     "stats.beifussWithLabel": "with mugwort ({count} {noun})",
     "stats.beifussWithoutLabel": "without mugwort ({count} {noun})",
     "stats.beifussLowN": "For a solid conclusion you need several nights in both groups – as a data scientist you know that better than any app. 😉",
+    "stats.nBadgeLowTooltip": "Not much data yet — a trend, not a finding",
+    "stats.tooFewForRate": "Too few dreams (n<3) for a reliable rate — pure noise.",
 
     "stats.connectionsTitle": "🔗 Connections",
     "stats.connectionsHint": "Which places, people, dreamsigns and feelings belong together?",
