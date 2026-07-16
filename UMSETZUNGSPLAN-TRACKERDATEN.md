@@ -88,26 +88,58 @@ Idempotenz; Nickerchen-Filter; kaputte Datei → verständlicher Fehler-Code.
 
 ## Stufe TD.3: Analysen — was nur der Tracker beantworten kann
 
+> **Querverbindungen (ergänzt Juli 2026):** Diese Stufe setzt auf
+> `UMSETZUNGSPLAN-ERKENNTNISSE.md` auf und nutzt: `nBadge` (E.2),
+> Recall-Qualität (E.3), POS/NEG-Emotions-Mapping + Tagesbilanz (E.4),
+> Figuren-Valenz (E.5), Klartraum-Details (E.6) und das tracker-freie
+> Schlaf-Wirkungs-Paket (E.7) — die E.7-Karten werden hier nur um
+> REM-/Wachphasen-Aufrisse vertieft, nicht dupliziert.
+>
+> **Schlafend-Regel (wie E.6):** Alle Karten und Kennzahlen mit
+> Luziditäts-Bezug erscheinen erst, wenn mindestens ein Traum mit
+> Luzidität ≥ 3 existiert — vorher kein „0 %"-Lärm.
+
 Alle in der Analyse-Sektion 🔬 Experimente (bzw. bei „😴 Schlaf &
 Erinnerung" andocken), ab **≥ 9 Tracker-Nächten**, n immer ausgewiesen:
 
-1. **REM × Traumerinnerung** (die Kernfrage): Ø Wörter und Klartraum-Quote
-   je REM-Terzil (wenig/mittel/viel REM — Drittel-Prinzip wie gehabt).
-   Zusätzlich Aufriss-Option „🌙 REM-Anteil (über/unter deinem Median)".
+1. **REM × Traumerinnerung** (die Kernfrage): Verteilung der
+   Recall-Qualität (E.3: Fragment/Szene/Film) und Ø Wörter je REM-Terzil
+   (wenig/mittel/viel REM — Drittel-Prinzip wie gehabt); Klartraum-Quote
+   je REM-Terzil (Schlafend-Regel). **REM-Menge und REM-Dichte trennen:**
+   absolute `rem_minutes` und Anteil an `sleep_minutes` als getrennte
+   Aufrisse — „lange Nacht" und „REM-reiche Nacht" sind verschiedene
+   Effekte, die eine gemeinsame Karte vermischen würde. Zusätzlich
+   Aufriss-Option „🌙 REM-Anteil (über/unter deinem Median)".
 2. **Wachphasen × Erinnerung:** Nächte mit vielen kurzen Wachphasen gelten
    als erinnerungsfreundlich (man wacht öfter traumnah auf) — stimmt das
-   bei dir? Ø Wörter je Awakenings-Gruppe (0–1 / 2–3 / 4+).
-3. **Gemessen vs. gefühlt** (der Kalibrier-Spiegel): Wo beides existiert,
+   bei dir? Ø Wörter **und Ø Träume/Nacht** je Awakenings-Gruppe
+   (0–1 / 2–3 / 4+).
+3. **Natürliche WBTB-Nächte** *(Schlafend-Regel)*: Nächte mit ≥ 2
+   Wachphasen sind faktisch ungeplante WBTBs — Klartraum-Quote solcher
+   Nächte vs. durchgeschlafene. Sobald E.6-Daten existieren, daneben die
+   Quote der Träume mit `lucid_trigger = "wbtb"` spiegeln.
+4. **Schlafarchitektur × Valenz** (Tracker-Vertiefung von E.7a/E.7b):
+   Albtraum-Quote und POS/NEG-Emotions-Anteil je REM-Terzil und
+   Awakenings-Gruppe. Dazu **Figuren-Valenz** (E.5): Anteil
+   😨-Begegnungen je Schlaf-/REM-Terzil — „häufen sich bedrohliche
+   Figuren in kurzen oder REM-armen Nächten?"
+5. **Tiefschlaf & Tagesbilanz (Confounder-Karte):** `deep_minutes` neben
+   der Tagesbilanz (E.4b) desselben Tages zeigen, bevor man Valenz-Effekte
+   dem Schlaf zuschreibt — schlechter Tag und schlechter Schlaf kommen
+   selten allein. 💡-Wissens-Moment verlinkt „🌗 Tag & Traum".
+6. **Gemessen vs. gefühlt** (der Kalibrier-Spiegel): Wo beides existiert,
    Streudiagramm Selbstauskunft-Minuten vs. Tracker-Minuten + Ø-Abweichung
    („Du schätzt dich im Schnitt 25 min zu kurz"). Charmanter Nebeneffekt:
    macht die eigene 🌫️-Grob-Schätzung über Zeit besser.
-4. **Tracker-Score × Erinnerung** (nur wenn `tracker_score` vorhanden):
+7. **Tracker-Score × Erinnerung** (nur wenn `tracker_score` vorhanden):
    einfache Balken je Score-Terzil.
-5. 💡-Wissens-Moment `tracker` an diesen Karten: die Ehrlichkeits-Einordnung
+8. 💡-Wissens-Moment `tracker` an diesen Karten: die Ehrlichkeits-Einordnung
    (Phasen = Schätzung; Trends > Absolutwerte; Korrelation ≠ Ursache).
 
 **Tests:** Terzile/Gruppen gegen handgerechneten Fixture-Datensatz;
-Mischbestand (manuelle + Tracker-Nächte) verrechnet sich nicht.
+REM-Menge vs. REM-Dichte getrennt; WBTB-Klassifikation (≥ 2 Wachphasen);
+Schlafend-Regel; Mischbestand (manuelle + Tracker-Nächte) verrechnet
+sich nicht.
 
 ## Stufe TD.4: Ausblick (bewusst NICHT jetzt)
 
