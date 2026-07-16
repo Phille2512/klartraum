@@ -8,9 +8,31 @@ from sqlmodel import Session, select
 from deps import get_session, require_auth
 from helpers import has_substance
 from models import Dream, Intention, Night
-from stats_helpers import build_emotions_analysis, build_per_bucket, build_sleep_analysis, build_writing, split_groups
+from stats_helpers import (
+    build_connections,
+    build_emotions_analysis,
+    build_per_bucket,
+    build_sleep_analysis,
+    build_writing,
+    split_groups,
+)
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
+
+
+@router.get("/stats/connections")
+def stats_connections(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
+    return build_connections(dreams)
 
 
 @router.get("/stats")

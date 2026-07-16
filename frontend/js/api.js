@@ -57,6 +57,12 @@ const api = {
     ).toString();
     return this.request(`/api/stats${query ? "?" + query : ""}`);
   },
+  statsConnections(params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== "" && v != null)
+    ).toString();
+    return this.request(`/api/stats/connections${query ? "?" + query : ""}`);
+  },
   currentIntention() {
     return this.request("/api/intentions/current");
   },

@@ -56,6 +56,7 @@ const I18N = {
     "journal.filterBigDreams": "⭐ Große Träume",
     "journal.filterTagPlaceholder": "Nach Tag/Zeichen/Ort/Person filtern …",
     "journal.filterReset": "Filter zurücksetzen",
+    "journal.pairFilterToast": "Gefiltert: {a} + {b}",
     "journal.formTitleNew": "Neuer Traum",
     "journal.formTitleEdit": "Traum bearbeiten",
     "journal.contentLabel": "Was hast du geträumt?",
@@ -336,6 +337,11 @@ const I18N = {
     "stats.beifussWithLabel": "mit Beifuß ({count} {noun})",
     "stats.beifussWithoutLabel": "ohne Beifuß ({count} {noun})",
     "stats.beifussLowN": "Für eine belastbare Aussage brauchst du mehrere Nächte in beiden Gruppen – als Data Scientist weißt du das besser als jede App. 😉",
+
+    "stats.connectionsTitle": "🔗 Verbindungen",
+    "stats.connectionsHint": "Welche Orte, Personen, Zeichen und Gefühle gehören zusammen?",
+    "stats.connectionsEmpty": "Noch zu wenige gemeinsame Auftritte — wächst mit jedem Eintrag.",
+    "stats.connectionsEmotionsTitle": "Wo wohnt welche Emotion?",
 
     "stats.correlationsTitle": "📊 Korrelationen",
     "stats.correlationsHint": "Welche Faktoren beeinflussen deine Klarträume?",
@@ -849,6 +855,7 @@ const I18N = {
     "journal.filterBigDreams": "⭐ Big dreams",
     "journal.filterTagPlaceholder": "Filter by tag/dreamsign/place/person …",
     "journal.filterReset": "Reset filters",
+    "journal.pairFilterToast": "Filtered: {a} + {b}",
     "journal.formTitleNew": "New dream",
     "journal.formTitleEdit": "Edit dream",
     "journal.contentLabel": "What did you dream?",
@@ -1129,6 +1136,11 @@ const I18N = {
     "stats.beifussWithLabel": "with mugwort ({count} {noun})",
     "stats.beifussWithoutLabel": "without mugwort ({count} {noun})",
     "stats.beifussLowN": "For a solid conclusion you need several nights in both groups – as a data scientist you know that better than any app. 😉",
+
+    "stats.connectionsTitle": "🔗 Connections",
+    "stats.connectionsHint": "Which places, people, dreamsigns and feelings belong together?",
+    "stats.connectionsEmpty": "Not enough shared appearances yet — grows with every entry.",
+    "stats.connectionsEmotionsTitle": "Where does each emotion live?",
 
     "stats.correlationsTitle": "📊 Correlations",
     "stats.correlationsHint": "Which factors influence your lucid dreams?",

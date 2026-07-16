@@ -45,7 +45,10 @@ const journal = {
   selectedEmotions: [],
 
   // Filter-Chips (Tagebuch-Suche): unabhängig von selectedEmotions (Formular)
-  filters: { tag: "", emotion: "", bigDream: false },
+  // pairWith (E.1): zweites Element eines Verbindungs-Klicks — clientseitiger
+  // UND-Filter oben auf den serverseitigen Tag-Filter, da die API nur einen
+  // Tag gleichzeitig filtert.
+  filters: { tag: "", emotion: "", bigDream: false, pairWith: null },
 
   init() {
     this.form = document.getElementById("dream-form");
@@ -149,12 +152,13 @@ const journal = {
       clearTimeout(tagDebounce);
       tagDebounce = setTimeout(() => {
         this.filters.tag = e.target.value.trim();
+        this.filters.pairWith = null; // manuelle Eingabe ersetzt einen Verbindungs-Klick
         this.load();
       }, 300);
     });
 
     document.getElementById("filter-reset-btn").addEventListener("click", () => {
-      this.filters = { tag: "", emotion: "", bigDream: false };
+      this.filters = { tag: "", emotion: "", bigDream: false, pairWith: null };
       document.getElementById("filter-tag-input").value = "";
       document.getElementById("filter-bigdream-chip").classList.remove("active");
       emotionEl.querySelectorAll(".filter-emotion-chip").forEach((c) => c.classList.remove("active"));
@@ -162,8 +166,20 @@ const journal = {
     });
   },
 
+  // E.1: Klick auf ein Verbindungs-Paar in der Analyse -> Tagebuch gefiltert
+  // auf Träume, die beide Elemente enthalten.
+  filterByPair(a, b) {
+    this.filters = { tag: a.name, emotion: "", bigDream: false, pairWith: b };
+    const input = document.getElementById("filter-tag-input");
+    if (input) input.value = a.name;
+    document.getElementById("journal-filter-bar")?.classList.remove("hidden");
+    document.getElementById("journal-filter-toggle")?.classList.add("active");
+    showToast(t("journal.pairFilterToast", { a: a.name, b: b.name }));
+    document.querySelector('[data-tab="journal"]').click();
+  },
+
   hasActiveFilters() {
-    return !!(this.filters.tag || this.filters.emotion || this.filters.bigDream);
+    return !!(this.filters.tag || this.filters.emotion || this.filters.bigDream || this.filters.pairWith);
   },
 
   async load() {
@@ -174,6 +190,10 @@ const journal = {
         emotion: this.filters.emotion,
         big_dream: this.filters.bigDream ? "true" : undefined,
       });
+      if (this.filters.pairWith) {
+        const field = { dream_sign: "dream_signs", place: "places", person: "persons" }[this.filters.pairWith.kind];
+        this.dreams = this.dreams.filter((d) => d[field]?.includes(this.filters.pairWith.name));
+      }
       this.serverOffline = false;
     } catch (err) {
       if (err.isNetworkError) {

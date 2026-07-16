@@ -1,6 +1,7 @@
 """S.3: Statistik-Berechnungen für routers/stats.py, reine Umzugsarbeit aus
 main.py (in eigenes Modul ausgelagert, damit routers/stats.py < 300 Zeilen bleibt)."""
 import datetime as dt
+import itertools
 from collections import Counter
 
 from helpers import has_substance
@@ -284,4 +285,69 @@ def build_emotions_analysis(dreams: list[Dream], granularity: str) -> dict:
         "person_matrix": {e: [{"person": p, "count": c} for p, c in persons.most_common(5)] for e, persons in emotion_person.items()},
         "top_place_combos": combo_list_place,
         "top_person_combos": combo_list_person,
+    }
+
+
+ELEMENT_KINDS = {"dream_sign", "place", "person"}
+MIN_SUPPORT = 3
+
+
+def build_connections(dreams: list[Dream]) -> dict:
+    """E.1: Co-Occurrence-Analyse — welche Elemente (Traumzeichen/Orte/
+    Personen) und Emotionen treten gemeinsam auf? Lift = wie viel häufiger
+    als bei statistischer Unabhängigkeit erwartet
+    (n_together * n_dreams) / (n_a * n_b). Ein Element, das mehrfach im
+    selben Traum vorkommt (z. B. zwei Tags gleichen Namens), zählt pro
+    Traum nur einmal — daher überall Mengen statt Listen."""
+    n_dreams = len(dreams)
+    element_counts: Counter[tuple[str, str]] = Counter()
+    pair_counts: Counter[frozenset] = Counter()
+    emotion_counts: Counter[str] = Counter()
+    emotion_element_counts: Counter[tuple[str, tuple[str, str]]] = Counter()
+
+    for d in dreams:
+        elements = {(t.kind, t.name) for t in d.tags if t.kind in ELEMENT_KINDS}
+        for el in elements:
+            element_counts[el] += 1
+        for a, b in itertools.combinations(sorted(elements), 2):
+            pair_counts[frozenset((a, b))] += 1
+
+        emotions = {e.strip() for e in (d.emotions or "").split(",") if e.strip()}
+        for e in emotions:
+            emotion_counts[e] += 1
+            for el in elements:
+                emotion_element_counts[(e, el)] += 1
+
+    def lift(n: int, n_a: int, n_b: int) -> float:
+        return round((n * n_dreams) / (n_a * n_b), 2) if n_a and n_b and n_dreams else 0.0
+
+    element_pairs = []
+    for pair, n in pair_counts.items():
+        if n < MIN_SUPPORT:
+            continue
+        a, b = sorted(pair)
+        element_pairs.append({
+            "a": {"kind": a[0], "name": a[1]},
+            "b": {"kind": b[0], "name": b[1]},
+            "n": n,
+            "lift": lift(n, element_counts[a], element_counts[b]),
+        })
+    element_pairs.sort(key=lambda p: (-p["lift"], -p["n"]))
+
+    emotion_elements = []
+    for (emo, el), n in emotion_element_counts.items():
+        if n < MIN_SUPPORT:
+            continue
+        emotion_elements.append({
+            "emotion": emo,
+            "element": {"kind": el[0], "name": el[1]},
+            "n": n,
+            "lift": lift(n, emotion_counts[emo], element_counts[el]),
+        })
+    emotion_elements.sort(key=lambda p: (-p["lift"], -p["n"]))
+
+    return {
+        "element_pairs": element_pairs,
+        "emotion_elements": emotion_elements,
+        "n_dreams": n_dreams,
     }

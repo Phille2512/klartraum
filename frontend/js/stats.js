@@ -510,7 +510,57 @@ const stats = {
   renderExperiments(data) {
     this.renderBeifuss(data.beifuss);
     this.renderSleepAnalysis(data.sleep);
+    this.renderConnections();
     this.renderCorrelations(data.correlations);
+  },
+
+  // E.1: Verbindungs-Analyse (Co-Occurrence) — eigener Endpoint, respektiert
+  // (anders als die Schlaf-Terzile) den Zeitraum-Filter der Seite.
+  async renderConnections() {
+    const elEl = document.getElementById("connections-elements");
+    const emoEl = document.getElementById("connections-emotions");
+    const range = this.computeFromTo();
+    let data;
+    try {
+      data = await api.statsConnections({ from: range.from, to: range.to });
+    } catch {
+      elEl.innerHTML = "";
+      emoEl.innerHTML = "";
+      return;
+    }
+
+    const bar = (label, n, maxN, onClick) => `<div class="connection-row"${onClick ? ' style="cursor:pointer"' : ""}>
+      <span class="connection-label">${label}</span>
+      <span class="connection-bar"><span class="connection-bar-fill" style="width:${Math.max(Math.round((n / maxN) * 100), 6)}%"></span></span>
+      <span class="connection-count">${n}×</span>
+    </div>`;
+
+    if (!data.element_pairs.length) {
+      elEl.innerHTML = `<p class="hint">${t("stats.connectionsEmpty")}</p>`;
+    } else {
+      const pairs = data.element_pairs.slice(0, 10);
+      const maxN = Math.max(...pairs.map((p) => p.n));
+      elEl.innerHTML = pairs.map((p, i) => {
+        const label = `${atlas.ICONS[p.a.kind] || ""} ${escapeHtml(p.a.name)} × ${atlas.ICONS[p.b.kind] || ""} ${escapeHtml(p.b.name)}`;
+        return `<div data-pair-idx="${i}">${bar(label, p.n, maxN, true)}</div>`;
+      }).join("");
+      elEl.querySelectorAll("[data-pair-idx]").forEach((row) => {
+        const p = pairs[Number(row.dataset.pairIdx)];
+        row.addEventListener("click", () => journal.filterByPair(p.a, p.b));
+      });
+    }
+
+    if (data.emotion_elements.length) {
+      const combos = data.emotion_elements.slice(0, 10);
+      const maxN = Math.max(...combos.map((c) => c.n));
+      emoEl.innerHTML = `<h3>${t("stats.connectionsEmotionsTitle")}</h3>` + combos.map((c) => {
+        const emo = EMOTIONS[c.emotion];
+        const label = `${emo?.icon || ""} ${emo?.label || c.emotion} × ${atlas.ICONS[c.element.kind] || ""} ${escapeHtml(c.element.name)}`;
+        return bar(label, c.n, maxN, false);
+      }).join("");
+    } else {
+      emoEl.innerHTML = "";
+    }
   },
 
   // N.3: Terzil-Analyse Schlafdauer x Erinnerung — immer über alle Nächte

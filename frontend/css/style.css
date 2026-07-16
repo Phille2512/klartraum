@@ -1232,6 +1232,43 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   font-weight: 600;
 }
 
+/* E.1: Verbindungs-Analyse -- horizontale Balken-Zeilen statt Chart */
+.connection-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+.connection-label {
+  flex: 0 0 auto;
+  max-width: 55%;
+  font-size: 0.85rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.connection-bar {
+  flex: 1 1 auto;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.connection-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+.connection-count {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  min-width: 2rem;
+  text-align: right;
+}
+
 /* --- Expand details (Reflexionen/Imaginationen) --- */
 .expand-detail { margin-top: 0.5rem; }
 .expand-detail summary {
