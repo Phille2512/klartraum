@@ -45,7 +45,61 @@ function rateOrDash(pctText, n, minN = 3) {
 }
 
 // D.1: Reihenfolge fuer die Swipe-Navigation zwischen den Analyse-Sektionen.
-const STATS_SECTION_ORDER = ["write", "lucidity", "emotions", "experiments", "compass", "review"];
+const STATS_SECTION_ORDER = ["overview", "write", "lucidity", "emotions", "experiments", "compass", "review"];
+
+// D.2: Karten in den Themen-Sektionen, die sich an den Ueberblick anheften
+// lassen. Review-Sektion (Archetypen/Mandala) bewusst ausgenommen -- deren
+// Render-Funktionen laden asynchron nach (api.getInnenwelt, mandala.render)
+// und passen nicht ins synchrone ensureCardRendered-Muster unten.
+const PINNABLE_CARD_IDS = [
+  "card-writing", "card-recall", "card-heatmap", "card-histogram", "card-detail", "card-score",
+  "card-weeks", "card-lucidity-dist", "incubation-card", "phenomena-card",
+  "emotion-section",
+  "card-beifuss", "card-sleep", "card-connections", "correlation-section",
+  "card-compass", "card-signs", "new-elements-card",
+];
+// Reine Chart.js-Karten: Canvas-Inhalt laesst sich beim Klonen nicht als Bild
+// mitnehmen, daher fuer die Pin-Vorschau ohne eigenen Render-Aufruf geklont
+// (Titel/Hinweistext genuegen als Kontext, siehe renderPinnedCards).
+const CANVAS_ONLY_CARD_IDS = new Set([
+  "card-recall", "card-histogram", "card-detail", "card-score",
+  "card-weeks", "card-lucidity-dist", "card-compass", "card-signs",
+]);
+
+// D.2: reine Funktionen fuer Trend-Pfeil und Mini-Sparkline -- unabhaengig
+// von DOM/state testbar (drei Faelle: steigend/fallend/stabil + leere Buckets).
+function trendArrow(curr, prev) {
+  if (curr == null || prev == null || Number.isNaN(curr) || Number.isNaN(prev)) return "";
+  if (curr > prev) return "▲";
+  if (curr < prev) return "▼";
+  return "▬";
+}
+
+function sparklineSvg(values, { width = 72, height = 22, color = "var(--accent)" } = {}) {
+  const nums = values.filter((v) => v != null && !Number.isNaN(v));
+  if (nums.length < 2) return `<div class="sparkline-empty">${t("stats.overviewNoTrend")}</div>`;
+  const min = Math.min(...nums), max = Math.max(...nums);
+  const range = max - min || 1;
+  const step = width / (values.length - 1);
+  const points = values.map((v, i) => {
+    const x = i * step;
+    const y = v == null || Number.isNaN(v) ? height / 2 : height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return `<svg class="sparkline" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+// D.2: "Traeume/Woche" soll ohne Datumsformat-Parserei (Bucket-Keys sehen je
+// nach Granularitaet anders aus) aus der Bucket-Anzahl geschaetzt werden.
+function weeksInBuckets(perBucket, granularity) {
+  const n = perBucket.length;
+  if (!n) return 0;
+  if (granularity === "day") return n / 7;
+  if (granularity === "month") return n * (365.25 / 12 / 7);
+  return n;
+}
 
 const stats = {
   charts: {},
@@ -57,7 +111,7 @@ const stats = {
   set range(v) { localStorage.setItem("stats-range", v); },
   get granularity() { return localStorage.getItem("stats-granularity") || "week"; },
   set granularity(v) { localStorage.setItem("stats-granularity", v); },
-  get section() { return localStorage.getItem("stats-section") || "write"; },
+  get section() { return localStorage.getItem("stats-section") || "overview"; },
   set section(v) { localStorage.setItem("stats-section", v); },
   get split() { return localStorage.getItem("stats-split") || ""; },
   set split(v) { localStorage.setItem("stats-split", v); },
@@ -102,6 +156,9 @@ const stats = {
       return;
     }
     this.data = data;
+    // D.2: pro Datensatz neu tracken, welche Sektionen schon einen echten
+    // Render-Durchlauf hatten (fuer ensureCardRendered bei Pin-Vorschauen).
+    this._renderedSections = new Set();
     this.renderCards(data);
     this.renderSplitControls();
     this.renderSection(this.section);
@@ -113,6 +170,7 @@ const stats = {
       return;
     }
     this.bound = true;
+    this.bindPinButtons();
 
     document.getElementById("stats-range-chips").querySelectorAll(".chip").forEach((chip) => {
       chip.addEventListener("click", () => {
@@ -264,12 +322,222 @@ const stats = {
   renderSection(section) {
     if (!this.data) return;
     const data = this.data;
+    this._renderedSections?.add(section);
+    if (section === "overview") this.renderOverview(data);
     if (section === "write") this.renderWriting(data);
     if (section === "lucidity") this.renderLucidity(data);
     if (section === "emotions") this.renderEmotionsSection(data);
     if (section === "experiments") this.renderExperiments(data);
     if (section === "compass") this.renderCompassSection(data);
     if (section === "review") this.renderReview();
+  },
+
+  // ---- 🏠 Überblick (D.2) ----
+  renderOverview(data) {
+    this.renderOverviewTiles(data);
+    this.renderPinnedCards();
+  },
+
+  renderOverviewTiles(data) {
+    const el = document.getElementById("overview-tiles");
+    if (!el) return;
+    const perBucket = data.per_bucket;
+    const last = (arr, key, i = 1) => arr.length >= i ? arr[arr.length - i]?.[key] : null;
+
+    // 🔥 Streak -- hat keine natuerliche "vorherige Bucket"-Vergleichsgroesse
+    // (ein Streak ist ein laufender Zaehler, kein Messwert je Zeitfenster).
+    // Statt eines nicht-aussagekraeftigen Trend-Pfeils zeigt die Kachel einen
+    // 14-Tage-Praesenz-Streifen aus dem ohnehin geladenen Schreib-Kalender.
+    const last14 = data.writing.heatmap.slice(-14);
+    const byDate = Object.fromEntries(last14.map((h) => [h.date, h]));
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    const streakStrip = `<div class="streak-strip">${days.map((d) =>
+      `<span class="streak-dot${byDate[d] ? " filled" : ""}"></span>`).join("")}</div>`;
+
+    const dreamsTotal = perBucket.map((b) => b.total);
+    const weeks = weeksInBuckets(perBucket, data.granularity);
+    const perWeek = weeks > 0 ? Math.round(data.total / weeks) : null;
+
+    const avgWordsSeries = perBucket.map((b) => b.avg_words);
+
+    // Schlafend-Regel (wie E.6): Klartraum-Quote erst ab dem ersten Traum
+    // mit Luziditaet >= 3, sonst Erinnerungs-Score als Ersatz-Kachel.
+    const hasLucid = data.lucid > 0;
+    let fourth;
+    if (hasLucid) {
+      const rateSeries = perBucket.map((b) => b.total ? Math.round((b.lucid / b.total) * 100) : null);
+      fourth = {
+        icon: "✨", value: `${data.lucid_rate}%`, label: t("stats.cardLucidRate"),
+        series: rateSeries, color: "var(--lucid)",
+        jumpSection: "lucidity", jumpTarget: "card-lucidity-dist",
+      };
+    } else {
+      const scoreSeries = data.writing.score_per_bucket.map((s) => s.score);
+      const lastScore = last(data.writing.score_per_bucket, "score");
+      fourth = {
+        icon: "🧮", value: lastScore != null ? lastScore : "–", label: t("stats.overviewRecallScore"),
+        series: scoreSeries, color: "var(--accent)",
+        jumpSection: "write", jumpTarget: "card-score",
+      };
+    }
+
+    const tile = ({ icon, value, label, trend, sparkline, jumpSection, jumpTarget }) => `
+      <div class="overview-tile" data-jump-section="${jumpSection}" data-jump-target="${jumpTarget}">
+        <div class="overview-tile-top">
+          <span class="overview-tile-icon">${icon}</span>
+          <span class="overview-tile-value">${value}</span>
+          ${trend ? `<span class="overview-tile-trend ${trend === "▲" ? "up" : trend === "▼" ? "down" : ""}">${trend}</span>` : ""}
+        </div>
+        <div class="overview-tile-label">${label}</div>
+        ${sparkline}
+      </div>`;
+
+    el.innerHTML = [
+      tile({
+        icon: "🔥", value: data.streak, label: t("stats.cardStreak"),
+        trend: "", sparkline: streakStrip,
+        jumpSection: "write", jumpTarget: "card-heatmap",
+      }),
+      tile({
+        icon: "🌙", value: perWeek != null ? perWeek : "–", label: t("stats.overviewDreamsPerWeek"),
+        trend: trendArrow(last(perBucket, "total"), last(perBucket, "total", 2)),
+        sparkline: sparklineSvg(dreamsTotal, { color: "var(--accent)" }),
+        jumpSection: "lucidity", jumpTarget: "card-weeks",
+      }),
+      tile({
+        icon: "✍️", value: data.writing.avg_words, label: t("stats.avgWordsPerEntry"),
+        trend: trendArrow(last(perBucket, "avg_words"), last(perBucket, "avg_words", 2)),
+        sparkline: sparklineSvg(avgWordsSeries, { color: "var(--accent)" }),
+        jumpSection: "write", jumpTarget: "card-recall",
+      }),
+      tile({
+        icon: fourth.icon, value: fourth.value, label: fourth.label,
+        trend: trendArrow(fourth.series[fourth.series.length - 1], fourth.series[fourth.series.length - 2]),
+        sparkline: sparklineSvg(fourth.series, { color: fourth.color }),
+        jumpSection: fourth.jumpSection, jumpTarget: fourth.jumpTarget,
+      }),
+    ].join("");
+
+    el.querySelectorAll(".overview-tile").forEach((tileEl) => {
+      tileEl.addEventListener("click", () => this.jumpTo(tileEl.dataset.jumpSection, tileEl.dataset.jumpTarget));
+    });
+  },
+
+  // D.2: sorgt dafuer, dass eine Karte echten Inhalt hat, bevor sie fuer die
+  // Pin-Vorschau geklont wird -- noetig, weil renderXxx() sonst nur beim
+  // tatsaechlichen Besuch der jeweiligen Sektion laeuft. Blendet die Sektion
+  // dafuer kurz (synchron, kein Repaint dazwischen) ein, da Chart.js beim
+  // Zeichnen eine echte Layout-Groesse braucht.
+  ensureCardRendered(id) {
+    if (CANVAS_ONLY_CARD_IDS.has(id)) return;
+    const card = document.getElementById(id);
+    const section = card?.closest(".stats-section")?.dataset.section;
+    if (!section || this._renderedSections?.has(section)) return;
+    const sectionEl = document.querySelector(`.stats-section[data-section="${section}"]`);
+    const wasHidden = sectionEl?.classList.contains("hidden");
+    if (wasHidden) sectionEl.classList.remove("hidden");
+    this.renderSection(section);
+    if (wasHidden) sectionEl.classList.add("hidden");
+  },
+
+  // D.2: "Render-Funktion wiederverwenden" -- statt eigener Kachel-Vorlagen
+  // je Pin wird die bereits gerenderte Quellkarte geklont. <canvas> laesst
+  // sich beim Klonen nicht als Bild mitnehmen (kein Bitmap-Transfer), daher
+  // wird es entfernt; Titel/Hinweistext bleiben als Kontext erhalten.
+  renderPinnedCards() {
+    const container = document.getElementById("overview-pinned");
+    if (!container) return;
+    const pins = this.pins.filter((id) => document.getElementById(id));
+    pins.forEach((id) => this.ensureCardRendered(id));
+
+    container.innerHTML = "";
+    pins.forEach((id) => {
+      const source = document.getElementById(id);
+      if (!source) return;
+      const clone = source.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.classList.add("overview-pinned-card");
+      clone.querySelectorAll("canvas").forEach((c) => c.remove());
+      clone.querySelectorAll(".card-pin-btn").forEach((b) => b.remove());
+
+      const pinBtn = document.createElement("button");
+      pinBtn.type = "button";
+      pinBtn.className = "card-pin-btn pinned";
+      pinBtn.title = t("stats.pinRemove");
+      pinBtn.innerHTML = "📌";
+      pinBtn.addEventListener("click", (e) => { e.stopPropagation(); this.togglePin(id); });
+      clone.appendChild(pinBtn);
+
+      clone.addEventListener("click", (e) => {
+        if (e.target.closest(".card-pin-btn")) return;
+        const section = source.closest(".stats-section")?.dataset.section;
+        if (section) this.jumpTo(section, id);
+      });
+      container.appendChild(clone);
+    });
+  },
+
+  // D.2: Tap auf Kachel/gepinnte Karte -> zugehoerige Sektion oeffnen, zur
+  // Quell-Karte scrollen, kurz hervorheben (~1,5s CSS-Animation).
+  jumpTo(section, targetId) {
+    this.section = section;
+    this.syncControlUI();
+    this.renderSection(section);
+    requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      target.classList.add("jump-highlight");
+      setTimeout(() => target.classList.remove("jump-highlight"), 1500);
+    });
+  },
+
+  // ---- 📌 Pins (D.2) ----
+  get pins() {
+    try { return JSON.parse(localStorage.getItem("stats-pins") || "[]"); } catch { return []; }
+  },
+  set pins(v) { localStorage.setItem("stats-pins", JSON.stringify(v)); },
+
+  togglePin(id) {
+    const pins = this.pins;
+    const i = pins.indexOf(id);
+    if (i === -1) pins.push(id); else pins.splice(i, 1);
+    this.pins = pins;
+    this.syncPinButtons();
+    if (this.section === "overview") this.renderPinnedCards();
+  },
+
+  syncPinButtons() {
+    const pins = this.pins;
+    PINNABLE_CARD_IDS.forEach((id) => {
+      const btn = document.querySelector(`#${id} > .card-pin-btn`);
+      if (!btn) return;
+      const pinned = pins.includes(id);
+      btn.classList.toggle("pinned", pinned);
+      btn.title = pinned ? t("stats.pinRemove") : t("stats.pinAdd");
+    });
+  },
+
+  bindPinButtons() {
+    PINNABLE_CARD_IDS.forEach((id) => {
+      const card = document.getElementById(id);
+      if (!card || card.querySelector(":scope > .card-pin-btn")) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "card-pin-btn";
+      btn.innerHTML = "📌";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.togglePin(id);
+      });
+      card.appendChild(btn);
+    });
+    this.syncPinButtons();
   },
 
   renderCards(data) {

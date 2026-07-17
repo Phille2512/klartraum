@@ -199,6 +199,7 @@ main {
   border-radius: var(--radius);
   padding: 1rem;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .card h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
@@ -1844,4 +1845,83 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   justify-content: center;
   gap: 1.5rem;
   padding: 1rem;
+}
+
+/* --- D.2: Überblick (Analyse-Dashboard) --- */
+.overview-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.overview-tile {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  cursor: pointer;
+}
+.overview-tile:hover { outline: 1px solid var(--bg-input); }
+
+.overview-tile-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.overview-tile-icon { font-size: 1rem; }
+.overview-tile-value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+.overview-tile-trend { font-size: 0.85rem; }
+.overview-tile-trend.up { color: var(--lucid); }
+.overview-tile-trend.down { color: var(--text-dim); }
+.overview-tile-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0.15rem 0 0.4rem;
+}
+
+.sparkline { display: block; overflow: visible; }
+.sparkline-empty {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* D.1-Streak-Kachel: Praesenz-Strip statt Trend-Sparkline (siehe stats.js) */
+.streak-strip { display: flex; gap: 2px; align-items: flex-end; height: 22px; }
+.streak-dot {
+  flex: 1;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--bg-input);
+}
+.streak-dot.filled { background: var(--accent); height: 100%; }
+
+.overview-pinned { display: flex; flex-direction: column; }
+.overview-pinned-card { cursor: pointer; }
+.overview-pinned-card canvas { display: none; }
+
+/* D.2: Pin-Umschalter oben rechts auf jeder anheftbaren Karte */
+.card-pin-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  opacity: 0.35;
+  cursor: pointer;
+  filter: grayscale(1);
+  padding: 0.1rem;
+  line-height: 1;
+}
+.card-pin-btn.pinned { opacity: 1; filter: none; }
+
+/* D.2: kurzes Hervorhebungs-Blinken nach Tap-Navigation von Kachel/Karte */
+.jump-highlight { animation: jump-flash 1.5s ease; }
+@keyframes jump-flash {
+  0%, 100% { box-shadow: none; }
+  20% { box-shadow: 0 0 0 2px var(--accent); }
 }

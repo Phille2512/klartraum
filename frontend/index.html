@@ -171,7 +171,8 @@
       <div id="stat-cards" class="stat-cards"></div>
 
       <div class="chip-row" id="stats-section-nav">
-        <button class="chip active" data-section="write" data-i18n="stats.sectionWrite">✍️ Schreiben</button>
+        <button class="chip active" data-section="overview" data-i18n="stats.sectionOverview">🏠 Überblick</button>
+        <button class="chip" data-section="write" data-i18n="stats.sectionWrite">✍️ Schreiben</button>
         <button class="chip" data-section="lucidity" data-i18n="stats.sectionLucidity">✨ Luzidität</button>
         <button class="chip" data-section="emotions" data-i18n="stats.sectionEmotions">💛 Gefühle</button>
         <button class="chip" data-section="experiments" data-i18n="stats.sectionExperiments">🔬 Experimente</button>
@@ -180,32 +181,38 @@
       </div>
 
       <div id="stats-sections">
-        <div class="stats-section" data-section="write">
-          <div class="card">
+        <div class="stats-section" data-section="overview">
+          <div id="overview-tiles" class="overview-tiles"></div>
+          <div id="overview-insights"></div>
+          <div id="overview-pinned" class="overview-pinned"></div>
+        </div>
+
+        <div class="stats-section hidden" data-section="write">
+          <div class="card" id="card-writing">
             <h2 data-i18n="stats.writingTitle">✍️ Dein Traumbuch in Wörtern</h2>
             <div class="split-control" data-target="write"></div>
             <div id="writing-headline-cards" class="stat-cards"></div>
           </div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-recall">
             <h2 data-i18n="stats.recallChartTitle">📈 Wörter pro Eintrag über Zeit</h2>
             <p class="hint" data-i18n="stats.recallChartHint">Dünne Linie = Bucket-Werte, dicke Linie = gleitender Durchschnitt über 5 Buckets.</p>
             <canvas id="chart-recall"></canvas>
           </div>
-          <div class="card">
+          <div class="card" id="card-heatmap">
             <h2 data-i18n="stats.calendarTitle">🔥 Schreib-Kalender</h2>
             <p class="hint" data-i18n="stats.calendarHint">Letzte 6 Monate – Farbintensität = Wortzahl, leere Tage bleiben sichtbar. Tippen für Details.</p>
             <div id="writing-heatmap" class="heatmap-grid"></div>
           </div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-histogram">
             <h2 data-i18n="stats.histogramTitle">📊 Wortzahl-Verteilung</h2>
             <canvas id="chart-histogram"></canvas>
           </div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-detail">
             <h2 data-i18n="stats.detailChartTitle">🔍 Detailtiefe</h2>
             <p class="hint" data-i18n="stats.detailChartHint">Ø Anzahl erinnerter Zeichen, Orte und Personen pro Traum – erinnerst du mehr Substanz, nicht nur mehr Text?</p>
             <canvas id="chart-detail"></canvas>
           </div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-score">
             <h2 data-i18n="stats.scoreChartTitle">🧮 Erinnerungs-Score</h2>
             <small class="hint" data-i18n="stats.scoreChartHint">Formel: 40 % Wortzahl-Perzentil + 30 % Detailtiefe-Perzentil + 30 % Erinnerungsquote (lucidity ≥ 1) je Bucket</small>
             <canvas id="chart-score"></canvas>
@@ -214,11 +221,11 @@
 
         <div class="stats-section hidden" data-section="lucidity">
           <div class="split-control" data-target="lucidity"></div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-weeks">
             <h2 data-i18n="stats.chartWeeksTitle">Klarträume pro Zeitraum</h2>
             <canvas id="chart-weeks"></canvas>
           </div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-lucidity-dist">
             <h2 data-i18n="stats.chartLucidityDistTitle">Verteilung der Traumerinnerung</h2>
             <canvas id="chart-lucidity"></canvas>
           </div>
@@ -250,15 +257,15 @@
         </div>
 
         <div class="stats-section hidden" data-section="experiments">
-          <div class="card">
+          <div class="card" id="card-beifuss">
             <h2 data-i18n="stats.beifussTitle">🌿 Wirkt Beifuß bei dir?</h2>
             <div id="beifuss-compare"></div>
           </div>
-          <div class="card">
+          <div class="card" id="card-sleep">
             <h2 id="sleep-analysis-heading" data-i18n="stats.sleepAnalysisTitle">😴 Schlaf &amp; Erinnerung</h2>
             <div id="sleep-analysis"></div>
           </div>
-          <div class="card">
+          <div class="card" id="card-connections">
             <h2 data-i18n="stats.connectionsTitle">🔗 Verbindungen</h2>
             <p class="hint" data-i18n="stats.connectionsHint">Welche Orte, Personen, Zeichen und Gefühle gehören zusammen?</p>
             <div id="connections-elements"></div>
@@ -273,7 +280,7 @@
         </div>
 
         <div class="stats-section hidden" data-section="compass">
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-compass">
             <h2 id="compass-heading">🧭 <span data-i18n="stats.compassTitle">Traumkompass</span> <small data-i18n="stats.compassSubtitle">nach Stephen LaBerge</small></h2>
             <p class="hint" data-i18n="stats.compassHint">Traumzeichen gehören zu vier Kategorien. Wohin deine Träume „lehnen",
               verrät, worauf sich deine Reality Checks lohnen.</p>
@@ -281,7 +288,7 @@
             <div id="compass-sorter"></div>
             <div id="mission"></div>
           </div>
-          <div class="card chart-card">
+          <div class="card chart-card" id="card-signs">
             <h2 data-i18n="stats.topSignsTitle">Deine häufigsten Traumzeichen</h2>
             <p class="hint" data-i18n="stats.topSignsHint">Verknüpfe diese Zeichen tagsüber mit Reality Checks – sie sind deine Eintrittskarte in den Klartraum.</p>
             <canvas id="chart-signs"></canvas>
