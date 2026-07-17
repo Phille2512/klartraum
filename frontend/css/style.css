@@ -1925,3 +1925,15 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   0%, 100% { box-shadow: none; }
   20% { box-shadow: 0 0 0 2px var(--accent); }
 }
+
+/* D.3: Erkenntnis-Karten im Ueberblick -- Satz + n-Badge + Sprung-Link */
+.insight-card { border-left: 3px solid var(--accent); }
+.insight-card p { margin: 0 0 0.5rem; }
+.insight-jump {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  padding: 0;
+  cursor: pointer;
+}

@@ -335,7 +335,71 @@ const stats = {
   // ---- 🏠 Überblick (D.2) ----
   renderOverview(data) {
     this.renderOverviewTiles(data);
+    this.renderInsights();
     this.renderPinnedCards();
+  },
+
+  // D.3: Erkenntnis-Karten -- eigener Endpoint (wie E.1s Verbindungen),
+  // respektiert den Zeitraum-Filter der Seite. Rotation: zuletzt gezeigte
+  // Finding-IDs (localStorage) ruecken ans Ende, Server-Ranking nach
+  // Effektstaerke bleibt sonst erhalten. Maximal 3 sichtbar; ohne Findings
+  // bleibt der Bereich komplett leer (kein "0 Erkenntnisse"-Leerkasten).
+  get insightsSeen() {
+    try { return JSON.parse(localStorage.getItem("stats-insights-seen") || "[]"); } catch { return []; }
+  },
+  set insightsSeen(v) { localStorage.setItem("stats-insights-seen", JSON.stringify(v)); },
+
+  async renderInsights() {
+    const el = document.getElementById("overview-insights");
+    if (!el) return;
+    const range = this.computeFromTo();
+    let findings;
+    try {
+      findings = (await api.statsInsights({ from: range.from, to: range.to })).findings;
+    } catch {
+      el.innerHTML = "";
+      return;
+    }
+    if (!findings.length) {
+      el.innerHTML = "";
+      return;
+    }
+    const seen = this.insightsSeen;
+    const ordered = [...findings].sort((a, b) => {
+      const aSeen = seen.includes(a.id) ? 1 : 0;
+      const bSeen = seen.includes(b.id) ? 1 : 0;
+      return aSeen - bSeen; // stabiler Sort: Effekt-Reihenfolge bleibt sonst erhalten
+    });
+    const shown = ordered.slice(0, 3);
+    this.insightsSeen = shown.map((f) => f.id);
+
+    el.innerHTML = shown.map((f, i) => this.renderInsightCard(f, i)).join("");
+    el.querySelectorAll("[data-insight-jump]").forEach((btn) => {
+      const f = shown[Number(btn.dataset.insightJump)];
+      btn.addEventListener("click", () => this.jumpTo(f.section, f.anchor));
+    });
+  },
+
+  renderInsightCard(f, i) {
+    const text = t(f.text_key, this.resolveInsightParams(f));
+    return `<div class="card insight-card">
+      <p>${text} ${nBadge(f.n)}</p>
+      <button type="button" class="insight-jump" data-insight-jump="${i}">${t("insights.jumpToEvidence")}</button>
+    </div>`;
+  },
+
+  // Rohe Backend-Keys (Emotion, Wochentag) in lokalisierte Anzeigeform
+  // uebersetzen -- die Engine liefert bewusst nur Keys, keine Saetze.
+  resolveInsightParams(f) {
+    const p = { ...f.params };
+    if (p.emotion) {
+      const e = EMOTIONS[p.emotion];
+      p.emotion = e ? `${e.icon} ${e.label}` : p.emotion;
+    }
+    if (p.day) {
+      p.day = t(`insights.weekday.${p.day}`);
+    }
+    return p;
   },
 
   renderOverviewTiles(data) {
