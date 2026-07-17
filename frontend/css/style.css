@@ -191,6 +191,11 @@ main {
   view-transition-name: main-content;
 }
 
+/* M.1: main-Limit nur anheben, waehrend das Traum-Formular offen ist (und
+   nicht im klassischen Modus) -- journal.js setzt/entfernt die Klasse in
+   openForm()/closeForm(). */
+main.form-open-wide { max-width: 1080px; }
+
 .tab { display: none; }
 .tab.active { display: block; }
 
@@ -234,6 +239,89 @@ input:focus, textarea:focus, select:focus {
 }
 
 .form-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+/* M.1: Luft & Buehne -- Traum-Formular. Skaliert eigene Feldabstaende ueber
+   --form-gap statt der gewachsenen Einzelmargen; Grid/Sticky/Auto-Grow nur
+   ausserhalb des klassischen Modus (Toggle "Klassische Maske"). */
+#dream-form {
+  --form-gap: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-gap);
+}
+#dream-form label { margin-bottom: 0; }
+
+#dream-form .form-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+#dream-form .form-header h2 { margin: 0; }
+#form-classic-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+#dream-form .form-write,
+#dream-form .form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-gap);
+}
+
+.title-date-row { grid-template-columns: 2fr 1fr; }
+.title-date-row .title-field,
+.title-date-row .date-field { margin-bottom: 0; }
+
+/* Schreib-Typografie nur im Traumtext-Feld, nicht global. */
+#dream-content {
+  font-size: 17px;
+  line-height: 1.65;
+  min-height: calc(1.65em * 10); /* ~10 Zeilen als mobile Basis */
+  resize: vertical;
+  field-sizing: content; /* progressive enhancement, siehe JS-Fallback in journal.js */
+}
+
+@media (min-width: 900px) {
+  #dream-form:not(.classic) #dream-content { min-height: 40vh; }
+
+  #dream-form:not(.classic) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "header header"
+      "write fields"
+      "actions actions";
+    align-items: start;
+  }
+  #dream-form:not(.classic) .form-header { grid-area: header; }
+  #dream-form:not(.classic) .form-write {
+    grid-area: write;
+    position: sticky;
+    top: calc(var(--app-header-h, 64px) + 1rem);
+    align-self: start;
+  }
+  #dream-form:not(.classic) .form-fields { grid-area: fields; }
+  #dream-form:not(.classic) .form-actions { grid-area: actions; }
+}
+
+/* Klassischer Modus: exakt der bisherige Look -- fixe 6-zeilige Textarea,
+   keine Sonder-Typografie, kein Grid (per Media-Query oben ausgeschlossen). */
+#dream-form.classic #dream-content {
+  font-size: inherit;
+  line-height: inherit;
+  min-height: 0;
+  field-sizing: fixed;
+}
+
+/* Aktionen haften am unteren Rand, sobald das Formular hoeher als der
+   Viewport ist -- wirkt sich erst aus, wenn ueberhaupt gescrollt wird. */
+#dream-form .form-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card);
+  padding: 0.6rem 0 0.2rem;
+  z-index: 2;
+}
 
 button {
   font: inherit;

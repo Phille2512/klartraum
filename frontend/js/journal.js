@@ -59,6 +59,12 @@ const journal = {
     document.getElementById("cancel-btn").addEventListener("click", () => this.closeForm());
     this.form.addEventListener("submit", (e) => this.save(e));
 
+    // M.1: Luft & Bühne
+    this.updateHeaderHeightVar();
+    window.addEventListener("resize", () => this.updateHeaderHeightVar());
+    this.bindClassicToggle();
+    this.bindAutoGrow();
+
     this.initFilterBar();
 
     // Emotion Picker rendern
@@ -182,6 +188,52 @@ const journal = {
     return !!(this.filters.tag || this.filters.emotion || this.filters.bigDream || this.filters.pairWith);
   },
 
+  // ---- M.1: Luft & Bühne ----
+  get formClassic() { return localStorage.getItem("form-classic") === "1"; },
+  set formClassic(v) { localStorage.setItem("form-classic", v ? "1" : "0"); },
+
+  // Sticky Schreibfläche (Grid ≥900px) muss unter dem ebenfalls sticky
+  // header enden, sonst verschwindet sie dahinter (siehe D.1-Bugfix in
+  // stats.js für dieselbe Falle).
+  updateHeaderHeightVar() {
+    const header = document.querySelector("header");
+    if (header) document.documentElement.style.setProperty("--app-header-h", `${header.offsetHeight}px`);
+  },
+
+  bindClassicToggle() {
+    const btn = document.getElementById("form-classic-toggle");
+    if (!btn) return;
+    const sync = () => {
+      const classic = this.formClassic;
+      this.form.classList.toggle("classic", classic);
+      btn.classList.toggle("active", classic);
+    };
+    sync();
+    btn.addEventListener("click", () => {
+      this.formClassic = !this.formClassic;
+      sync();
+      // main-Breite nachziehen, falls das Formular gerade offen ist.
+      if (!this.form.classList.contains("hidden")) {
+        document.querySelector("main")?.classList.toggle("form-open-wide", !this.formClassic);
+      }
+    });
+  },
+
+  // Auto-Grow-Fallback für Browser ohne field-sizing:content (progressive
+  // enhancement -- moderne Browser übernehmen das rein per CSS, siehe
+  // style.css). Im klassischen Modus bleibt die feste 6-Zeilen-Höhe.
+  bindAutoGrow() {
+    const el = document.getElementById("dream-content");
+    if (!el || (window.CSS?.supports?.("field-sizing", "content"))) return;
+    const grow = () => {
+      if (this.formClassic) return;
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    };
+    el.addEventListener("input", grow);
+    this._growDreamContent = grow;
+  },
+
   async load() {
     try {
       this.dreams = await api.listDreams({
@@ -228,12 +280,14 @@ const journal = {
 
   async openForm(dream = null) {
     this.form.classList.remove("hidden");
+    document.querySelector("main")?.classList.toggle("form-open-wide", !this.formClassic);
     document.getElementById("form-title").textContent = dream ? t("journal.formTitleEdit") : t("journal.formTitleNew");
     document.getElementById("dream-id").value = dream ? dream.id : "";
     document.getElementById("dream-date").value = dream ? dream.date : todayISO();
     this.loadNightSection(document.getElementById("dream-date").value);
     document.getElementById("dream-title").value = dream ? dream.title : "";
     document.getElementById("dream-content").value = dream ? dream.content : "";
+    this._growDreamContent?.();
     document.getElementById("dream-lucidity").value = dream ? dream.lucidity : "2";
     document.getElementById("dream-sleep").value = dream?.sleep_quality ?? "";
     SUBSTANCES.forEach((s) => {
@@ -296,6 +350,7 @@ const journal = {
   closeForm() {
     this.form.classList.add("hidden");
     this.form.reset();
+    document.querySelector("main")?.classList.remove("form-open-wide");
   },
 
   // ---- N.2: Schlafzeit-Erfassung — eigene Entität, unabhängig vom Traum ----
