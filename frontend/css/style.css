@@ -507,9 +507,12 @@ button.danger { color: var(--danger); }
 .sorter-chip:hover { outline: 2px solid var(--accent); }
 
 /* --- Steuerzeile & Sektionen (Analyse 2.0) --- */
+/* D.1: top:0 kollidiert mit dem ebenfalls sticky header (z-index 10) --
+   die Leiste "verschwindet" dahinter statt darunter zu kleben. Der reale
+   Header-Wert kommt per JS als CSS-Var (updateHeaderHeightVar in stats.js). */
 .stats-controlbar {
   position: sticky;
-  top: 0;
+  top: var(--app-header-h, 96px);
   z-index: 5;
   background: var(--bg);
   padding: 0.5rem 0;
@@ -517,6 +520,42 @@ button.danger { color: var(--danger); }
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  /* D.1: die Leiste aendert beim Ein-/Ausklappen ihre eigene Hoehe --
+     ohne das hier verschiebt Scroll-Anchoring die Seite und loest damit
+     ein "scroll"-Event aus, das den Tap-to-expand sofort wieder zuklappt. */
+  overflow-anchor: none;
+}
+
+/* D.1: eingeklappter Zustand beim Scrollen -- nur Zusammenfassungs-Zeile,
+   Tap darauf oeffnet die volle Leiste wieder (siehe stats.js). */
+.stats-controlbar-summary {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-input);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  width: fit-content;
+  cursor: pointer;
+}
+.stats-controlbar.collapsed .stats-controlbar-summary { display: flex; }
+.stats-controlbar.collapsed .chip-row,
+.stats-controlbar.collapsed .stats-custom-range,
+.stats-controlbar.collapsed #stats-gran-hint {
+  display: none;
+}
+
+/* D.1: Sektions-Chips kleben direkt unter der (ggf. eingeklappten)
+   Filterleiste -- top wird von stats.js dynamisch auf deren Unterkante
+   gesetzt, da diese Hoehe je nach Eingeklappt-Zustand wechselt. */
+#stats-section-nav {
+  position: sticky;
+  z-index: 4;
+  background: var(--bg);
+  padding: 0.3rem 0;
 }
 
 .chip-row {

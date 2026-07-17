@@ -44,6 +44,9 @@ function rateOrDash(pctText, n, minN = 3) {
     : pctText;
 }
 
+// D.1: Reihenfolge fuer die Swipe-Navigation zwischen den Analyse-Sektionen.
+const STATS_SECTION_ORDER = ["write", "lucidity", "emotions", "experiments", "compass", "review"];
+
 const stats = {
   charts: {},
   data: null,
@@ -138,7 +141,85 @@ const stats = {
       });
     });
 
+    this.bindStickyNav();
+    this.bindSwipeNav();
     this.syncControlUI();
+  },
+
+  // D.1: Filterleiste + Sektions-Chips bleiben beim Scrollen sichtbar.
+  // header ist selbst sticky top:0 -- die Filterleiste muss darunter kleben
+  // (Hoehe per CSS-Var), die Sektions-Chips wiederum unter der Filterleiste,
+  // deren Hoehe sich durchs Einklappen aendert -- daher hier statt in CSS.
+  bindStickyNav() {
+    const updateHeaderHeightVar = () => {
+      const header = document.querySelector("header");
+      if (header) document.documentElement.style.setProperty("--app-header-h", `${header.offsetHeight}px`);
+    };
+    updateHeaderHeightVar();
+    window.addEventListener("resize", updateHeaderHeightVar);
+
+    let forceExpanded = false;
+    let expandedAt = 0;
+    let ticking = false;
+    const sync = () => {
+      ticking = false;
+      const bar = document.querySelector(".stats-controlbar");
+      const nav = document.getElementById("stats-section-nav");
+      if (!bar || !nav || !document.getElementById("tab-stats").classList.contains("active")) return;
+      const stickyTop = parseFloat(getComputedStyle(bar).top) || 0;
+      const isStuck = bar.getBoundingClientRect().top <= stickyTop + 0.5;
+      bar.classList.toggle("collapsed", isStuck && !forceExpanded);
+      nav.style.top = `${Math.round(bar.getBoundingClientRect().bottom)}px`;
+    };
+    window.addEventListener("scroll", () => {
+      // Tap-to-expand loest durchs eigene Hoehenwachstum ein "scroll"-Event
+      // aus (Scroll-Anchoring) -- kurze Schonfrist, damit das den gerade
+      // geoeffneten Zustand nicht sofort wieder zuklappt.
+      if (forceExpanded && Date.now() - expandedAt < 300) {
+        if (!ticking) { ticking = true; requestAnimationFrame(sync); }
+        return;
+      }
+      forceExpanded = false;
+      if (!ticking) { ticking = true; requestAnimationFrame(sync); }
+    }, { passive: true });
+
+    document.getElementById("stats-controlbar-summary").addEventListener("click", () => {
+      forceExpanded = true;
+      expandedAt = Date.now();
+      sync();
+    });
+    this._syncStickyNav = sync;
+  },
+
+  updateControlbarSummary() {
+    const el = document.getElementById("stats-controlbar-summary");
+    if (!el) return;
+    const rangeLabel = document.querySelector("#stats-range-chips .chip.active")?.textContent || "";
+    const granLabel = document.querySelector("#stats-gran-chips .chip.active")?.textContent || "";
+    el.textContent = `🔎 ${rangeLabel} · ${granLabel}`;
+  },
+
+  // D.1: Swipe zwischen den Sektionen (Zielgeraet Pixel, 412px) -- einfache
+  // touchstart/touchend-Delta-Logik, kein Bibliotheks-Import.
+  bindSwipeNav() {
+    const el = document.getElementById("stats-sections");
+    if (!el) return;
+    let startX = 0, startY = 0;
+    el.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener("touchend", (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+      const idx = STATS_SECTION_ORDER.indexOf(this.section);
+      const next = STATS_SECTION_ORDER[idx + (dx < 0 ? 1 : -1)];
+      if (!next) return;
+      this.section = next;
+      this.syncControlUI();
+      this.renderSection(this.section);
+    }, { passive: true });
   },
 
   syncControlUI() {
@@ -157,6 +238,8 @@ const stats = {
     document.querySelectorAll(".stats-section").forEach((sec) => {
       sec.classList.toggle("hidden", sec.dataset.section !== this.section);
     });
+    this.updateControlbarSummary();
+    this._syncStickyNav?.();
   },
 
   // ---- Vergleichs-Aufriss (A.4) ----
