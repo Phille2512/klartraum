@@ -1937,3 +1937,52 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   padding: 0;
   cursor: pointer;
 }
+
+/* D.4: Kompakte Ansicht -- Toggle neben den Sektions-Chips */
+.compact-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0.5rem 0 0.75rem;
+  cursor: pointer;
+  width: fit-content;
+}
+/* globales input{width:100%} wuerde die Checkbox sonst ueber die ganze
+   Zeile strecken (unsichtbarer riesiger Klick-Bereich, Label weit weg) */
+.compact-toggle-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* D.4: Accordion -- Ueberschrift bleibt anklickbar, Karteninhalt
+   (card-body) klappt weg. Hero-Karten (accordion-hero) bekommen keinen
+   Toggle und sind immer offen. */
+.card-heading-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.card-summary {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+.card-chevron {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  transition: transform 0.2s ease;
+}
+.card.collapsed .card-chevron { transform: rotate(-90deg); }
+.card.collapsed .card-body { display: none; }
+.card-takeaway {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.3rem 0 0;
+  padding-left: 0.1rem;
+}

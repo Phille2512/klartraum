@@ -156,9 +156,11 @@ const stats = {
       return;
     }
     this.data = data;
-    // D.2: pro Datensatz neu tracken, welche Sektionen schon einen echten
-    // Render-Durchlauf hatten (fuer ensureCardRendered bei Pin-Vorschauen).
-    this._renderedSections = new Set();
+    // D.4: pro Datensatz neu tracken, welche Karten schon einen echten
+    // Render-Durchlauf hatten (fuer ensureCardRendered bei Pin-Vorschauen
+    // und um beim Aufklappen nicht doppelt zu rendern).
+    this._renderedCards = new Set();
+    this._insightsPromise = null;
     this.renderCards(data);
     this.renderSplitControls();
     this.renderSection(this.section);
@@ -170,6 +172,8 @@ const stats = {
       return;
     }
     this.bound = true;
+    this.bindAccordion();
+    this.bindCompactToggle();
     this.bindPinButtons();
 
     document.getElementById("stats-range-chips").querySelectorAll(".chip").forEach((chip) => {
@@ -280,6 +284,183 @@ const stats = {
     }, { passive: true });
   },
 
+  // ---- D.4: Kompakte Ansicht (Accordion) ----
+  get compactMode() {
+    const v = localStorage.getItem("stats-compact-mode");
+    return v === null ? true : v === "1"; // Standard AN
+  },
+  set compactMode(v) { localStorage.setItem("stats-compact-mode", v ? "1" : "0"); },
+
+  get expandedCardIds() {
+    try { return JSON.parse(localStorage.getItem("stats-expanded-cards") || "[]"); } catch { return []; }
+  },
+  set expandedCardIds(v) { localStorage.setItem("stats-expanded-cards", JSON.stringify(v)); },
+
+  isCardExpanded(id) {
+    if (!this.compactMode) return true; // AUS = alles offen, wie vor D.4
+    return this.expandedCardIds.includes(id);
+  },
+
+  toggleCardExpanded(id) {
+    const ids = this.expandedCardIds;
+    const i = ids.indexOf(id);
+    if (i === -1) ids.push(id); else ids.splice(i, 1);
+    this.expandedCardIds = ids;
+    if (this.data) this.renderSection(this.section);
+  },
+
+  bindCompactToggle() {
+    const checkbox = document.getElementById("compact-toggle");
+    if (!checkbox) return;
+    checkbox.checked = this.compactMode;
+    checkbox.addEventListener("change", () => {
+      this.compactMode = checkbox.checked;
+      if (this.data) this.renderSection(this.section);
+    });
+  },
+
+  // D.4: Bestehende Chart-Karten bekommen per JS einen Accordion-Wrapper
+  // (kein Eingriff in die Karten-Markup selbst) -- alles nach dem <h2>
+  // wandert in einen .card-body-Container, der bei Collapsed ausgeblendet
+  // wird. Laeuft VOR bindPinButtons(), damit der 📌-Button als Geschwister
+  // von .card-body angehaengt wird, nicht mit hineingezogen.
+  bindAccordion() {
+    this.cardRegistry(this.data || {}).forEach(({ id, hero }) => {
+      const card = document.getElementById(id);
+      if (!card || card.dataset.accordionBound) return;
+      card.dataset.accordionBound = "1";
+      const heading = card.querySelector("h2");
+      if (!heading) return;
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+      [...card.children].forEach((child) => {
+        if (child !== heading) body.appendChild(child);
+      });
+      card.appendChild(body);
+
+      const takeaway = document.createElement("p");
+      takeaway.className = "card-takeaway hidden";
+      card.insertBefore(takeaway, body);
+
+      if (hero) {
+        card.classList.add("accordion-hero");
+        return; // Hero bleibt immer offen, kein Toggle
+      }
+
+      heading.classList.add("card-heading-toggle");
+      heading.appendChild(Object.assign(document.createElement("span"), { className: "card-summary" }));
+      heading.appendChild(Object.assign(document.createElement("span"), { className: "card-chevron", textContent: "▾" }));
+      heading.addEventListener("click", () => this.toggleCardExpanded(id));
+    });
+  },
+
+  // D.4: Deklarative Karten-Registry -- eine Stelle, die weiss, wie jede
+  // Karte gerendert wird (Leaf-Funktionen unveraendert, siehe D.4-Vorgabe
+  // "Render-Logik wird nicht angefasst"), welchen kompakten Summary-Text
+  // sie im eingeklappten Zustand zeigt und ob sie Chart.js braucht
+  // (expensive: nur dafuer lohnt sich Lazy Rendering).
+  cardRegistry(data) {
+    const split = data.split;
+    return [
+      // ---- ✍️ Schreiben ----
+      { id: "card-writing", section: "write", hero: false, expensive: false,
+        render: () => this.renderWritingHeadline(split ? null : data.writing, split),
+        summary: () => data.writing?.avg_words ? t("stats.summaryAvgWords", { n: data.writing.avg_words }) : null },
+      { id: "card-recall", section: "write", hero: true, expensive: true,
+        render: () => this.renderRecall(split ? null : data.per_bucket, split) },
+      { id: "card-heatmap", section: "write", hero: false, expensive: false,
+        render: () => this.renderHeatmap(data.writing.heatmap) },
+      { id: "card-histogram", section: "write", hero: false, expensive: true,
+        render: () => this.renderHistogram(data.writing.histogram) },
+      { id: "card-detail", section: "write", hero: false, expensive: true,
+        render: () => this.renderDetailChart(data.writing.detail_depth_per_bucket),
+        summary: () => {
+          const vals = data.writing.detail_depth_per_bucket.map((b) => b.avg_detail);
+          if (!vals.length) return null;
+          const avg = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+          return t("stats.summaryAvgDetail", { n: avg });
+        } },
+      { id: "card-score", section: "write", hero: false, expensive: true,
+        render: () => this.renderScoreChart(data.writing.score_per_bucket),
+        summary: () => {
+          const last = data.writing.score_per_bucket.at(-1);
+          return last ? t("stats.summaryScore", { n: last.score }) : null;
+        } },
+
+      // ---- ✨ Luzidität ----
+      { id: "card-weeks", section: "lucidity", hero: true, expensive: true,
+        render: () => { if (split) this.renderWeeksSplit(split); else this.renderWeeks(data.per_bucket); } },
+      { id: "card-lucidity-dist", section: "lucidity", hero: false, expensive: true,
+        render: () => this.renderLucidityChart(data.lucidity_distribution),
+        summary: () => t("stats.summaryFullyLucid", { n: data.lucidity_distribution[4] || 0 }) },
+      { id: "incubation-card", section: "lucidity", hero: false, expensive: false,
+        render: () => this.renderIncubation(data.incubation),
+        summary: () => data.incubation?.total ? t("stats.summaryIncubationRate", { n: data.incubation.rate }) : null },
+      { id: "phenomena-card", section: "lucidity", hero: false, expensive: false,
+        render: () => this.renderPhenomena(data.phenomena),
+        summary: () => {
+          const total = data.phenomena ? Object.values(data.phenomena.counts).reduce((a, b) => a + b, 0) : 0;
+          return total ? t("stats.summaryPhenomenaCount", { n: total }) : null;
+        } },
+
+      // ---- 💛 Gefühle (einzige Karte der Sektion -> zwangslaeufig Hero) ----
+      { id: "emotion-section", section: "emotions", hero: true, expensive: false,
+        render: () => this.renderEmotionsSection(data) },
+
+      // ---- 🔬 Experimente ----
+      { id: "card-beifuss", section: "experiments", hero: false, expensive: false,
+        render: () => this.renderBeifuss(data.beifuss) },
+      { id: "card-sleep", section: "experiments", hero: true, expensive: false,
+        render: () => this.renderSleepAnalysis(data.sleep) },
+      { id: "card-connections", section: "experiments", hero: false, expensive: false,
+        render: () => this.renderConnections() },
+      { id: "correlation-section", section: "experiments", hero: false, expensive: false,
+        render: () => this.renderCorrelations(data.correlations) },
+
+      // ---- 🧭 Kompass ----
+      { id: "card-compass", section: "compass", hero: true, expensive: true,
+        render: () => { this.renderCompass(data.compass); this.renderMission(data); this.renderSorter(); } },
+      { id: "card-signs", section: "compass", hero: false, expensive: true,
+        render: () => this.renderSigns(data.top_dream_signs),
+        summary: () => data.top_dream_signs?.[0]
+          ? t("stats.summaryTopSign", { name: escapeHtml(data.top_dream_signs[0].name), n: data.top_dream_signs[0].count })
+          : null },
+      { id: "new-elements-card", section: "compass", hero: false, expensive: false,
+        render: () => this.renderNewElements(data.new_elements),
+        summary: () => data.new_elements?.length ? t("stats.summaryNewCount", { n: data.new_elements.length }) : null },
+
+      // ---- 🌗 Rückblick (Render-Funktionen laden async nach) ----
+      { id: "archetype-figures-card", section: "review", hero: true, expensive: false,
+        render: () => this.renderArchetypeFigures() },
+      { id: "mandala-card", section: "review", hero: false, expensive: false,
+        render: () => { const mc = document.getElementById("mandala-card"); if (mc) mandala.render(mc); } },
+    ];
+  },
+
+  // D.4: Takeaway-Zeile aus derselben Finding-Logik wie D.3 -- ein Finding
+  // ist genau an eine Karte gebunden (finding.anchor === card-id). Ohne
+  // sicheres Finding fuer diese Karte: keine Zeile (Konvention aus dem Plan).
+  async renderCardTakeaway(cardId) {
+    const el = document.getElementById(cardId)?.querySelector(".card-takeaway");
+    if (!el) return;
+    const findings = await this.ensureInsightsLoaded();
+    const finding = findings.find((f) => f.anchor === cardId);
+    if (!finding) { el.classList.add("hidden"); el.textContent = ""; return; }
+    el.textContent = t(finding.text_key, this.resolveInsightParams(finding));
+    el.classList.remove("hidden");
+  },
+
+  // Erkenntnisse einmal pro Datensatz laden, von Überblick UND Takeaway-
+  // Zeilen gemeinsam genutzt (kein doppelter Request).
+  ensureInsightsLoaded() {
+    if (this._insightsPromise) return this._insightsPromise;
+    const range = this.computeFromTo();
+    this._insightsPromise = api.statsInsights({ from: range.from, to: range.to })
+      .then((r) => r.findings).catch(() => []);
+    return this._insightsPromise;
+  },
+
   syncControlUI() {
     document.getElementById("stats-range-chips").querySelectorAll(".chip").forEach((chip) => {
       chip.classList.toggle("active", chip.dataset.range === this.range);
@@ -322,14 +503,37 @@ const stats = {
   renderSection(section) {
     if (!this.data) return;
     const data = this.data;
-    this._renderedSections?.add(section);
     if (section === "overview") this.renderOverview(data);
-    if (section === "write") this.renderWriting(data);
-    if (section === "lucidity") this.renderLucidity(data);
-    if (section === "emotions") this.renderEmotionsSection(data);
-    if (section === "experiments") this.renderExperiments(data);
-    if (section === "compass") this.renderCompassSection(data);
-    if (section === "review") this.renderReview();
+    else this.renderAccordionSection(section, data);
+  },
+
+  // D.4: alle Themen-Sektionen (write/lucidity/emotions/experiments/
+  // compass/review) laufen ueber dieselbe Karten-Registry statt eigener
+  // Orchestrator-Funktionen -- damit gilt Lazy Rendering/Hero/Summary
+  // ueberall gleich, ohne dass die Leaf-Render-Funktionen angefasst werden.
+  renderAccordionSection(section, data) {
+    this.cardRegistry(data)
+      .filter((entry) => entry.section === section)
+      .forEach((entry) => {
+        const expanded = entry.hero || this.isCardExpanded(entry.id);
+        if (entry.hero || !entry.expensive || expanded) {
+          entry.render();
+          this._renderedCards?.add(entry.id);
+        }
+        this.syncCardHeader(entry);
+      });
+  },
+
+  // Summary-Text + Auf-/Zu-Zustand einer Karte nach dem Render aktualisieren.
+  syncCardHeader(entry) {
+    const card = document.getElementById(entry.id);
+    if (!card) return;
+    if (!entry.hero) {
+      const summaryEl = card.querySelector(".card-summary");
+      if (summaryEl) summaryEl.textContent = entry.summary ? (entry.summary() || "") : "";
+      card.classList.toggle("collapsed", !this.isCardExpanded(entry.id));
+    }
+    this.renderCardTakeaway(entry.id);
   },
 
   // ---- 🏠 Überblick (D.2) ----
@@ -352,14 +556,7 @@ const stats = {
   async renderInsights() {
     const el = document.getElementById("overview-insights");
     if (!el) return;
-    const range = this.computeFromTo();
-    let findings;
-    try {
-      findings = (await api.statsInsights({ from: range.from, to: range.to })).findings;
-    } catch {
-      el.innerHTML = "";
-      return;
-    }
+    const findings = await this.ensureInsightsLoaded();
     if (!findings.length) {
       el.innerHTML = "";
       return;
@@ -492,21 +689,17 @@ const stats = {
     });
   },
 
-  // D.2: sorgt dafuer, dass eine Karte echten Inhalt hat, bevor sie fuer die
-  // Pin-Vorschau geklont wird -- noetig, weil renderXxx() sonst nur beim
-  // tatsaechlichen Besuch der jeweiligen Sektion laeuft. Blendet die Sektion
-  // dafuer kurz (synchron, kein Repaint dazwischen) ein, da Chart.js beim
-  // Zeichnen eine echte Layout-Groesse braucht.
+  // D.2/D.4: sorgt dafuer, dass eine Karte echten Inhalt hat, bevor sie fuer
+  // die Pin-Vorschau geklont wird -- noetig, weil eine Karte im Kompakt-
+  // Modus lazy sein kann (noch nie gerendert). Ruft die Registry-Render-
+  // Funktion direkt auf, unabhaengig vom Auf-/Zu-Zustand.
   ensureCardRendered(id) {
-    if (CANVAS_ONLY_CARD_IDS.has(id)) return;
-    const card = document.getElementById(id);
-    const section = card?.closest(".stats-section")?.dataset.section;
-    if (!section || this._renderedSections?.has(section)) return;
-    const sectionEl = document.querySelector(`.stats-section[data-section="${section}"]`);
-    const wasHidden = sectionEl?.classList.contains("hidden");
-    if (wasHidden) sectionEl.classList.remove("hidden");
-    this.renderSection(section);
-    if (wasHidden) sectionEl.classList.add("hidden");
+    if (CANVAS_ONLY_CARD_IDS.has(id)) return; // Canvas wird beim Pinnen ohnehin entfernt
+    if (this._renderedCards?.has(id)) return;
+    const entry = this.cardRegistry(this.data).find((e) => e.id === id);
+    if (!entry) return;
+    entry.render();
+    this._renderedCards?.add(id);
   },
 
   // D.2: "Render-Funktion wiederverwenden" -- statt eigener Kachel-Vorlagen
@@ -549,6 +742,12 @@ const stats = {
   // D.2: Tap auf Kachel/gepinnte Karte -> zugehoerige Sektion oeffnen, zur
   // Quell-Karte scrollen, kurz hervorheben (~1,5s CSS-Animation).
   jumpTo(section, targetId) {
+    // D.4: Sprungziel kann eine eingeklappte, noch nicht gerenderte Karte
+    // sein -- vor dem Rendern aufklappen, sonst landet man auf einer
+    // leeren Karte.
+    if (this.compactMode && !this.expandedCardIds.includes(targetId)) {
+      this.expandedCardIds = [...this.expandedCardIds, targetId];
+    }
     this.section = section;
     this.syncControlUI();
     this.renderSection(section);
@@ -613,16 +812,8 @@ const stats = {
   },
 
   // ---- ✍️ Schreiben (A.3) ----
-  renderWriting(data) {
-    const split = data.split;
-    const writing = split ? null : data.writing;
-    this.renderWritingHeadline(split ? null : data.writing, split);
-    this.renderRecall(split ? null : data.per_bucket, split);
-    this.renderHeatmap(split ? data.writing.heatmap : data.writing.heatmap);
-    this.renderHistogram(data.writing.histogram);
-    this.renderDetailChart(data.writing.detail_depth_per_bucket);
-    this.renderScoreChart(data.writing.score_per_bucket);
-  },
+  // D.4: renderWriting()-Orchestrator entfernt -- cardRegistry() ruft die
+  // Leaf-Funktionen unten jetzt einzeln auf (lazy pro Karte).
 
   renderWritingHeadline(writing, split) {
     const el = document.getElementById("writing-headline-cards");
@@ -743,26 +934,21 @@ const stats = {
   },
 
   // ---- ✨ Luzidität ----
-  renderLucidity(data) {
-    this.renderIncubation(data.incubation);
-    this.renderPhenomena(data.phenomena);
-    if (data.split) {
-      const a = data.split.per_bucket_a, b = data.split.per_bucket_b;
-      this.makeChart("chart-weeks", {
-        type: "bar",
-        data: {
-          labels: this.mergedBuckets(a, b),
-          datasets: [
-            { label: `${t("stats.cardLucidDreams")} · ${data.split.label_a}`, data: this.alignSeries(a, "lucid"), backgroundColor: "#f5c66a" },
-            { label: `${t("stats.cardLucidDreams")} · ${data.split.label_b}`, data: this.alignSeries(b, "lucid"), backgroundColor: "#8b7ff5" },
-          ],
-        },
-        options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
-      });
-    } else {
-      this.renderWeeks(data.per_bucket);
-    }
-    this.renderLucidityChart(data.lucidity_distribution);
+  // D.4: aus renderLucidity() herausgeloest, damit cardRegistry() dieselbe
+  // Split-Logik fuer chart-weeks aufrufen kann, ohne sie zu duplizieren.
+  renderWeeksSplit(split) {
+    const a = split.per_bucket_a, b = split.per_bucket_b;
+    this.makeChart("chart-weeks", {
+      type: "bar",
+      data: {
+        labels: this.mergedBuckets(a, b),
+        datasets: [
+          { label: `${t("stats.cardLucidDreams")} · ${split.label_a}`, data: this.alignSeries(a, "lucid"), backgroundColor: "#f5c66a" },
+          { label: `${t("stats.cardLucidDreams")} · ${split.label_b}`, data: this.alignSeries(b, "lucid"), backgroundColor: "#8b7ff5" },
+        ],
+      },
+      options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
+    });
   },
 
   renderIncubation(incubation) {
@@ -938,12 +1124,7 @@ const stats = {
   },
 
   // ---- 🔬 Experimente ----
-  renderExperiments(data) {
-    this.renderBeifuss(data.beifuss);
-    this.renderSleepAnalysis(data.sleep);
-    this.renderConnections();
-    this.renderCorrelations(data.correlations);
-  },
+  // D.4: renderExperiments()-Orchestrator entfernt -- siehe cardRegistry().
 
   // E.1: Verbindungs-Analyse (Co-Occurrence) — eigener Endpoint, respektiert
   // (anders als die Schlaf-Terzile) den Zeitraum-Filter der Seite.
@@ -1092,13 +1273,7 @@ const stats = {
   },
 
   // ---- 🧭 Kompass ----
-  renderCompassSection(data) {
-    this.renderCompass(data.compass);
-    this.renderMission(data);
-    this.renderSorter();
-    this.renderSigns(data.top_dream_signs);
-    this.renderNewElements(data.new_elements);
-  },
+  // D.4: renderCompassSection()-Orchestrator entfernt -- siehe cardRegistry().
 
   renderNewElements(newElements) {
     const el = document.getElementById("new-elements-list");
@@ -1225,11 +1400,7 @@ const stats = {
   },
 
   // ---- 🌗 Rückblick ----
-  async renderReview() {
-    await this.renderArchetypeFigures();
-    const mc = document.getElementById("mandala-card");
-    if (mc) await mandala.render(mc);
-  },
+  // D.4: renderReview()-Orchestrator entfernt -- siehe cardRegistry().
 
   // ---- 🌗 Deine inneren Figuren (H.3: Bezug Lexikon ↔ eigene Analyse) ----
   async renderArchetypeFigures() {
