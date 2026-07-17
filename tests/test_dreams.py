@@ -209,6 +209,33 @@ def test_delete_dream_removes_dreamtag_links(auth_client):
     assert fliegen[0]["count"] == 1
 
 
+def test_duplicate_name_in_one_field_does_not_crash(auth_client):
+    """Regressionstest (BUGFIXES.md): derselbe Name zweimal im selben Feld
+    loeste vor dem Fix einen IntegrityError auf dreamtag(dream_id, tag_id)
+    aus, weil apply_tags() nicht deduplizierte."""
+    resp = auth_client.post("/api/dreams", json=make_dream(dream_signs=["zaehne", "zaehne"]))
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["dream_signs"] == ["zaehne"]
+
+
+def test_duplicate_name_across_fields_is_kept_per_kind(auth_client):
+    """Derselbe Name in verschiedenen Feldern (z. B. Ort UND Person) ist kein
+    Duplikat -- kind gehoert zum Dedupe-Schluessel."""
+    resp = auth_client.post("/api/dreams", json=make_dream(places=["schule"], persons=["schule"]))
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["places"] == ["schule"]
+    assert resp.json()["persons"] == ["schule"]
+
+
+def test_duplicate_name_ignores_case_and_whitespace(auth_client):
+    """get_or_create_tag() normalisiert intern gleich (strip + lower) --
+    der Dedupe-Schluessel in apply_tags() muss dieselbe Normalisierung
+    verwenden, sonst crasht z. B. "Zaehne" + " zaehne " weiterhin."""
+    resp = auth_client.post("/api/dreams", json=make_dream(dream_signs=["Zaehne", " zaehne "]))
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["dream_signs"] == ["zaehne"]
+
+
 def test_regression_echoes_route_order(auth_client):
     """Regressionstest Routen-Reihenfolge: /api/dreams/echoes darf nicht mit
     /api/dreams/{dream_id} kollidieren (sonst 422, weil 'echoes' als int geparst wird)."""

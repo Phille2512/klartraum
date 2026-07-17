@@ -57,9 +57,23 @@ def apply_tags(session: Session, dream: Dream, payload: DreamIn) -> None:
         ("place", payload.places),
         ("person", payload.persons),
     ]
-    dream.tags = [
-        get_or_create_tag(session, name, kind)
-        for kind, names in groups
-        for name in names
-        if name.strip()
-    ]
+    # Bugfix (siehe BUGFIXES.md): derselbe Name im selben Feld -- auch nur
+    # durch Gross-/Kleinschreibung oder Leerraum abweichend -- lieferte sonst
+    # zweimal dasselbe Tag (get_or_create_tag normalisiert intern gleich),
+    # was beim Speichern einen IntegrityError auf der Verknuepfungstabelle
+    # dreamtag(dream_id, tag_id) ausloeste. Deduplizieren auf derselben
+    # Normalisierung wie get_or_create_tag, Reihenfolge des ersten Auftretens
+    # bleibt erhalten.
+    seen: set[tuple[str, str]] = set()
+    tags = []
+    for kind, names in groups:
+        for name in names:
+            name = name.strip()
+            if not name:
+                continue
+            key = (kind, name.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            tags.append(get_or_create_tag(session, name, kind))
+    dream.tags = tags
