@@ -410,6 +410,14 @@ const journal = {
         suggEl: host.querySelector(".chip-suggestions"),
       };
       state.textEl.placeholder = native.placeholder;
+      // Bugfix: Ohne explizites for landet ein Klick auf Leerraum im Label
+      // (z. B. durch Grid-Stretch in .form-row entstanden) beim ERSTEN
+      // fokussierbaren Nachfahren -- das war bisher zufällig der ✕-Button
+      // der ersten Pill und löschte sie. for zeigt jetzt gezielt aufs
+      // Tippfeld, keine Mehrdeutigkeit mehr.
+      state.textEl.id = `chip-input-${cfg.key}`;
+      const label = host.closest("label");
+      if (label) label.htmlFor = state.textEl.id;
       this.chipFields[cfg.key] = state;
 
       state.textEl.addEventListener("keydown", (e) => {

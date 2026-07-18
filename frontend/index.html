@@ -80,9 +80,13 @@
               </button>
             </legend>
             <div class="group-body">
-              <label><span data-i18n="journal.lucidityLabel">Erinnerung / Luzidität</span>
+              <label for="dream-lucidity"><span data-i18n="journal.lucidityLabel">Erinnerung / Luzidität</span>
                 <!-- M.3: Chips sind eine Bedien-Schicht -- das Select bleibt die
-                     Quelle der Wahrheit, journal.js liest beim Speichern nur es. -->
+                     Quelle der Wahrheit, journal.js liest beim Speichern nur es.
+                     for="dream-lucidity" ist Pflicht: ohne explizites for leitet
+                     ein Label-Klick auf Leerraum sonst an den ERSTEN fokussierbaren
+                     Nachfahren weiter -- hier waere das versehentlich der erste
+                     Chip-Button (Wert 0) statt eines harmlosen Fokus aufs Select. -->
                 <div class="chip-row chip-ui" id="lucidity-chips"></div>
                 <select id="dream-lucidity" class="chip-native">
                   <option value="0" data-i18n="journal.lucidityOption.0">0 – keine Erinnerung</option>
@@ -145,7 +149,8 @@
             </legend>
             <div class="group-body">
               <div id="night-section" class="night-section"></div>
-              <label><span data-i18n="journal.sleepLabel">Schlafqualität</span>
+              <label for="dream-sleep"><span data-i18n="journal.sleepLabel">Schlafqualität</span>
+                <!-- for="dream-sleep": siehe Begruendung bei Luziditaet oben. -->
                 <div class="chip-row chip-ui" id="sleep-chips"></div>
                 <select id="dream-sleep" class="chip-native">
                   <option value="">–</option>
