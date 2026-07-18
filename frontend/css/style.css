@@ -323,6 +323,70 @@ input:focus, textarea:focus, select:focus {
   z-index: 2;
 }
 
+/* M.2: Vier Gruppen-Karten. Einklappen versteckt nur den group-body --
+   alle Felder bleiben im DOM (Payload unveraendert, journal.js). */
+#dream-form .form-group {
+  border: 1px solid var(--bg-input);
+  border-radius: 10px;
+  padding: 0.3rem 0.85rem 0.85rem;
+  margin: 0;
+  min-width: 0;
+}
+#dream-form .form-group.collapsed { padding-bottom: 0.3rem; }
+#dream-form .form-group legend {
+  /* float nimmt die legend aus der Rahmen-Kerbe -> normaler Karten-Kopf */
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+#dream-form .group-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  color: var(--text);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+#dream-form .group-title { white-space: nowrap; }
+#dream-form .group-summary {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#dream-form .form-group:not(.collapsed) .group-summary { display: none; }
+#dream-form .group-chevron {
+  margin-left: auto;
+  color: var(--text-dim);
+  transition: transform 0.15s;
+}
+#dream-form .form-group.collapsed .group-chevron { transform: rotate(-90deg); }
+#dream-form .group-body {
+  clear: both;
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-gap);
+  padding-top: 0.45rem;
+}
+#dream-form .form-group.collapsed .group-body { display: none; }
+
+/* Klassische Maske: alle vier Karten fest aufgeklappt, keine
+   Zusammenfassungs-Zeilen (ein Zustand mit dem M.1-Toggle). */
+#dream-form.classic .form-group.collapsed .group-body { display: flex; }
+#dream-form.classic .form-group.collapsed { padding-bottom: 0.85rem; }
+#dream-form.classic .group-summary,
+#dream-form.classic .group-chevron { display: none; }
+#dream-form.classic .group-toggle { cursor: default; }
+
 button {
   font: inherit;
   border: none;

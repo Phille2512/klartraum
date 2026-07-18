@@ -68,73 +68,121 @@
           </div>
         </div>
         <div class="form-fields">
-          <!-- E.3/E.4a/E.5/E.6 (UMSETZUNGSPLAN-ERKENNTNISSE.md) docken ab M.2 an eigenen Gruppen-Karten an -->
-          <div class="form-row">
-            <label><span data-i18n="journal.lucidityLabel">Erinnerung / Luzidität</span>
-              <select id="dream-lucidity">
-                <option value="0" data-i18n="journal.lucidityOption.0">0 – keine Erinnerung</option>
-                <option value="1" data-i18n="journal.lucidityOption.1">1 – Fragment</option>
-                <option value="2" selected data-i18n="journal.lucidityOption.2">2 – normaler Traum</option>
-                <option value="3" data-i18n="journal.lucidityOption.3">3 – kurz luzide</option>
-                <option value="4" data-i18n="journal.lucidityOption.4">4 – voll luzide</option>
-              </select>
-            </label>
-            <label><span data-i18n="journal.sleepLabel">Schlafqualität</span>
-              <select id="dream-sleep">
-                <option value="">–</option>
-                <option value="1" data-i18n="journal.sleep.1">1 – sehr schlecht</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5" data-i18n="journal.sleep.5">5 – sehr gut</option>
-              </select>
-            </label>
-          </div>
-          <div id="night-section" class="night-section"></div>
-          <label><span data-i18n="journal.substancesLabel">Substanzen vor dem Schlafen</span> <small data-i18n="journal.optionalHint">(falls zutreffend)</small></label>
-          <div class="substance-picker">
-            <label class="checkbox-label"><input type="checkbox" id="dream-substance-beifuss"> 🌿 <span data-i18n="substance.beifuss">Beifuß</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-substance-melatonin"> 💊 <span data-i18n="substance.melatonin">Melatonin</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-substance-alkohol"> 🍷 <span data-i18n="substance.alkohol">Alkohol</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-substance-weed"> 🌱 <span data-i18n="substance.weed">Weed</span></label>
-          </div>
-          <label><span data-i18n="journal.otherLabel">Sonstiges</span> <small data-i18n="journal.otherHint">(z. B. anderes Schlafmittel, kurz)</small>
-            <input type="text" id="dream-substance-other" data-i18n-placeholder="journal.otherPlaceholder" placeholder="z. B. Baldrian, CBD-Öl">
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" id="dream-bigdream"> <span id="bigdream-star">⭐</span> <span data-i18n="journal.bigDreamLabel">Großer Traum</span> <small data-i18n="journal.bigDreamHint">(numinos, aufwühlend, bleibt im Gedächtnis — nach C. G. Jung)</small>
-          </label>
-          <label><span data-i18n="journal.phenomenaLabel">Phänomene</span> <small data-i18n="journal.optionalHint">(falls zutreffend)</small></label>
-          <div class="phenomena-picker">
-            <label class="checkbox-label"><input type="checkbox" id="dream-falsches-erwachen"> 🔁 <span data-i18n="phenomenon.falschesErwachen">Falsches Erwachen</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-schlafparalyse"> 🧊 <span data-i18n="phenomenon.schlafparalyse">Schlafparalyse</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-traum-im-traum"> 🪆 <span data-i18n="phenomenon.traumImTraum">Traum-im-Traum</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-wiederkehrend"> ♻️ <span data-i18n="phenomenon.wiederkehrend">Wiederkehrender Traum</span></label>
-            <label class="checkbox-label"><input type="checkbox" id="dream-albtraum"> 😱 <span data-i18n="phenomenon.albtraum">Albtraum</span></label>
-          </div>
-          <label><span data-i18n="journal.emotionsLabel">Emotionen</span> <small data-i18n="journal.emotionsHint">(was hast du im Traum gefühlt?)</small></label>
-          <div id="emotion-picker" class="emotion-picker"></div>
-          <label><span data-i18n="journal.signsLabel">Traumzeichen</span> <small data-i18n="journal.signsHint">(wiederkehrende Muster, kommagetrennt)</small>
-            <input type="text" id="dream-signs" list="signs-list" data-i18n-placeholder="journal.signsPlaceholder" placeholder="z. B. fliegen, verstorbene Person, Zähne">
-            <datalist id="signs-list"></datalist>
-          </label>
-          <div class="form-row">
-            <label><span data-i18n="journal.placesLabel">📍 Orte</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
-              <input type="text" id="dream-places" list="places-list" data-i18n-placeholder="journal.placesPlaceholder" placeholder="z. B. alte schule, meer">
-              <datalist id="places-list"></datalist>
-            </label>
-            <label><span data-i18n="journal.personsLabel">👤 Personen</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
-              <input type="text" id="dream-persons" list="persons-list" data-i18n-placeholder="journal.personsPlaceholder" placeholder="z. B. papa, freundin">
-              <datalist id="persons-list"></datalist>
-            </label>
-          </div>
-          <label><span data-i18n="journal.tagsLabel">Tags</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
-            <input type="text" id="dream-tags" list="tags-list" data-i18n-placeholder="journal.tagsPlaceholder" placeholder="z. B. albtraum, arbeit">
-            <datalist id="tags-list"></datalist>
-          </label>
-          <label><span data-i18n="journal.notesLabel">Eigene Analyse / Notizen</span>
-            <textarea id="dream-notes" rows="2" data-i18n-placeholder="journal.notesPlaceholder" placeholder="Deutung, Auffälligkeiten … (optional)"></textarea>
-          </label>
+          <!-- M.2: Vier Gruppen-Karten. Alle Felder bleiben im DOM (IDs und
+               Payload unveraendert), Einklappen versteckt nur den group-body.
+               Zusammenfassungs-Zeilen fuellt journal.js (updateGroupSummaries). -->
+          <fieldset class="form-group" data-group="traum">
+            <legend>
+              <button type="button" class="group-toggle" aria-expanded="true">
+                <span class="group-title">💭 <span data-i18n="journal.groupTraum">Der Traum</span></span>
+                <span class="group-summary hint"></span>
+                <span class="group-chevron" aria-hidden="true">▾</span>
+              </button>
+            </legend>
+            <div class="group-body">
+              <label><span data-i18n="journal.lucidityLabel">Erinnerung / Luzidität</span>
+                <select id="dream-lucidity">
+                  <option value="0" data-i18n="journal.lucidityOption.0">0 – keine Erinnerung</option>
+                  <option value="1" data-i18n="journal.lucidityOption.1">1 – Fragment</option>
+                  <option value="2" selected data-i18n="journal.lucidityOption.2">2 – normaler Traum</option>
+                  <option value="3" data-i18n="journal.lucidityOption.3">3 – kurz luzide</option>
+                  <option value="4" data-i18n="journal.lucidityOption.4">4 – voll luzide</option>
+                </select>
+              </label>
+              <!-- E.3: Erinnerungs-Block dockt hier an (UMSETZUNGSPLAN-ERKENNTNISSE.md) -->
+              <label><span data-i18n="journal.emotionsLabel">Emotionen</span> <small data-i18n="journal.emotionsHint">(was hast du im Traum gefühlt?)</small></label>
+              <div id="emotion-picker" class="emotion-picker"></div>
+              <!-- E.6: Klartraum-Block dockt hier an (UMSETZUNGSPLAN-ERKENNTNISSE.md) -->
+            </div>
+          </fieldset>
+          <fieldset class="form-group" data-group="elemente">
+            <legend>
+              <button type="button" class="group-toggle" aria-expanded="true">
+                <span class="group-title">🧩 <span data-i18n="journal.groupElemente">Elemente</span></span>
+                <span class="group-summary hint"></span>
+                <span class="group-chevron" aria-hidden="true">▾</span>
+              </button>
+            </legend>
+            <div class="group-body">
+              <label><span data-i18n="journal.signsLabel">Traumzeichen</span> <small data-i18n="journal.signsHint">(wiederkehrende Muster, kommagetrennt)</small>
+                <input type="text" id="dream-signs" list="signs-list" data-i18n-placeholder="journal.signsPlaceholder" placeholder="z. B. fliegen, verstorbene Person, Zähne">
+                <datalist id="signs-list"></datalist>
+              </label>
+              <div class="form-row">
+                <label><span data-i18n="journal.placesLabel">📍 Orte</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
+                  <input type="text" id="dream-places" list="places-list" data-i18n-placeholder="journal.placesPlaceholder" placeholder="z. B. alte schule, meer">
+                  <datalist id="places-list"></datalist>
+                </label>
+                <label><span data-i18n="journal.personsLabel">👤 Personen</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
+                  <input type="text" id="dream-persons" list="persons-list" data-i18n-placeholder="journal.personsPlaceholder" placeholder="z. B. papa, freundin">
+                  <datalist id="persons-list"></datalist>
+                </label>
+              </div>
+              <!-- E.5: Personen-Valenz dockt hier an (UMSETZUNGSPLAN-ERKENNTNISSE.md) -->
+              <label><span data-i18n="journal.tagsLabel">Tags</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
+                <input type="text" id="dream-tags" list="tags-list" data-i18n-placeholder="journal.tagsPlaceholder" placeholder="z. B. albtraum, arbeit">
+                <datalist id="tags-list"></datalist>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset class="form-group" data-group="nacht">
+            <legend>
+              <button type="button" class="group-toggle" aria-expanded="false">
+                <span class="group-title">😴 <span data-i18n="journal.groupNacht">Die Nacht</span></span>
+                <span class="group-summary hint"></span>
+                <span class="group-chevron" aria-hidden="true">▾</span>
+              </button>
+            </legend>
+            <div class="group-body">
+              <div id="night-section" class="night-section"></div>
+              <label><span data-i18n="journal.sleepLabel">Schlafqualität</span>
+                <select id="dream-sleep">
+                  <option value="">–</option>
+                  <option value="1" data-i18n="journal.sleep.1">1 – sehr schlecht</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5" data-i18n="journal.sleep.5">5 – sehr gut</option>
+                </select>
+              </label>
+              <!-- E.4a: Aufwachart dockt hier an (UMSETZUNGSPLAN-ERKENNTNISSE.md) -->
+              <label><span data-i18n="journal.substancesLabel">Substanzen vor dem Schlafen</span> <small data-i18n="journal.optionalHint">(falls zutreffend)</small></label>
+              <div class="substance-picker">
+                <label class="checkbox-label"><input type="checkbox" id="dream-substance-beifuss"> 🌿 <span data-i18n="substance.beifuss">Beifuß</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-substance-melatonin"> 💊 <span data-i18n="substance.melatonin">Melatonin</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-substance-alkohol"> 🍷 <span data-i18n="substance.alkohol">Alkohol</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-substance-weed"> 🌱 <span data-i18n="substance.weed">Weed</span></label>
+              </div>
+              <label><span data-i18n="journal.otherLabel">Sonstiges</span> <small data-i18n="journal.otherHint">(z. B. anderes Schlafmittel, kurz)</small>
+                <input type="text" id="dream-substance-other" data-i18n-placeholder="journal.otherPlaceholder" placeholder="z. B. Baldrian, CBD-Öl">
+              </label>
+            </div>
+          </fieldset>
+          <fieldset class="form-group" data-group="besonderes">
+            <legend>
+              <button type="button" class="group-toggle" aria-expanded="false">
+                <span class="group-title">✨ <span data-i18n="journal.groupBesonderes">Besonderes</span></span>
+                <span class="group-summary hint"></span>
+                <span class="group-chevron" aria-hidden="true">▾</span>
+              </button>
+            </legend>
+            <div class="group-body">
+              <label class="checkbox-label">
+                <input type="checkbox" id="dream-bigdream"> <span id="bigdream-star">⭐</span> <span data-i18n="journal.bigDreamLabel">Großer Traum</span> <small data-i18n="journal.bigDreamHint">(numinos, aufwühlend, bleibt im Gedächtnis — nach C. G. Jung)</small>
+              </label>
+              <label><span data-i18n="journal.phenomenaLabel">Phänomene</span> <small data-i18n="journal.optionalHint">(falls zutreffend)</small></label>
+              <div class="phenomena-picker">
+                <label class="checkbox-label"><input type="checkbox" id="dream-falsches-erwachen"> 🔁 <span data-i18n="phenomenon.falschesErwachen">Falsches Erwachen</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-schlafparalyse"> 🧊 <span data-i18n="phenomenon.schlafparalyse">Schlafparalyse</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-traum-im-traum"> 🪆 <span data-i18n="phenomenon.traumImTraum">Traum-im-Traum</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-wiederkehrend"> ♻️ <span data-i18n="phenomenon.wiederkehrend">Wiederkehrender Traum</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="dream-albtraum"> 😱 <span data-i18n="phenomenon.albtraum">Albtraum</span></label>
+              </div>
+              <label><span data-i18n="journal.notesLabel">Eigene Analyse / Notizen</span>
+                <textarea id="dream-notes" rows="2" data-i18n-placeholder="journal.notesPlaceholder" placeholder="Deutung, Auffälligkeiten … (optional)"></textarea>
+              </label>
+            </div>
+          </fieldset>
         </div>
         <div class="form-actions">
           <button type="submit" class="primary" data-i18n="common.save">Speichern</button>

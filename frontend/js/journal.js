@@ -64,6 +64,7 @@ const journal = {
     window.addEventListener("resize", () => this.updateHeaderHeightVar());
     this.bindClassicToggle();
     this.bindAutoGrow();
+    this.bindGroupCards();
 
     this.initFilterBar();
 
@@ -234,6 +235,77 @@ const journal = {
     this._growDreamContent = grow;
   },
 
+  // ---- M.2: Vier Gruppen-Karten ----
+  // Einklappen versteckt nur den group-body — alle Felder bleiben im DOM,
+  // save() liest dieselben Inputs wie vorher. Im klassischen Modus sind alle
+  // Karten fest aufgeklappt (CSS), Klicks auf den Kopf werden ignoriert.
+  GROUP_DEFAULTS: { traum: true, elemente: true, nacht: false, besonderes: false },
+
+  groupOpen(name) {
+    const stored = localStorage.getItem(`form-group-${name}`);
+    return stored === null ? this.GROUP_DEFAULTS[name] : stored === "1";
+  },
+
+  bindGroupCards() {
+    this.form.querySelectorAll(".form-group").forEach((card) => {
+      const name = card.dataset.group;
+      const btn = card.querySelector(".group-toggle");
+      const sync = () => {
+        const open = this.groupOpen(name);
+        card.classList.toggle("collapsed", !open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+      sync();
+      btn.addEventListener("click", () => {
+        if (this.formClassic) return;
+        localStorage.setItem(`form-group-${name}`, this.groupOpen(name) ? "0" : "1");
+        sync();
+      });
+    });
+    // Zusammenfassungen bei jeder Interaktion nachziehen (liest nur ein
+    // Dutzend Felder); "click" fängt Emotion-Chips und Checkbox-Labels mit ab.
+    this.form.addEventListener("input", () => this.updateGroupSummaries());
+    this.form.addEventListener("click", () => this.updateGroupSummaries());
+  },
+
+  updateGroupSummaries() {
+    const set = (name, parts) => {
+      const el = this.form.querySelector(`.form-group[data-group="${name}"] .group-summary`);
+      if (el) el.textContent = `· ${parts.length ? parts.join(" · ") : t("journal.groupEmpty")}`;
+    };
+
+    const traum = [t(`journal.lucidityBadge.${document.getElementById("dream-lucidity").value}`)];
+    if (this.selectedEmotions.length) traum.push(this.selectedEmotions.map((e) => EMOTIONS[e]?.icon ?? "").join(" "));
+    set("traum", traum);
+
+    const elemente = [];
+    const countInto = (id, icon) => {
+      const n = splitList(document.getElementById(id).value).length;
+      if (n) elemente.push(`${icon} ${n}`);
+    };
+    countInto("dream-signs", "🔮");
+    countInto("dream-places", "📍");
+    countInto("dream-persons", "👤");
+    countInto("dream-tags", "#");
+    set("elemente", elemente);
+
+    const nacht = [];
+    if (this.currentNight?.sleep_minutes != null) nacht.push(`≈ ${this.formatSleepHours(this.currentNight.sleep_minutes)} h`);
+    const sleep = document.getElementById("dream-sleep").value;
+    if (sleep) nacht.push(t("journal.sumQuality", { n: sleep }));
+    const subs = SUBSTANCES.filter((s) => document.getElementById(s.inputId).checked).map((s) => s.icon);
+    if (document.getElementById("dream-substance-other").value.trim()) subs.push("🧪");
+    if (subs.length) nacht.push(subs.join(" "));
+    set("nacht", nacht);
+
+    const besonderes = [];
+    if (document.getElementById("dream-bigdream").checked) besonderes.push("⭐");
+    const phen = PHENOMENA.filter((p) => document.getElementById(p.inputId).checked).map((p) => p.icon);
+    if (phen.length) besonderes.push(phen.join(" "));
+    if (document.getElementById("dream-notes").value.trim()) besonderes.push(`📝 ${t("journal.sumNotes")}`);
+    set("besonderes", besonderes);
+  },
+
   async load() {
     try {
       this.dreams = await api.listDreams({
@@ -308,6 +380,7 @@ const journal = {
       chip.classList.toggle("selected", this.selectedEmotions.includes(chip.dataset.emotion));
     });
     document.getElementById("dream-echoes").classList.add("hidden");
+    this.updateGroupSummaries();
     this.refreshDatalists();
 
     // Morgen-Rückfrage: offene Intention zeigen
@@ -361,15 +434,19 @@ const journal = {
     this.nightDate = date;
     try {
       const night = await api.getNight(date);
-      if (this.nightDate === date) this.renderNightSummary(el, night);
+      if (this.nightDate !== date) return;
+      this.currentNight = night; // M.2: für die Zusammenfassungs-Zeile der Nacht-Karte
+      this.renderNightSummary(el, night);
     } catch (err) {
       if (this.nightDate !== date) return; // Datum wurde inzwischen weitergeklickt
+      this.currentNight = null;
       if (err.status === 404) {
         this.renderNightPicker(el);
       } else {
         el.innerHTML = ""; // still ausblenden statt das restliche Formular zu blockieren
       }
     }
+    this.updateGroupSummaries();
   },
 
   // Lokalisierte Dezimalstunden ("7,5" statt "7.5" im Deutschen; "8" statt "8,0").
@@ -465,7 +542,9 @@ const journal = {
   async saveNight(el, payload) {
     try {
       const night = await api.putNight(this.nightDate, payload);
+      this.currentNight = night;
       this.renderNightSummary(el, night);
+      this.updateGroupSummaries();
     } catch (err) {
       showToast(err.isNetworkError ? t("night.offline") : err.message);
     }
