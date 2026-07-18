@@ -1,14 +1,13 @@
-# Offene Punkte (Stand: 18.07.2026)
+# Offene Punkte (Stand: 18.07.2026, Abend)
 
-## Branches (keiner gemerged)
+## Branches
 
-- **`main`** — stabiler Alltags-Stand (zuletzt E.2, n-Badges)
-- **`dashboard-ux`** — D.1–D.4 fertig, wartet auf D.5-Praxistest
-- **`maske-ux`** — M.1–**M.4 fertig** (Luft & Bühne, Gruppen-Karten, Chip-Eingabe, Lese-Ansicht + Entwurf-Sicherung), wartet auf M.5
+- **`main`** — **v5.0.0 veröffentlicht** (2026-07-18): `maske-ux` (M.1–M.4, komplettes Formular-Redesign) per Fast-Forward gemergt und released, GitHub-Actions-Build (Mac/Windows/Linux) grün, Release live unter github.com/Phille2512/klartraum/releases/tag/v5.0.0. **Bewusste Abweichung vom Plan:** Der in `UMSETZUNGSPLAN-MASKE.md` vorgesehene Zwei-Wochen-Praxistest (M.5) vor dem Merge wurde auf Philipps ausdrücklichen Wunsch übersprungen, weil Freunde die Verbesserung (nicht mehr gedrängtes Formular) sofort brauchen. Toggles „Klassische Maske"/„Tippen öffnet Formular" bleiben als Sofort-Rückweg, falls doch Probleme auftauchen. `maske-ux` selbst bleibt als Branch bestehen (nicht gelöscht).
+- **`dashboard-ux`** — unverändert, D.1–D.4 fertig, wartet weiter auf D.5-Praxistest (von der v5.0.0-Entscheidung nicht betroffen)
 
 ## Nächste konkrete Schritte
 
-- **M.5** — zwei Wochen Praxistest, dann Merge-Entscheidung (Kriterien laut Plan: Toggle-Nutzung auswerten, Default-Aufklapp-Zustand der Karten ggf. anpassen)
+- **M.5 nachträglich im Blick behalten:** Da der Praxistest übersprungen wurde, lohnt sich in den nächsten Tagen ein wacheres Auge auf Rückmeldungen (eigene Nutzung + Freunde) statt der ursprünglich geplanten zwei stillen Testwochen. Insbesondere: Toggle-Nutzung, ob die Default-Aufklapp-Zustände der Gruppen-Karten passen.
 - **D.5** — zwei Wochen Praxistest Dashboard, dann Merge-Entscheidung
 - **E.3–E.7** — Erinnerungs-Block, Nacht-/Tageskontext, … (Andock-Kommentare `<!-- E.3 hier -->` usw. stehen seit M.2 im Formular-Markup)
 - **V.1–V.5** — Verbindungen-Plan, brandneu, noch nicht angefasst
@@ -17,6 +16,7 @@
 
 ## Offene Fäden
 
+- **v5.0.0-Release (18.07., Tag `v5.0.0`, Commit `ede0c61`):** main gemergt, gepusht, GitHub-Actions-Release grün (alle drei Plattformen). Die in M.2/M.3 offen gebliebenen Punkte "echter Speicher-Roundtrip mit Login" wurden dadurch NICHT nachgeholt — sie gelten weiterhin, jetzt aber für den produktiven main-Stand statt nur für die Feature-Branch. Falls Freunde nach dem Update Probleme melden, zuerst prüfen, ob es mit den M.1–M.4-Änderungen zusammenhängt (neues Formular) und ob der Klassik-Toggle das Problem umgeht.
 - **M.4-Verifikation:** Tap auf Titel/Text öffnet die Lese-Ansicht (große Typografie, alle Merkmale als Badges, Sprung zu Bearbeiten/Reflexion/Jung-Analyse — dabei musste ich einen z-index-Konflikt fixen: Reflexion/Jung-Analyse-Overlays liegen unter dem wiederverwendeten Lesezimmer-Overlay, also schließt die Lese-Ansicht sich jetzt selbst, bevor sie zu ihnen springt). Toggle „Tippen öffnet Formular" schaltet auf den alten Direkt-Bearbeiten-Fluss zurück, geprüft. Entwurf-Sicherung geprüft: Autosave nach 2 s Tipppause, übersteht Abbrechen, Wiederherstellen-Prompt mit korrektem Datum/Zeit-Format, erscheint nicht beim Bearbeiten bestehender Träume, Autosave bleibt beim Bearbeiten inaktiv. Alles per echten Klicks/Timern im Browser getestet (DE+EN, Rotlicht, Desktop), 412 px nicht extra für M.4 wiederholt (Lesezimmer-Klassen sind dort bereits erprobt). Backend-Suite unverändert grün (141 passed) — kein API-Change.
 - **Gefundener und gefixter Bug (18.07., Commit `86bacf5`):** Bei allen sechs M.3-Feldern (Luzidität, Schlafqualität, Traumzeichen, Orte, Personen, Tags) löschte ein Klick auf scheinbar leeren Raum im Feld (entsteht z. B. durch CSS-Grid-Stretch bei Orte/Personen nebeneinander) versehentlich einen Eintrag bzw. änderte den Wert — Ursache war ein `<label>` ohne `for`-Attribut, das den Klick an den ersten fokussierbaren Nachfahren weiterleitete (oft der ✕-Button der ersten Pill). Behoben durch explizites `for` auf jedem Label. Bitte einmal kurz gegentesten, ob sich das jetzt richtig anfühlt.
 - **M.3-Verifikation:** Luzidität-/Schlafqualität-Chips, Element-Pills (Hinzufügen/Entfernen/Vorschlag-Klick/Backspace), Normalisierung auf Bestandsschreibweise, Dedupe und der Klassik-Toggle-Resync (native Bearbeitung überschreibt Chips nicht) sind alle im Browser durchgetestet — per echten Klicks bzw. per Enter/Komma-Commit (letzteres nur synthetisch geprüft, da der Test-Browser bei der virtuellen Enter-Taste ein leeres `KeyboardEvent` liefert; der Blur-Pfad mit echten Klicks funktioniert und ist der praxisrelevante Weg). Der volle Server-Roundtrip (Speichern mit echtem Login, Netzwerk-Payload-Diff) steht weiterhin aus — der Test-Browser hat auf Port 8001 keinen Auth-Token. Backend-Suite unverändert grün (141 passed), Payload-Konstruktion in `save()` nicht angefasst.
