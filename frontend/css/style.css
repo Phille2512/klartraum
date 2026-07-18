@@ -43,7 +43,8 @@
   border-color: var(--accent);
 }
 
-[data-theme="night"] .intention-prompt {
+[data-theme="night"] .intention-prompt,
+[data-theme="night"] .draft-prompt {
   border-color: var(--lucid);
   background: linear-gradient(135deg, #1a0e0e, #140a0a);
 }
@@ -2036,3 +2037,33 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   gap: 1.5rem;
   padding: 1rem;
 }
+
+/* --- M.4: Lese-Ansicht (eigenes Overlay, reine Optik von lesezimmer-* geerbt) --- */
+.entry-open { cursor: pointer; }
+
+/* .lesezimmer-dream setzt cursor:pointer fuers Tap-to-reveal im Lesezimmer --
+   in der Lese-Ansicht gibt es kein Tap-to-reveal, Details stehen immer da. */
+.dream-read-card { cursor: default; }
+
+.dream-read-actions {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* --- M.4: Entwurf-Sicherung --- */
+.draft-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--lucid);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2a2450, #1e2032);
+  font-size: 0.88rem;
+}
+.draft-prompt span { flex: 1; min-width: 180px; }

@@ -86,6 +86,11 @@ const journal = {
     this.bindAutoGrow();
     this.bindGroupCards();
 
+    // M.4: Lese-Ansicht + Entwurf-Sicherung
+    this.bindReadModeToggle();
+    this.bindReadOverlay();
+    this.bindDraftAutosave();
+
     this.initFilterBar();
 
     // Emotion Picker rendern
@@ -605,6 +610,13 @@ const journal = {
     this.updateGroupSummaries();
     this.refreshDatalists();
 
+    // M.4: Entwurf-Prompt nur bei neuen Träumen -- beim Bearbeiten gilt der
+    // Server-Stand, ein alter Entwurf würde hier nur verwirren.
+    const draftPromptEl = document.getElementById("draft-prompt");
+    draftPromptEl.classList.add("hidden");
+    draftPromptEl.innerHTML = "";
+    if (!dream) this.showDraftPrompt();
+
     // Morgen-Rückfrage: offene Intention zeigen
     const prompt = document.getElementById("intention-prompt");
     prompt.classList.add("hidden");
@@ -651,6 +663,174 @@ const journal = {
     Object.keys(this.chipFields || {}).forEach((key) => this.setChipFieldValues(key, []));
     this.syncLucidityChips();
     this.syncSleepChips();
+  },
+
+  // ---- M.4: Lese-Ansicht ----
+  // Additiv: Titel/Datum/Text eines Listen-Eintrags öffnen die Lese-Ansicht
+  // statt direkt des Formulars; alle bestehenden Aktions-Buttons (Bearbeiten,
+  // Reflexion, Weiterträumen, Synchronizität, Jung-Analyse, Löschen) bleiben
+  // unverändert erreichbar. Toggle "Tippen öffnet Formular" stellt den
+  // bisherigen Direkt-Bearbeiten-Fluss wieder her.
+  get readDirectEdit() { return localStorage.getItem("read-direct-edit") === "1"; },
+  set readDirectEdit(v) { localStorage.setItem("read-direct-edit", v ? "1" : "0"); },
+
+  bindReadModeToggle() {
+    const btn = document.getElementById("read-direct-edit-toggle");
+    if (!btn) return;
+    btn.classList.toggle("active", this.readDirectEdit);
+    btn.addEventListener("click", () => {
+      this.readDirectEdit = !this.readDirectEdit;
+      btn.classList.toggle("active", this.readDirectEdit);
+    });
+  },
+
+  openDreamEntry(id) {
+    if (this.readDirectEdit) { this.edit(id); return; }
+    this.openRead(id);
+  },
+
+  bindReadOverlay() {
+    const overlay = document.getElementById("dream-read-overlay");
+    if (!overlay) return;
+    document.getElementById("dream-read-close").addEventListener("click", () => this.closeRead());
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) this.closeRead(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.classList.contains("hidden")) this.closeRead();
+    });
+  },
+
+  openRead(id) {
+    const dream = this.dreams.find((d) => d.id === id);
+    if (!dream) return;
+    this._readDreamId = id;
+    document.getElementById("dream-read-date").textContent = formatDate(dream.date);
+    document.getElementById("dream-read-title").textContent = (dream.big_dream ? "⭐ " : "") + dream.title;
+    document.getElementById("dream-read-text").textContent = dream.content || t("lesezimmer.noContent");
+    document.getElementById("dream-read-details").innerHTML = this.renderReadBadges(dream);
+    document.getElementById("dream-read-actions").innerHTML = `
+      <button type="button" id="read-edit-btn">✏️ ${t("common.edit")}</button>
+      <button type="button" id="read-reflection-btn">${t("journal.actionReflection")}</button>
+      <button type="button" id="read-analysis-btn">${t("journal.actionAnalysis")}</button>`;
+    document.getElementById("read-edit-btn").addEventListener("click", () => {
+      this.closeRead();
+      this.edit(id);
+    });
+    document.getElementById("read-reflection-btn").addEventListener("click", () => {
+      // Reflexions-/Jung-Analyse-Overlays haben ein niedrigeres z-index als
+      // die (von lesezimmer-overlay geerbte) Lese-Ansicht -- erst schließen,
+      // sonst landet der Dialog unsichtbar dahinter.
+      this.closeRead();
+      this.showReflection(dream);
+    });
+    document.getElementById("read-analysis-btn").addEventListener("click", () => {
+      this.closeRead();
+      this.openAnalysis(id);
+    });
+    document.getElementById("dream-read-overlay").classList.remove("hidden");
+  },
+
+  closeRead() {
+    document.getElementById("dream-read-overlay").classList.add("hidden");
+  },
+
+  // Gleiche Merkmals-Badges wie in render()/lesezimmer.js -- bewusst als
+  // eigene kleine Kopie gehalten (Präzedenzfall: lesezimmer.js dupliziert sie
+  // ebenfalls), damit die Lese-Ansicht keine Modul-Reihenfolge-Abhängigkeit
+  // zu lesezimmer.js bekommt (journal.js lädt vor lesezimmer.js).
+  renderReadBadges(d) {
+    const lucidityLabels = [0, 1, 2, 3, 4].map((i) => t(`journal.lucidityBadge.${i}`));
+    const parts = [
+      `<span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${lucidityLabels[d.lucidity]}</span>`,
+      ...d.dream_signs.map((s) => `<span class="badge sign">🔮 ${escapeHtml(s)}</span>`),
+      ...d.places.map((p) => `<span class="badge place">📍 ${escapeHtml(p)}</span>`),
+      ...d.persons.map((p) => `<span class="badge person">👤 ${escapeHtml(p)}</span>`),
+      ...d.tags.map((tag) => `<span class="badge">${escapeHtml(tag)}</span>`),
+      ...(d.emotions || []).map((e) =>
+        EMOTIONS[e]
+          ? `<span class="badge emotion-badge" style="--emo-color:${EMOTIONS[e].color}">${EMOTIONS[e].icon} ${EMOTIONS[e].label}</span>`
+          : ""
+      ),
+      ...SUBSTANCES.filter((s) => d.substances.includes(s.key)).map((s) => `<span class="badge herb">${s.icon} ${s.label}</span>`),
+      d.substance_other ? `<span class="badge herb">🧪 ${escapeHtml(d.substance_other)}</span>` : "",
+      ...PHENOMENA.filter((p) => d[p.field]).map((p) => `<span class="badge phenomenon">${p.icon} ${p.label}</span>`),
+    ];
+    let html = `<div class="lesezimmer-badges">${parts.join("")}</div>`;
+    if (d.notes_analysis) html += `<p class="hint">📝 ${escapeHtml(d.notes_analysis)}</p>`;
+    return html;
+  },
+
+  // ---- M.4: Entwurf-Sicherung ----
+  // Nur für NEUE Träume (beim Bearbeiten gilt der Server-Stand als Wahrheit).
+  // Kein Konflikt mit der Offline-Outbox: Der Entwurf sichert VOR dem
+  // Absenden, die Outbox übernimmt NACH dem Absenden -- deshalb wird der
+  // Entwurf in beiden Erfolgsfällen (online gespeichert / in Outbox gelegt)
+  // gelöscht, aber nicht bei Abbrechen oder Fehlern.
+  DRAFT_KEY: "dream-draft",
+
+  isEditingExisting() {
+    return !!document.getElementById("dream-id").value;
+  },
+
+  bindDraftAutosave() {
+    let debounce;
+    const scheduleSave = () => {
+      if (this.isEditingExisting()) return;
+      clearTimeout(debounce);
+      debounce = setTimeout(() => this.saveDraft(), 2000);
+    };
+    document.getElementById("dream-title").addEventListener("input", scheduleSave);
+    document.getElementById("dream-content").addEventListener("input", scheduleSave);
+    document.getElementById("dream-date").addEventListener("input", scheduleSave);
+  },
+
+  saveDraft() {
+    if (this.isEditingExisting()) return;
+    const title = document.getElementById("dream-title").value;
+    const content = document.getElementById("dream-content").value;
+    const date = document.getElementById("dream-date").value;
+    if (!title.trim() && !content.trim()) { this.clearDraft(); return; }
+    localStorage.setItem(this.DRAFT_KEY, JSON.stringify({ title, content, date, savedAt: new Date().toISOString() }));
+  },
+
+  clearDraft() {
+    localStorage.removeItem(this.DRAFT_KEY);
+  },
+
+  getDraft() {
+    try {
+      return JSON.parse(localStorage.getItem(this.DRAFT_KEY) || "null");
+    } catch {
+      return null;
+    }
+  },
+
+  showDraftPrompt() {
+    const draft = this.getDraft();
+    if (!draft || (!draft.title?.trim() && !draft.content?.trim())) return;
+    const when = new Date(draft.savedAt);
+    const dateStr = when.toLocaleDateString(localeForLang(), { day: "2-digit", month: "2-digit" });
+    const timeStr = when.toLocaleTimeString(localeForLang(), { hour: "2-digit", minute: "2-digit" });
+    const el = document.getElementById("draft-prompt");
+    el.classList.remove("hidden");
+    el.innerHTML = `<span>${t("journal.draftPrompt", { date: dateStr, time: timeStr })}</span>
+      <button type="button" class="chip primary" id="draft-restore-btn">${t("common.yes")}</button>
+      <button type="button" class="chip" id="draft-discard-btn">${t("journal.discard")}</button>`;
+    document.getElementById("draft-restore-btn").addEventListener("click", () => this.restoreDraft(draft));
+    document.getElementById("draft-discard-btn").addEventListener("click", () => {
+      this.clearDraft();
+      el.classList.add("hidden");
+    });
+  },
+
+  restoreDraft(draft) {
+    document.getElementById("dream-title").value = draft.title || "";
+    document.getElementById("dream-content").value = draft.content || "";
+    this._growDreamContent?.();
+    if (draft.date) {
+      document.getElementById("dream-date").value = draft.date;
+      this.loadNightSection(draft.date);
+    }
+    document.getElementById("draft-prompt").classList.add("hidden");
   },
 
   // ---- N.2: Schlafzeit-Erfassung — eigene Entität, unabhängig vom Traum ----
@@ -811,6 +991,8 @@ const journal = {
         savedDream = await api.createDream(payload);
         showToast(t("journal.toastSaved"));
       }
+      // M.4: Entwurf hat seinen Zweck erfüllt, sobald der Traum abgesendet ist.
+      if (!id) this.clearDraft();
       this.closeForm();
       await this.load();
       // Traumtakt-Microinteraction: der Eintrag "legt sich" sanft in die Liste
@@ -820,6 +1002,7 @@ const journal = {
       if (!id && err.isNetworkError) {
         // Server nicht erreichbar: Traum in die Offline-Warteschlange legen
         await offline.enqueue(payload);
+        this.clearDraft(); // Outbox übernimmt jetzt die Zuständigkeit, s. Kommentar oben
         showToast(t("journal.toastSavedOffline"));
         this.closeForm();
         this.load();
@@ -884,11 +1067,16 @@ const journal = {
     this.list.innerHTML = offlineHint + this.renderStreakNachtrag() + pendingHtml + this.dreams
       .map(
         (d) => `<article class="card dream-entry" id="dream-${d.id}">
-          <div class="entry-head">
-            <h3>${d.big_dream ? "⭐ " : ""}${escapeHtml(d.title)}</h3>
-            <span class="entry-date">${formatDate(d.date)}</span>
+          <!-- M.4: Tap oeffnet die Lese-Ansicht (Einstellung "Tippen oeffnet
+               Formular" schaltet auf den alten Direkt-Bearbeiten-Fluss zurueck).
+               Nur Titel/Datum/Text sind Tap-Ziel, Badges/Aktionen bleiben wie gehabt. -->
+          <div class="entry-open" onclick="journal.openDreamEntry(${d.id})">
+            <div class="entry-head">
+              <h3>${d.big_dream ? "⭐ " : ""}${escapeHtml(d.title)}</h3>
+              <span class="entry-date">${formatDate(d.date)}</span>
+            </div>
+            ${d.content ? `<p>${escapeHtml(d.content)}</p>` : ""}
           </div>
-          ${d.content ? `<p>${escapeHtml(d.content)}</p>` : ""}
           <div>
             <span class="badge ${d.lucidity >= 3 ? "lucid" : ""}">${lucidityLabels[d.lucidity]}</span>
             ${d.dream_signs.map((s) => `<span class="badge sign">🔮 ${escapeHtml(s)}</span>`).join("")}

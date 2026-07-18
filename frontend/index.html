@@ -35,6 +35,9 @@
       </div>
 
       <button type="button" id="journal-filter-toggle" class="chip" data-i18n="journal.filterToggle">🔎 Filter</button>
+      <!-- M.4: Sofort-Rückweg zum alten Fluss -- Tap auf einen Traum öffnet
+           dann wieder direkt das Formular statt der Lese-Ansicht. -->
+      <button type="button" id="read-direct-edit-toggle" class="chip" data-i18n="journal.directEditToggle">✏️ Tippen öffnet Formular</button>
       <div id="journal-filter-bar" class="journal-filter-bar hidden">
         <button type="button" id="filter-bigdream-chip" class="chip" data-i18n="journal.filterBigDreams">⭐ Große Träume</button>
         <div id="filter-emotion-chips" class="chip-row"></div>
@@ -51,6 +54,9 @@
           <button type="button" id="form-classic-toggle" class="chip" data-i18n="journal.classicToggle">Klassische Maske</button>
         </div>
         <input type="hidden" id="dream-id">
+        <!-- M.4: Entwurf-Sicherung -- nur für NEUE Träume, journal.js füllt die
+             Zeile beim Öffnen des leeren Formulars, falls ein Entwurf existiert. -->
+        <div id="draft-prompt" class="draft-prompt hidden"></div>
         <!-- M.1: Bühne fürs Schreiben -- Text zuerst, Titel/Datum folgen danach. -->
         <div class="form-write">
           <label><span data-i18n="journal.contentLabel">Was hast du geträumt?</span>
@@ -542,6 +548,23 @@
       <p class="hint"><a href="#" id="ritual-lesezimmer-link" data-i18n="app.ritualLesezimmerLink">📖 Eine Geschichte aus deiner Welt lesen</a></p>
       <button id="ritual-close" class="ritual-close-btn">✕</button>
     </div>
+  </div>
+
+  <!-- M.4: Lese-Ansicht -- eigenständiges Overlay (nicht das Lesezimmer, das
+       fürs zufällige Wiederlesen vieler Träume gedacht ist); wiederverwendet
+       dessen Optik über dieselben lesezimmer-*-Klassen. -->
+  <div id="dream-read-overlay" class="lesezimmer-overlay hidden">
+    <div class="lesezimmer-glow" aria-hidden="true"></div>
+    <button id="dream-read-close" class="ritual-close-btn lesezimmer-close-btn" data-i18n-aria="journal.readCloseAria" aria-label="Lese-Ansicht schließen">✕</button>
+    <div class="lesezimmer-body">
+      <article class="lesezimmer-dream dream-read-card">
+        <p class="lesezimmer-date" id="dream-read-date"></p>
+        <h2 id="dream-read-title"></h2>
+        <div class="lesezimmer-text" id="dream-read-text"></div>
+        <div class="lesezimmer-details" id="dream-read-details"></div>
+      </article>
+    </div>
+    <div id="dream-read-actions" class="entry-actions dream-read-actions"></div>
   </div>
 
   <!-- Reflexions-Overlay -->
