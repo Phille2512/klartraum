@@ -231,7 +231,8 @@ D.1 Quick Wins → D.2 Überblick → D.3 Engine → D.4 Kompakt → [2 Wochen] 
 
 - **Voraussetzung für D.3:** E.2 (n-Schwellen) aus
   `UMSETZUNGSPLAN-ERKENNTNISSE.md`. D.1/D.2 können davor liegen.
-- **Empfohlene Verzahnung:** E.1–E.2 → D.1–D.4 → Praxistest läuft,
+- **Empfohlene Verzahnung:** V.1 (`UMSETZUNGSPLAN-VERBINDUNGEN.md`) +
+  E.2 → D.1–D.4 → Praxistest läuft,
   währenddessen E.3/E.4 (Datenerhebung sammelt schon) → neue Generatoren
   registrieren, sobald deren Daten tragen.
 - Jede Stufe: pytest grün, DE + EN, 412 px + Rotlicht, ein Commit,

@@ -99,8 +99,10 @@ Idempotenz; Nickerchen-Filter; kaputte Datei → verständlicher Fehler-Code.
 > Luziditäts-Bezug erscheinen erst, wenn mindestens ein Traum mit
 > Luzidität ≥ 3 existiert — vorher kein „0 %"-Lärm.
 
-Alle in der Analyse-Sektion 🔬 Experimente (bzw. bei „😴 Schlaf &
-Erinnerung" andocken), ab **≥ 9 Tracker-Nächten**, n immer ausgewiesen:
+Alle Karten docken in der Analyse-Sektion **„😴 Schlaf"** an (SS.1 aus
+`UMSETZUNGSPLAN-SCHLAFSCHULE.md`; falls die noch nicht existiert:
+übergangsweise 🔬 Experimente), ab **≥ 9 Tracker-Nächten**, n immer
+ausgewiesen:
 
 1. **REM × Traumerinnerung** (die Kernfrage): Verteilung der
    Recall-Qualität (E.3: Fragment/Szene/Film) und Ø Wörter je REM-Terzil

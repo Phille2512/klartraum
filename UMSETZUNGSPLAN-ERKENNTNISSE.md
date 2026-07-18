@@ -25,7 +25,7 @@
 
 | Stufe | Inhalt | Neue Daten? |
 |---|---|---|
-| E.1 | Verbindungs-Analyse (Co-Occurrence) aus Bestandsdaten | nein |
+| E.1 | Verbindungs-Analyse → ausgelagert nach `UMSETZUNGSPLAN-VERBINDUNGEN.md` | nein |
 | E.2 | Statistische Ehrlichkeit: n-Badges & „zu wenig Daten" | nein |
 | E.3 | Erinnerungs-Block: Recall-Qualität + Notiz-Latenz | 2 optionale Chips |
 | E.4 | Nacht- & Tages-Kontext: Aufwachart + Tagesbilanz | 1 Chip + 1 Ritual-Frage |
@@ -37,52 +37,15 @@
 
 ## Stufe E.1: Verbindungs-Analyse — was tritt gemeinsam auf?
 
-**Ziel:** Die Frage „Welche Orte, Personen, Zeichen und Emotionen gehören
-zusammen?" automatisch beantworten. Alle Daten liegen bereits vor
-(Tags + Emotionen pro Traum) — reine Auswertung.
-
-**Backend:** Neuer Endpoint `GET /api/stats/connections` in
-`routers/stats.py`, Berechnung in `stats_helpers.py::build_connections()`.
-Parameter `from`/`to` wie bei `/api/stats`.
-
-- **Element×Element:** Für jeden Traum alle Paare seiner Tags
-  (kind ∈ {dream_sign, place, person}) zählen. Nur Paare mit
-  `n_together >= 3` ausliefern (Mindest-Support).
-- **Emotion×Element:** analog, Emotionen (kommagetrennte Keys am Traum)
-  gegen Elemente.
-- Pro Paar zusätzlich den **Lift** mitliefern:
-  `lift = (n_together * n_dreams) / (n_a * n_b)` — „wie viel häufiger als
-  zufällig erwartet". In der UI in Alltagssprache übersetzen
-  („4× gemeinsam — deutlich öfter als zufällig").
-
-```json
-{
-  "element_pairs": [{"a": {"name": "…", "kind": "place"},
-                     "b": {"name": "…", "kind": "person"},
-                     "n": 4, "lift": 2.8}],
-  "emotion_elements": [{"emotion": "angst",
-                        "element": {"name": "…", "kind": "dream_sign"},
-                        "n": 5, "lift": 3.1}],
-  "n_dreams": 87
-}
-```
-
-**Frontend (`stats.js`):** Neuer Abschnitt **„🔗 Verbindungen"** im
-Analyse-Tab (thematische Gliederung aus ANALYSE-UX A.2 beibehalten):
-- Liste der Top-10-Paare, sortiert nach Lift (bei gleichem Lift nach n),
-  als Balken-Zeilen (kein neues Chart-Konstrukt nötig): `📍Schule × 👤Mutter ▓▓▓▓ 4×`.
-- Klick auf ein Paar → Tagebuch-Tab, gefiltert auf Träume, die beide
-  Elemente enthalten (bestehenden Tag-Filter wiederverwenden, falls
-  vorhanden; sonst einfache Filter-Übergabe an die Liste).
-- Emotion×Element als zweite Liste im selben Abschnitt
-  („Wo wohnt welche Emotion?").
-
-**Tests (Pflicht):** Paar-Zählung (auch: Element doppelt im selben Traum
-zählt einmal), Mindest-Support, Lift-Berechnung, Zeitraum-Filter, 401.
-
-**Akzeptanz:** Abschnitt erscheint nur, wenn mindestens ein Paar den
-Mindest-Support erreicht; sonst freundlicher Leerzustand
-(„Noch zu wenige gemeinsame Auftritte — wächst mit jedem Eintrag").
+**→ Verschoben und vertieft: `UMSETZUNGSPLAN-VERBINDUNGEN.md`** (Juli 2026).
+Die ursprüngliche E.1-Spezifikation (Paar-Liste + Lift) ist dort zur
+„Verstehens-Treppe" V.1–V.5 ausgebaut worden: Konditional-Sätze mit
+Jaccard-Ranking und Fisher-Wächter (V.1), Emotions-Heatmap (V.2),
+Atlas-Kanten (V.3), Element-Steckbrief (V.4), Engine-Generator „neue
+Verbindungen" (V.5). **Diese Stufe hier nicht separat umsetzen** — sie
+gilt als erledigt, sobald V.1 steht. Position in der Reihenfolge bleibt:
+das V-Fundament kann vor E.2 beginnen, das V.1-Frontend braucht `nBadge`
+aus E.2.
 
 ## Stufe E.2: Statistische Ehrlichkeit — n zeigen, Kleinst-n entschärfen
 
