@@ -81,7 +81,10 @@
             </legend>
             <div class="group-body">
               <label><span data-i18n="journal.lucidityLabel">Erinnerung / Luzidität</span>
-                <select id="dream-lucidity">
+                <!-- M.3: Chips sind eine Bedien-Schicht -- das Select bleibt die
+                     Quelle der Wahrheit, journal.js liest beim Speichern nur es. -->
+                <div class="chip-row chip-ui" id="lucidity-chips"></div>
+                <select id="dream-lucidity" class="chip-native">
                   <option value="0" data-i18n="journal.lucidityOption.0">0 – keine Erinnerung</option>
                   <option value="1" data-i18n="journal.lucidityOption.1">1 – Fragment</option>
                   <option value="2" selected data-i18n="journal.lucidityOption.2">2 – normaler Traum</option>
@@ -105,22 +108,29 @@
             </legend>
             <div class="group-body">
               <label><span data-i18n="journal.signsLabel">Traumzeichen</span> <small data-i18n="journal.signsHint">(wiederkehrende Muster, kommagetrennt)</small>
-                <input type="text" id="dream-signs" list="signs-list" data-i18n-placeholder="journal.signsPlaceholder" placeholder="z. B. fliegen, verstorbene Person, Zähne">
+                <!-- M.3: chip-field-Container wird von journal.js (bindChipInputs)
+                     befuellt; das Input darunter bleibt die Quelle der Wahrheit
+                     (kommagetrennter String, unveraendert wie vor M.3). -->
+                <div class="chip-field-ui chip-ui" data-chip-field="signs"></div>
+                <input type="text" id="dream-signs" list="signs-list" class="chip-native" data-i18n-placeholder="journal.signsPlaceholder" placeholder="z. B. fliegen, verstorbene Person, Zähne">
                 <datalist id="signs-list"></datalist>
               </label>
               <div class="form-row">
                 <label><span data-i18n="journal.placesLabel">📍 Orte</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
-                  <input type="text" id="dream-places" list="places-list" data-i18n-placeholder="journal.placesPlaceholder" placeholder="z. B. alte schule, meer">
+                  <div class="chip-field-ui chip-ui" data-chip-field="places"></div>
+                  <input type="text" id="dream-places" list="places-list" class="chip-native" data-i18n-placeholder="journal.placesPlaceholder" placeholder="z. B. alte schule, meer">
                   <datalist id="places-list"></datalist>
                 </label>
                 <label><span data-i18n="journal.personsLabel">👤 Personen</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
-                  <input type="text" id="dream-persons" list="persons-list" data-i18n-placeholder="journal.personsPlaceholder" placeholder="z. B. papa, freundin">
+                  <div class="chip-field-ui chip-ui" data-chip-field="persons"></div>
+                  <input type="text" id="dream-persons" list="persons-list" class="chip-native" data-i18n-placeholder="journal.personsPlaceholder" placeholder="z. B. papa, freundin">
                   <datalist id="persons-list"></datalist>
                 </label>
               </div>
               <!-- E.5: Personen-Valenz dockt hier an (UMSETZUNGSPLAN-ERKENNTNISSE.md) -->
               <label><span data-i18n="journal.tagsLabel">Tags</span> <small data-i18n="journal.commaHint">(kommagetrennt)</small>
-                <input type="text" id="dream-tags" list="tags-list" data-i18n-placeholder="journal.tagsPlaceholder" placeholder="z. B. albtraum, arbeit">
+                <div class="chip-field-ui chip-ui" data-chip-field="tags"></div>
+                <input type="text" id="dream-tags" list="tags-list" class="chip-native" data-i18n-placeholder="journal.tagsPlaceholder" placeholder="z. B. albtraum, arbeit">
                 <datalist id="tags-list"></datalist>
               </label>
             </div>
@@ -136,7 +146,8 @@
             <div class="group-body">
               <div id="night-section" class="night-section"></div>
               <label><span data-i18n="journal.sleepLabel">Schlafqualität</span>
-                <select id="dream-sleep">
+                <div class="chip-row chip-ui" id="sleep-chips"></div>
+                <select id="dream-sleep" class="chip-native">
                   <option value="">–</option>
                   <option value="1" data-i18n="journal.sleep.1">1 – sehr schlecht</option>
                   <option value="2">2</option>

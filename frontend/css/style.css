@@ -387,6 +387,84 @@ input:focus, textarea:focus, select:focus {
 #dream-form.classic .group-chevron { display: none; }
 #dream-form.classic .group-toggle { cursor: default; }
 
+/* M.3: Chips sind eine Bedien-Schicht ueber den unveraenderten nativen
+   Feldern (Select/Input bleiben die Quelle der Wahrheit, journal.js liest
+   beim Speichern exakt dieselben Inputs wie vor M.3). Klassische Maske zeigt
+   die nativen Felder unveraendert, Chip-Schicht wird ausgeblendet. */
+#dream-form:not(.classic) .chip-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+#dream-form.classic .chip-ui { display: none; }
+
+.chip-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-input);
+}
+.chip-input:focus-within { border-color: var(--accent); }
+
+.chip-input-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.chip-input-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.3rem 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.chip-input-pill button {
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+.chip-input-pill button:hover { background: var(--bg-input); color: var(--text); }
+
+.chip-input-field {
+  flex: 1;
+  min-width: 90px;
+  border: none;
+  background: none;
+  padding: 0.2rem 0;
+  margin: 0;
+}
+.chip-input-field:focus { outline: none; }
+
+.chip-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+.chip-suggestions .chip { font-size: 0.75rem; padding: 0.25rem 0.7rem; }
+
 button {
   font: inherit;
   border: none;

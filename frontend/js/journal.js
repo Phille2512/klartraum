@@ -36,6 +36,19 @@ const SUBSTANCES = [
 // N.1: Bucket-Mitten in Minuten — muss mit backend/routers/nights.py::BUCKET_MINUTES übereinstimmen.
 const NIGHT_BUCKETS = { unter6: 330, "6bis7": 390, "7bis8": 450, ueber8: 510 };
 
+// M.3: Luzidität/Schlafqualität-Chips lesen/schreiben direkt das jeweilige Select.
+const LUCIDITY_VALUES = [0, 1, 2, 3, 4];
+const SLEEP_VALUES = ["", "1", "2", "3", "4", "5"];
+
+// M.3: Element-Chip-Eingabe (Traumzeichen/Orte/Personen/Tags) — Preset-Key ↔
+// natives Input ↔ Tag-„kind" fürs Vorschlags-Ranking aus api.listTags().
+const CHIP_FIELDS = [
+  { key: "signs", nativeId: "dream-signs", kind: "dream_sign" },
+  { key: "places", nativeId: "dream-places", kind: "place" },
+  { key: "persons", nativeId: "dream-persons", kind: "person" },
+  { key: "tags", nativeId: "dream-tags", kind: "tag" },
+];
+
 // Tagebuch: Erfassen, Liste, Suche, Bearbeiten, Löschen
 const journal = {
   dreams: [],
@@ -62,6 +75,13 @@ const journal = {
     // M.1: Luft & Bühne
     this.updateHeaderHeightVar();
     window.addEventListener("resize", () => this.updateHeaderHeightVar());
+    // M.3: Chip-Bedienschicht muss VOR bindClassicToggle stehen, dessen
+    // Erst-Sync bereits this.chipFields voraussetzt (Resync bei Moduswechsel).
+    this.renderLucidityChips();
+    this.renderSleepChips();
+    document.getElementById("dream-lucidity").addEventListener("change", () => this.syncLucidityChips());
+    document.getElementById("dream-sleep").addEventListener("change", () => this.syncSleepChips());
+    this.bindChipInputs();
     this.bindClassicToggle();
     this.bindAutoGrow();
     this.bindGroupCards();
@@ -208,6 +228,16 @@ const journal = {
       const classic = this.formClassic;
       this.form.classList.toggle("classic", classic);
       btn.classList.toggle("active", classic);
+      // M.3: Beim Umschalten AUF die Chip-Ansicht die Chips aus den nativen
+      // Feldern neu ableiten -- falls im klassischen Modus direkt editiert
+      // wurde, sind die nativen Felder die Quelle der Wahrheit, nicht die
+      // zuletzt gerenderten Chips (sonst würde ein Chip-Klick die
+      // klassischen Änderungen überschreiben).
+      if (!classic) {
+        this.resyncChipFieldsFromNative();
+        this.syncLucidityChips();
+        this.syncSleepChips();
+      }
     };
     sync();
     btn.addEventListener("click", () => {
@@ -306,6 +336,186 @@ const journal = {
     set("besonderes", besonderes);
   },
 
+  // ---- M.3: Luzidität/Schlafqualität als Chips ----
+  // Chips setzen nur select.value + input-Event; das Select bleibt die
+  // Quelle der Wahrheit, save() liest weiterhin nur document.getElementById(...).value.
+  renderLucidityChips() {
+    const row = document.getElementById("lucidity-chips");
+    if (!row) return;
+    row.innerHTML = LUCIDITY_VALUES.map((v) =>
+      `<button type="button" class="chip lucidity-chip" data-value="${v}" title="${escapeHtml(t(`journal.lucidityOption.${v}`))}">${escapeHtml(t(`journal.lucidityBadge.${v}`))}</button>`
+    ).join("");
+    row.querySelectorAll(".lucidity-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const select = document.getElementById("dream-lucidity");
+        select.value = chip.dataset.value;
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+        this.syncLucidityChips();
+      });
+    });
+    this.syncLucidityChips();
+  },
+
+  syncLucidityChips() {
+    const select = document.getElementById("dream-lucidity");
+    document.querySelectorAll(".lucidity-chip").forEach((chip) => {
+      chip.classList.toggle("active", chip.dataset.value === select.value);
+    });
+  },
+
+  renderSleepChips() {
+    const row = document.getElementById("sleep-chips");
+    if (!row) return;
+    row.innerHTML = SLEEP_VALUES.map((v) =>
+      `<button type="button" class="chip sleep-chip" data-value="${v}"${v ? ` title="${escapeHtml(t("journal.sumQuality", { n: v }))}"` : ""}>${v || "–"}</button>`
+    ).join("");
+    row.querySelectorAll(".sleep-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const select = document.getElementById("dream-sleep");
+        select.value = chip.dataset.value;
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+        this.syncSleepChips();
+      });
+    });
+    this.syncSleepChips();
+  },
+
+  syncSleepChips() {
+    const select = document.getElementById("dream-sleep");
+    document.querySelectorAll(".sleep-chip").forEach((chip) => {
+      chip.classList.toggle("active", chip.dataset.value === select.value);
+    });
+  },
+
+  // ---- M.3: Element-Chip-Eingabe (Traumzeichen/Orte/Personen/Tags) ----
+  // Grundregel: Die nativen, kommagetrennten Inputs bleiben die Quelle der
+  // Wahrheit — jede Chip-Änderung schreibt sofort in state.values UND ins
+  // native Input zurück (syncChipNative), save() ist unverändert.
+  bindChipInputs() {
+    this.chipFields = {};
+    CHIP_FIELDS.forEach((cfg) => {
+      const host = this.form.querySelector(`[data-chip-field="${cfg.key}"]`);
+      const native = document.getElementById(cfg.nativeId);
+      if (!host || !native) return;
+      host.innerHTML = `<div class="chip-input">
+          <div class="chip-input-pills"></div>
+          <input type="text" class="chip-input-field">
+        </div>
+        <div class="chip-suggestions"></div>`;
+      const state = {
+        cfg,
+        values: [],
+        pillsEl: host.querySelector(".chip-input-pills"),
+        textEl: host.querySelector(".chip-input-field"),
+        suggEl: host.querySelector(".chip-suggestions"),
+      };
+      state.textEl.placeholder = native.placeholder;
+      this.chipFields[cfg.key] = state;
+
+      state.textEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === ",") {
+          e.preventDefault();
+          this.commitChipText(cfg.key);
+        } else if (e.key === "Backspace" && !state.textEl.value && state.values.length) {
+          state.values.pop();
+          this.renderChipField(cfg.key);
+        }
+      });
+      state.textEl.addEventListener("input", () => this.renderChipSuggestions(cfg.key));
+      state.textEl.addEventListener("blur", () => this.commitChipText(cfg.key));
+    });
+  },
+
+  setChipFieldValues(key, values) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    state.values = [...values];
+    state.textEl.value = "";
+    this.renderChipField(key);
+  },
+
+  commitChipText(key) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    const raw = state.textEl.value;
+    state.textEl.value = "";
+    splitList(raw).forEach((part) => this.addChipValue(key, part));
+    this.renderChipField(key);
+  },
+
+  // Vorschläge normalisieren Schreibweisen: ein case-insensitiv passender
+  // Bestandsname aus tagsCache gewinnt gegenüber der Tipp-Schreibweise.
+  addChipValue(key, rawValue) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    const existingTag = (this.tagsCache || []).find(
+      (tg) => tg.kind === state.cfg.kind && tg.name.toLowerCase() === rawValue.toLowerCase()
+    );
+    const value = existingTag ? existingTag.name : rawValue;
+    if (state.values.some((v) => v.toLowerCase() === value.toLowerCase())) return;
+    state.values.push(value);
+  },
+
+  removeChipValue(key, value) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    state.values = state.values.filter((v) => v !== value);
+    this.renderChipField(key);
+  },
+
+  renderChipField(key) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    state.pillsEl.innerHTML = state.values.map((v) =>
+      `<span class="chip-input-pill">${escapeHtml(v)}<button type="button" data-remove="${escapeHtml(v)}" aria-label="${t("common.delete")}">✕</button></span>`
+    ).join("");
+    state.pillsEl.querySelectorAll("[data-remove]").forEach((btn) => {
+      btn.addEventListener("click", () => this.removeChipValue(key, btn.dataset.remove));
+    });
+    this.syncChipNative(key);
+    this.renderChipSuggestions(key);
+    this.updateGroupSummaries();
+  },
+
+  syncChipNative(key) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    const native = document.getElementById(state.cfg.nativeId);
+    native.value = state.values.join(", ");
+    native.dispatchEvent(new Event("input", { bubbles: true }));
+  },
+
+  renderChipSuggestions(key) {
+    const state = this.chipFields?.[key];
+    if (!state) return;
+    const typed = state.textEl.value.trim().toLowerCase();
+    const selected = new Set(state.values.map((v) => v.toLowerCase()));
+    const pool = (this.tagsCache || []).filter((tg) => tg.kind === state.cfg.kind && !selected.has(tg.name.toLowerCase()));
+    const filtered = (typed ? pool.filter((tg) => tg.name.toLowerCase().includes(typed)) : pool).slice(0, 8);
+    state.suggEl.innerHTML = filtered.map((tg) =>
+      `<button type="button" class="chip" data-suggest="${escapeHtml(tg.name)}">${escapeHtml(tg.name)}</button>`
+    ).join("");
+    state.suggEl.querySelectorAll("[data-suggest]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.addChipValue(key, btn.dataset.suggest);
+        state.textEl.value = "";
+        this.renderChipField(key);
+        state.textEl.focus();
+      });
+    });
+  },
+
+  // Beim Umschalten AUF die Chip-Ansicht: Chips aus dem aktuellen nativen
+  // Wert neu ableiten, statt den zuletzt gerenderten (ggf. veralteten)
+  // Chip-Stand zurückzuschreiben.
+  resyncChipFieldsFromNative() {
+    Object.values(this.chipFields || {}).forEach((state) => {
+      const native = document.getElementById(state.cfg.nativeId);
+      state.values = splitList(native.value);
+      this.renderChipField(state.cfg.key);
+    });
+  },
+
   async load() {
     try {
       this.dreams = await api.listDreams({
@@ -333,6 +543,7 @@ const journal = {
 
   async refreshDatalists() {
     const tags = await api.listTags().catch(() => []);
+    this.tagsCache = tags; // M.3: Grundlage für die Vorschlags-Chips (häufigste zuerst, s. backend/routers/tags.py)
     const fill = (id, kind) => {
       document.getElementById(id).innerHTML = tags
         .filter((t) => t.kind === kind)
@@ -348,6 +559,7 @@ const journal = {
     if (filterList) {
       filterList.innerHTML = tags.map((t) => `<option value="${escapeHtml(t.name)}">`).join("");
     }
+    Object.keys(this.chipFields || {}).forEach((key) => this.renderChipSuggestions(key));
   },
 
   async openForm(dream = null) {
@@ -361,7 +573,9 @@ const journal = {
     document.getElementById("dream-content").value = dream ? dream.content : "";
     this._growDreamContent?.();
     document.getElementById("dream-lucidity").value = dream ? dream.lucidity : "2";
-    document.getElementById("dream-sleep").value = dream?.sleep_quality ?? "";
+    this.syncLucidityChips();
+    document.getElementById("dream-sleep").value = dream?.sleep_quality != null ? String(dream.sleep_quality) : "";
+    this.syncSleepChips();
     SUBSTANCES.forEach((s) => {
       document.getElementById(s.inputId).checked = dream ? dream.substances.includes(s.key) : false;
     });
@@ -370,10 +584,10 @@ const journal = {
     PHENOMENA.forEach((p) => {
       document.getElementById(p.inputId).checked = dream ? dream[p.field] : false;
     });
-    document.getElementById("dream-tags").value = dream ? dream.tags.join(", ") : "";
-    document.getElementById("dream-signs").value = dream ? dream.dream_signs.join(", ") : "";
-    document.getElementById("dream-places").value = dream ? dream.places.join(", ") : "";
-    document.getElementById("dream-persons").value = dream ? dream.persons.join(", ") : "";
+    this.setChipFieldValues("tags", dream ? dream.tags : []);
+    this.setChipFieldValues("signs", dream ? dream.dream_signs : []);
+    this.setChipFieldValues("places", dream ? dream.places : []);
+    this.setChipFieldValues("persons", dream ? dream.persons : []);
     document.getElementById("dream-notes").value = dream?.notes_analysis ?? "";
     this.selectedEmotions = dream ? [...dream.emotions] : [];
     document.querySelectorAll(".emotion-chip").forEach((chip) => {
@@ -424,6 +638,11 @@ const journal = {
     this.form.classList.add("hidden");
     this.form.reset();
     document.querySelector("main")?.classList.remove("form-open-wide");
+    // M.3: form.reset() setzt nur die nativen Felder zurück -- Chip-Pills und
+    // -Aktivzustände explizit nachziehen, sonst blieben sie vom letzten Traum stehen.
+    Object.keys(this.chipFields || {}).forEach((key) => this.setChipFieldValues(key, []));
+    this.syncLucidityChips();
+    this.syncSleepChips();
   },
 
   // ---- N.2: Schlafzeit-Erfassung — eigene Entität, unabhängig vom Traum ----
@@ -552,6 +771,10 @@ const journal = {
 
   async save(event) {
     event.preventDefault();
+    // M.3: Ein Chip-Feld kann noch ungetippten Text ohne Enter/Komma stehen
+    // haben (blur feuert normalerweise vorher, aber sicher ist sicher) --
+    // vor dem Payload-Bau final committen, damit nichts verloren geht.
+    Object.keys(this.chipFields || {}).forEach((key) => this.commitChipText(key));
     const id = document.getElementById("dream-id").value;
     const sleep = document.getElementById("dream-sleep").value;
     const payload = {
