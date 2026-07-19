@@ -141,7 +141,8 @@ class Night(SQLModel, table=True):
     hr_avg: int | None = None
     hr_max: int | None = None
     sleep_latency_minutes: int | None = None  # ins Bett -> eingeschlafen
-    stages_json: str | None = None  # JSON {"segments":[{"s":epoch,"e":epoch,"st":2|3|4|5}],"hr":[[epoch,bpm],...]}
+    stages_json: str | None = None  # JSON {"segments":[{"s":epoch,"e":epoch,"st":2|3|4|5}],"tz_offset_minutes":int,"hr":[[epoch,bpm],...]}
+                                     # tz_offset_minutes (TD.3): noetig, um Segment-Epochs spaeter wieder in Lokalzeit umzurechnen
 
 
 class DreamAnalysis(SQLModel, table=True):

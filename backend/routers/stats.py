@@ -13,6 +13,7 @@ from stats_helpers import (
     build_emotions_analysis,
     build_per_bucket,
     build_sleep_analysis,
+    build_tracker_analysis,
     build_writing,
     split_groups,
 )
@@ -59,6 +60,7 @@ def stats(
     all_nights = session.exec(select(Night)).all()
     all_dreams = session.exec(select(Dream)).all()
     sleep_analysis = build_sleep_analysis(all_dreams, all_nights)
+    tracker_analysis = build_tracker_analysis(all_dreams, all_nights)
 
     per_bucket = build_per_bucket(dreams, granularity)
 
@@ -241,6 +243,7 @@ def stats(
         "emotions_analysis": emotions_analysis,
         "correlations": correlations,
         "sleep": sleep_analysis,
+        "tracker": tracker_analysis,
     }
 
 

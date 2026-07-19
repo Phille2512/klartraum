@@ -1432,6 +1432,7 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
 
 .corr-grid.corr-5 { grid-template-columns: repeat(5, 1fr); }
 .corr-grid.corr-3 { grid-template-columns: repeat(3, 1fr); }
+.corr-grid.corr-2 { grid-template-columns: repeat(2, 1fr); max-width: 260px; }
 
 /* N.3: Ehrlichkeits-Konvention -- Terzil-Gruppen mit zu wenig Träumen abblenden */
 .corr-cell.low-n { opacity: 0.45; }

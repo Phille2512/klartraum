@@ -158,7 +158,9 @@ def parse_mi_fitness(
             for it in val.get("items", [])
         ]
         hr = _hr_series(rows, bed_ts, wake_ts)
-        stages = {"segments": segments}
+        # TD.3 braucht die Zeitzone mit, um Wachmoment-Segmente später wieder
+        # in Lokalzeit umzurechnen (Epoch allein reicht dafür nicht).
+        stages = {"segments": segments, "tz_offset_minutes": val["timezone"] * 15}
         if hr:
             stages["hr"] = hr
 

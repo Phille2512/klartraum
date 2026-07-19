@@ -526,8 +526,102 @@ const stats = {
   renderExperiments(data) {
     this.renderBeifuss(data.beifuss);
     this.renderSleepAnalysis(data.sleep);
+    this.renderTrackerAnalysis(data.tracker);
     this.renderConnections();
     this.renderCorrelations(data.correlations);
+  },
+
+  // TD.3: Tracker-Analysen -- dockt uebergangsweise hier an (SS.1 aus
+  // UMSETZUNGSPLAN-SCHLAFSCHULE.md existiert noch nicht). Karten 4/5 aus dem
+  // Plan (Schlafarchitektur x Valenz, Tiefschlaf x Tagesbilanz) fehlen bewusst
+  // -- die setzen auf E.4b/E.5/E.7 auf, die es noch nicht gibt.
+  renderTrackerAnalysis(tracker) {
+    const el = document.getElementById("tracker-analysis-card");
+    const body = document.getElementById("tracker-analysis");
+    if (!tracker.available) {
+      el.classList.remove("hidden");
+      body.innerHTML = `<p class="hint">${t("stats.trackerTooFew", { n: tracker.n_total })}</p>`;
+      return;
+    }
+    el.classList.remove("hidden");
+
+    const groupBars = (groups, order, labels, valueFn, pctFn, color, isRate) => order.map((key) => {
+      const g = groups[key];
+      const lowN = g.n_dreams < 3;
+      const pct = pctFn(g);
+      const raw = valueFn(g);
+      const valueText = isRate
+        ? (raw == null ? "–" : rateOrDash(raw + "%", g.n_dreams))
+        : raw;
+      return `<div class="corr-cell ${lowN ? "low-n" : ""}" title="n=${g.n_dreams}">
+        <div class="corr-bar" style="height:${Math.max(pct, 4)}%;background:${lowN ? "var(--bg-input)" : color}"></div>
+        <span class="corr-label">${labels[key]}</span>
+        <span class="corr-value">${valueText}</span>
+      </div>`;
+    }).join("");
+
+    const remOrder = ["wenig", "mittel", "viel"];
+    const remLabels = { wenig: t("stats.remLittleLabel"), mittel: t("stats.remMediumLabel"), viel: t("stats.remMuchLabel") };
+    const maxAmountWords = Math.max(...remOrder.map((k) => tracker.rem_amount[k].avg_words), 1);
+    const maxDensityWords = Math.max(...remOrder.map((k) => tracker.rem_density[k].avg_words), 1);
+
+    const awOrder = ["0-1", "2-3", "4+"];
+    const awLabels = { "0-1": t("stats.awakenings01Label"), "2-3": t("stats.awakenings23Label"), "4+": t("stats.awakenings4plusLabel") };
+    const maxAwWords = Math.max(...awOrder.map((k) => tracker.awakenings[k].avg_words), 1);
+    const maxAwDreams = Math.max(...awOrder.map((k) => tracker.awakenings[k].avg_dreams_per_night), 1);
+
+    const wbtbOrder = ["durchgeschlafen", "wbtb"];
+    const wbtbLabels = { durchgeschlafen: t("stats.throughGroupLabel"), wbtb: t("stats.wbtbGroupLabel") };
+
+    const wakeMomentsHtml = tracker.wbtb.wake_moments.length
+      ? `<ul class="hint" style="list-style:none;padding:0">${tracker.wbtb.wake_moments.map((m) =>
+          `<li>${t("stats.wakeMomentLine", { time: m.time, minutes: m.rem_after_minutes })}</li>`).join("")}</ul>`
+      : `<p class="hint">${t("stats.wakeMomentsEmpty")}</p>`;
+
+    const calib = tracker.calibration;
+    const calibrationHtml = calib.pairs.length
+      ? `<p>${t("stats.calibrationDeviation", { minutes: calib.avg_deviation_minutes })}</p>
+         <p class="hint">${t("stats.trackerCalibrationHint")} ${nBadge(calib.pairs.length)}</p>`
+      : `<p class="hint">${t("stats.calibrationEmpty")}</p>`;
+
+    const scoreHtml = tracker.tracker_score
+      ? `<h3>${t("stats.trackerScoreTitle")} ${nBadge(tracker.tracker_score.n_total)}</h3>
+        <div class="corr-grid corr-3">${groupBars(tracker.tracker_score, remOrder, remLabels, (g) => g.lucid_rate, (g) => g.lucid_rate ?? 0, "var(--lucid)", true)}</div>`
+      : `<h3>${t("stats.trackerScoreTitle")}</h3><p class="hint">${t("stats.trackerScoreUnavailable")}</p>`;
+
+    const lat = tracker.latency;
+    const latencyHtml = lat.n_total ? `
+      <p>${t("stats.latencyAvgLabel")}: ${t("stats.latencyMinutes", { minutes: lat.avg_minutes })} ${nBadge(lat.n_total)}</p>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="value">${lat.with_substance.avg_minutes != null ? t("stats.latencyMinutes", { minutes: lat.with_substance.avg_minutes }) : "–"}</div>
+          <div class="label">${t("stats.latencyWithSubstanceLabel")} ${nBadge(lat.with_substance.n)}</div></div>
+        <div class="stat-card"><div class="value">${lat.without_substance.avg_minutes != null ? t("stats.latencyMinutes", { minutes: lat.without_substance.avg_minutes }) : "–"}</div>
+          <div class="label">${t("stats.latencyWithoutSubstanceLabel")} ${nBadge(lat.without_substance.n)}</div></div>
+      </div>
+      <p class="hint">${t("stats.latencyLowWarning")}</p>` : "";
+
+    body.innerHTML = `
+      <h3>${t("stats.trackerRemAmountTitle")} ${nBadge(tracker.n_total)}</h3>
+      <div class="corr-grid corr-3">${groupBars(tracker.rem_amount, remOrder, remLabels, (g) => g.avg_words, (g) => (g.avg_words / maxAmountWords) * 100, "var(--accent)", false)}</div>
+      <h3>${t("stats.trackerRemDensityTitle")}</h3>
+      <div class="corr-grid corr-3">${groupBars(tracker.rem_density, remOrder, remLabels, (g) => g.avg_words, (g) => (g.avg_words / maxDensityWords) * 100, "var(--accent)", false)}</div>
+      <p class="hint">${t("stats.trackerRemHint")}</p>
+      <h3 style="margin-top:1rem">${t("stats.trackerAwakeningsTitle")}</h3>
+      <div class="corr-grid corr-3">${groupBars(tracker.awakenings, awOrder, awLabels, (g) => g.avg_words, (g) => (g.avg_words / maxAwWords) * 100, "var(--accent)", false)}</div>
+      <div class="corr-grid corr-3">${groupBars(tracker.awakenings, awOrder, awLabels, (g) => g.avg_dreams_per_night, (g) => (g.avg_dreams_per_night / maxAwDreams) * 100, "var(--lucid)", false)}</div>
+      <h3 style="margin-top:1rem">${t("stats.trackerWbtbTitle")}</h3>
+      <p class="hint">${t("stats.trackerWbtbHint")}</p>
+      <div class="corr-grid corr-2">${groupBars(tracker.wbtb, wbtbOrder, wbtbLabels, (g) => g.lucid_rate, (g) => g.lucid_rate ?? 0, "var(--lucid)", true)}</div>
+      <h4>${t("stats.wakeMomentsTitle")}</h4>
+      ${wakeMomentsHtml}
+      <h3 style="margin-top:1rem" id="tracker-calibration-heading">${t("stats.trackerCalibrationTitle")}</h3>
+      ${calibrationHtml}
+      ${scoreHtml}
+      <h3 style="margin-top:1rem">${t("stats.trackerLatencyTitle")}</h3>
+      ${latencyHtml}
+      <p class="hint">${t("stats.trackerDisclaimer")}</p>`;
+
+    wissen.attach(document.getElementById("tracker-analysis-heading"), "tracker");
   },
 
   // E.1: Verbindungs-Analyse (Co-Occurrence) — eigener Endpoint, respektiert

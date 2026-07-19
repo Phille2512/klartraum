@@ -78,6 +78,14 @@ def test_stats_empty_dataset(auth_client):
     assert data["per_bucket"] == []
 
 
+def test_stats_includes_tracker_block(auth_client):
+    # TD.3: /api/stats liefert den tracker-Block mit -- Feinschliff der
+    # Berechnung selbst ist in test_tracker_stats.py separat getestet.
+    resp = auth_client.get("/api/stats")
+    assert resp.status_code == 200
+    assert resp.json()["tracker"] == {"available": False, "n_total": 0}
+
+
 def test_stats_invalid_granularity_returns_422(auth_client):
     resp = auth_client.get("/api/stats", params={"granularity": "jahrhundert"})
     assert resp.status_code == 422

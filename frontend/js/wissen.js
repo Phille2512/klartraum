@@ -8,6 +8,7 @@ const WISSEN = {
   mandala: { text: t("wissen.mandala"), link: "jung-selbst" },
   synchronizitaet: { text: t("wissen.synchronizitaet"), link: "jung-grosse-traeume" },
   schlafzeit: { text: t("wissen.schlafzeit"), link: "guide-schlaf" },
+  tracker: { text: t("wissen.tracker"), link: "guide-schlaf" },
 };
 
 const wissen = {

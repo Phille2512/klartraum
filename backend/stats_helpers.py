@@ -2,10 +2,12 @@
 main.py (in eigenes Modul ausgelagert, damit routers/stats.py < 300 Zeilen bleibt)."""
 import datetime as dt
 import itertools
+import json
 from collections import Counter
 
 from helpers import has_substance
 from models import Dream, Night
+from tracker_adapters import STATE_AWAKE, STATE_REM
 
 # Valenz-Konstante für die Emotions-Analyse (A.5) — im Frontend per 💡 offengelegt
 EMOTION_VALENCE = {
@@ -122,6 +124,182 @@ def build_sleep_analysis(dreams: list[Dream], nights: list[Night]) -> dict:
         "kurz": group_stats(terciles["kurz"]),
         "mittel": group_stats(terciles["mittel"]),
         "lang": group_stats(terciles["lang"]),
+    }
+
+
+# TD.3: Analysen, die nur der Tracker beantworten kann. Baut NUR auf bereits
+# existierenden E-Stufen auf (E.2 nBadge im Frontend, EMOTION_VALENCE oben
+# fürs künftige E.4/E.7) -- Karten, die E.4b (Tagesbilanz) oder E.5
+# (Figuren-Valenz) voraussetzen wuerden, sind hier bewusst NICHT gebaut
+# (s. UMSETZUNGSPLAN-TRACKERDATEN.md TD.3 Karten 4/5, warten auf E.4/E.5/E.7).
+TRACKER_MIN_NIGHTS = 9
+
+
+def _tercile_split(items: list, key) -> dict[str, list]:
+    """Sortiert nach key und teilt in Drittel -- gleiches Prinzip wie
+    build_sleep_analysis (N.3), hier generisch fuer mehrere Kennzahlen."""
+    ordered = sorted(items, key=key)
+    n = len(ordered)
+    i1, i2 = n // 3, (2 * n) // 3
+    return {"wenig": ordered[:i1], "mittel": ordered[i1:i2], "viel": ordered[i2:]}
+
+
+def _awakenings_group(night: Night) -> str:
+    aw = night.awakenings or 0
+    if aw <= 1:
+        return "0-1"
+    if aw <= 3:
+        return "2-3"
+    return "4+"
+
+
+def build_tracker_analysis(dreams: list[Dream], nights: list[Night]) -> dict:
+    """TD.3. Rechnet ab >= 9 Naechten mit vollstaendigen Phasen-Feldern
+    (unabhaengig von source -- auch phases_only-Importe zaehlen). Klartraum-
+    Quoten erscheinen erst, wenn ueberhaupt ein Traum mit Luzidität >= 3
+    existiert (Schlafend-Regel, sonst nur "0%"-Lärm)."""
+    tracker_nights = [
+        n for n in nights
+        if n.rem_minutes is not None and n.deep_minutes is not None
+        and n.light_minutes is not None and n.awake_minutes is not None
+    ]
+    n_total = len(tracker_nights)
+    if n_total < TRACKER_MIN_NIGHTS:
+        return {"available": False, "n_total": n_total}
+
+    has_lucid = any(d.lucidity >= 3 for d in dreams)
+    dreams_by_date: dict[dt.date, list[Dream]] = {}
+    for d in dreams:
+        dreams_by_date.setdefault(d.date, []).append(d)
+
+    def group_stats(night_group: list[Night]) -> dict:
+        group_dreams = [d for n in night_group for d in dreams_by_date.get(n.date, [])]
+        n_dreams = len(group_dreams)
+        avg_words = round(sum(len(d.content.split()) for d in group_dreams) / n_dreams, 1) if n_dreams else 0
+        avg_dreams_per_night = round(n_dreams / len(night_group), 2) if night_group else 0
+        lucid_rate = (
+            round(sum(1 for d in group_dreams if d.lucidity >= 3) / n_dreams * 100, 1)
+            if n_dreams and has_lucid else None
+        )
+        return {
+            "n_nights": len(night_group), "n_dreams": n_dreams,
+            "avg_words": avg_words, "avg_dreams_per_night": avg_dreams_per_night,
+            "lucid_rate": lucid_rate,
+        }
+
+    # 1. REM-Menge (absolute Minuten) vs. REM-Dichte (Anteil an sleep_minutes)
+    # -- bewusst getrennt, s. Plan: "lange Nacht" != "REM-reiche Nacht".
+    rem_amount_groups = _tercile_split(tracker_nights, key=lambda n: n.rem_minutes)
+    rem_amount = {k: group_stats(v) for k, v in rem_amount_groups.items()}
+
+    def rem_share(n: Night) -> float:
+        return n.rem_minutes / n.sleep_minutes if n.sleep_minutes else 0.0
+
+    rem_density_groups = _tercile_split(tracker_nights, key=rem_share)
+    rem_density = {k: group_stats(v) for k, v in rem_density_groups.items()}
+    rem_density_median = median([rem_share(n) for n in tracker_nights])
+
+    # 2. Wachphasen-Gruppen
+    aw_groups: dict[str, list[Night]] = {"0-1": [], "2-3": [], "4+": []}
+    for n in tracker_nights:
+        aw_groups[_awakenings_group(n)].append(n)
+    awakenings = {k: group_stats(v) for k, v in aw_groups.items()}
+
+    # 3. Natuerliche WBTB-Naechte (>= 2 Wachphasen) + konkrete Wachmomente
+    wbtb_nights = [n for n in tracker_nights if (n.awakenings or 0) >= 2]
+    through_nights = [n for n in tracker_nights if (n.awakenings or 0) < 2]
+    wbtb = {"wbtb": group_stats(wbtb_nights), "durchgeschlafen": group_stats(through_nights)}
+
+    wake_moments = []
+    for n in tracker_nights:
+        if not n.stages_json:
+            continue
+        try:
+            parsed = json.loads(n.stages_json)
+        except json.JSONDecodeError:
+            continue
+        segs = sorted(parsed.get("segments", []), key=lambda s: s["s"])
+        tz_offset = parsed.get("tz_offset_minutes", 0)
+        tz = dt.timezone(dt.timedelta(minutes=tz_offset))
+        for i, seg in enumerate(segs):
+            if seg.get("st") != STATE_AWAKE:
+                continue
+            rem_after = 0.0
+            for later in segs[i + 1:]:
+                if later.get("st") == STATE_AWAKE:
+                    break
+                if later.get("st") == STATE_REM:
+                    rem_after += (later["e"] - later["s"]) / 60
+            if rem_after <= 0:
+                continue
+            wake_time = dt.datetime.fromtimestamp(seg["s"], tz).strftime("%H:%M")
+            wake_moments.append({"date": n.date.isoformat(), "time": wake_time, "rem_after_minutes": round(rem_after)})
+    wake_moments.sort(key=lambda m: -m["rem_after_minutes"])
+    wbtb["wake_moments"] = wake_moments[:5]
+
+    # 6. Gemessen vs. gefühlt: nur Nächte, wo BEIDES existiert -- manuelle
+    # Zeiten (source blieb "manual", z. B. phases_only-Import) UND
+    # Tracker-Phasen. Das ist genau der Anwendungsfall von phases_only.
+    calibration_pairs = [
+        {
+            "date": n.date.isoformat(),
+            "manual_minutes": n.sleep_minutes,
+            "tracker_minutes": n.rem_minutes + n.deep_minutes + n.light_minutes + n.awake_minutes,
+        }
+        for n in tracker_nights
+        if n.source == "manual" and n.sleep_minutes is not None
+    ]
+    avg_deviation = (
+        round(sum(p["manual_minutes"] - p["tracker_minutes"] for p in calibration_pairs) / len(calibration_pairs), 1)
+        if calibration_pairs else None
+    )
+
+    # 7. Tracker-Score-Terzile (nur falls vorhanden)
+    scored_nights = [n for n in tracker_nights if n.tracker_score is not None]
+    tracker_score = None
+    if len(scored_nights) >= TRACKER_MIN_NIGHTS:
+        score_groups = _tercile_split(scored_nights, key=lambda n: n.tracker_score)
+        tracker_score = {"n_total": len(scored_nights), **{k: group_stats(v) for k, v in score_groups.items()}}
+
+    # 8. Einschlaf-Latenz: Ø, Wochen-Verlauf, Aufriss nach Substanzen
+    latency_nights = [n for n in tracker_nights if n.sleep_latency_minutes is not None]
+    avg_latency = round(sum(n.sleep_latency_minutes for n in latency_nights) / len(latency_nights), 1) if latency_nights else None
+
+    latency_by_week: dict[str, list[int]] = {}
+    for n in latency_nights:
+        latency_by_week.setdefault(bucket_key(n.date, "week"), []).append(n.sleep_latency_minutes)
+    latency_trend = [
+        {"bucket": k, "avg_minutes": round(sum(v) / len(v), 1)}
+        for k, v in sorted(latency_by_week.items())
+    ]
+
+    def latency_group(has_sub: bool) -> dict:
+        group = [
+            n for n in latency_nights
+            if any(has_substance(d, s) for s in ("beifuss", "melatonin", "alkohol", "weed") for d in dreams_by_date.get(n.date, [])) == has_sub
+        ]
+        avg = round(sum(n.sleep_latency_minutes for n in group) / len(group), 1) if group else None
+        return {"n": len(group), "avg_minutes": avg}
+
+    latency = {
+        "n_total": len(latency_nights),
+        "avg_minutes": avg_latency,
+        "trend": latency_trend,
+        "with_substance": latency_group(True),
+        "without_substance": latency_group(False),
+    }
+
+    return {
+        "available": True,
+        "n_total": n_total,
+        "rem_amount": rem_amount,
+        "rem_density": rem_density,
+        "rem_density_median_pct": round(rem_density_median * 100, 1) if rem_density_median else None,
+        "awakenings": awakenings,
+        "wbtb": wbtb,
+        "calibration": {"pairs": calibration_pairs, "avg_deviation_minutes": avg_deviation},
+        "tracker_score": tracker_score,
+        "latency": latency,
     }
 
 
