@@ -182,6 +182,7 @@ const stats = {
     if (!this.data) return;
     const data = this.data;
     if (section === "write") this.renderWriting(data);
+    if (section === "sleep") this.renderSleepSection(data);
     if (section === "lucidity") this.renderLucidity(data);
     if (section === "emotions") this.renderEmotionsSection(data);
     if (section === "experiments") this.renderExperiments(data);
@@ -525,11 +526,118 @@ const stats = {
   // ---- 🔬 Experimente ----
   renderExperiments(data) {
     this.renderBeifuss(data.beifuss);
+    this.renderConnections();
+    this.renderCorrelations(data.correlations);
+  },
+
+  // ---- 😴 Schlaf (SS.1) ----
+  renderSleepSection(data) {
+    this.renderSleepOverviewTiles(data.sleep_overview);
+    this.renderNightBars(data.sleep_overview.night_bars);
+    this.renderWeekdayRhythm(data.sleep_overview.weekday_rhythm);
     this.renderSleepAnalysis(data.sleep);
     this.renderTrackerAnalysis(data.tracker);
     nightDetail.loadList();
-    this.renderConnections();
-    this.renderCorrelations(data.correlations);
+  },
+
+  renderSleepOverviewTiles(ov) {
+    const el = document.getElementById("sleep-overview-tiles");
+    if (!ov.n_total) {
+      el.innerHTML = `<p class="hint">${t("stats.sleepOverviewEmpty")}</p>`;
+      return;
+    }
+    const regularityLabel = ov.regularity ? t("stats.regularity." + ov.regularity) : "–";
+    const tiles = [
+      { value: ov.avg_duration_14d != null ? this.fmtHours(ov.avg_duration_14d) : "–", label: t("stats.tileAvg14d") },
+      { value: ov.median_duration != null ? this.fmtHours(ov.median_duration) : "–", label: t("stats.tileMedian") },
+      { value: regularityLabel, label: t("stats.tileRegularity") },
+      { value: ov.n_total, label: t("stats.tileNightsTotal") },
+    ];
+    if (ov.tracker_tiles) {
+      tiles.push(
+        { value: `${ov.tracker_tiles.avg_rem_share_pct}%`, label: t("stats.tileRemShare"), gold: true },
+        { value: ov.tracker_tiles.avg_awakenings, label: t("stats.tileAwakenings") },
+      );
+    }
+    el.innerHTML = tiles.map((tile) =>
+      `<div class="stat-card"><div class="value${tile.gold ? " gold" : ""}">${tile.value}</div><div class="label">${tile.label}</div></div>`
+    ).join("");
+  },
+
+  fmtHours(minutes) {
+    const h = Math.floor(minutes / 60), m = Math.round(minutes % 60);
+    return `${h} h ${m ? `${m} min` : ""}`.trim();
+  },
+
+  // Horizontale Nacht-Balken, 18-Uhr-bis-12-Uhr-Achse, Inline-SVG (kein
+  // Chart.js -- die Achse ist eine feste Zeitspanne, kein Datenbereich).
+  renderNightBars(bars) {
+    const el = document.getElementById("sleep-night-bars");
+    if (!bars.length) { el.innerHTML = `<p class="hint">${t("stats.sleepOverviewEmpty")}</p>`; return; }
+
+    const rowH = 16, gap = 4, padL = 70, padR = 10, width = 900;
+    const dayMinutes = 18 * 100; // Achse: 18:00 -> 12:00 naechster Tag = 18h = 1080min, in "Stunden*100"-Einheiten unten skaliert
+    const axisStartMin = 18 * 60; // Minuten seit Mitternacht, Achsenstart 18:00
+    const totalAxisMin = 18 * 60; // 18:00 bis 12:00 naechster Tag = 18h
+    const toX = (hhmm) => {
+      if (!hhmm) return null;
+      const [h, m] = hhmm.split(":").map(Number);
+      let mins = h * 60 + m;
+      if (mins < axisStartMin) mins += 24 * 60; // nach Mitternacht -> rechts vom Achsenstart weiterzaehlen
+      const rel = mins - axisStartMin;
+      return padL + (rel / totalAxisMin) * (width - padL - padR);
+    };
+    const height = bars.length * (rowH + gap) + 24;
+
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="night-bars-svg" role="img" aria-label="${t("stats.nightBarsTitle")}">`;
+    [18, 21, 0, 3, 6, 9, 12].forEach((h) => {
+      const x = toX(`${String(h).padStart(2, "0")}:00`);
+      svg += `<line x1="${x}" y1="0" x2="${x}" y2="${height - 20}" stroke="var(--bg-input)" stroke-width="1"/>`;
+      svg += `<text x="${x}" y="${height - 6}" fill="var(--text-dim)" font-size="10" text-anchor="middle">${String(h).padStart(2, "0")}:00</text>`;
+    });
+    bars.forEach((n, i) => {
+      const y = i * (rowH + gap);
+      if (n.confidence === "unknown" || !n.bed_time || !n.wake_time) {
+        svg += `<circle cx="${padL - 12}" cy="${y + rowH / 2}" r="3" fill="var(--text-dim)"/>`;
+        return;
+      }
+      const x1 = toX(n.bed_time), x2 = toX(n.wake_time);
+      const color = n.source === "tracker" ? "var(--sleep-rem)" : "var(--accent)";
+      const dash = n.confidence === "rough" ? ` stroke-dasharray="4,3"` : "";
+      svg += `<rect data-date="${n.date}" x="${Math.min(x1, x2)}" y="${y}" width="${Math.max(2, Math.abs(x2 - x1))}" height="${rowH}" rx="3" fill="${color}"${n.confidence === "rough" ? ` fill-opacity="0.55" stroke="${color}"${dash}` : ""} style="cursor:pointer"/>`;
+    });
+    svg += "</svg>";
+    el.innerHTML = svg;
+    el.querySelectorAll("rect[data-date]").forEach((r) => {
+      r.addEventListener("click", () => {
+        nightDetail.nights = bars.filter((b) => b.bed_time && b.wake_time).slice().reverse();
+        nightDetail.open(r.dataset.date);
+      });
+    });
+  },
+
+  renderWeekdayRhythm(rhythm) {
+    const el = document.getElementById("sleep-weekday-rhythm");
+    const hasData = rhythm.some((d) => d.n > 0);
+    if (!hasData) { el.innerHTML = `<p class="hint">${t("stats.sleepOverviewEmpty")}</p>`; return; }
+    const width = 700, padL = 40, padR = 10, rowY = { bed: 25, wake: 65 };
+    const toX = (hhmm) => {
+      if (!hhmm) return null;
+      const [h, m] = hhmm.split(":").map(Number);
+      let mins = h * 60 + m;
+      if (mins < 12 * 60) mins += 24 * 60; // Abendzeiten vor Mittag als "spaeter" einordnen
+      return padL + ((mins - 12 * 60) / (24 * 60)) * (width - padL - padR);
+    };
+    let svg = `<svg viewBox="0 0 ${width} 90" class="weekday-rhythm-svg" role="img">`;
+    rhythm.forEach((d, i) => {
+      const cx = padL + (i / 6) * (width - padL - padR) + 10;
+      if (d.avg_bed_time) svg += `<circle cx="${toX(d.avg_bed_time)}" cy="${rowY.bed}" r="4" fill="var(--accent)"/>`;
+      if (d.avg_wake_time) svg += `<circle cx="${toX(d.avg_wake_time)}" cy="${rowY.wake}" r="4" fill="var(--lucid)"/>`;
+    });
+    svg += "</svg>";
+    const dayLabels = rhythm.map((d) => `<span>${d.day}</span>`).join("");
+    el.innerHTML = `${svg}<div class="weekday-rhythm-labels">${dayLabels}</div>
+      <div class="night-legend"><span><i style="background:var(--accent)"></i>${t("stats.rhythmBedLabel")}</span><span><i style="background:var(--lucid)"></i>${t("stats.rhythmWakeLabel")}</span></div>`;
   },
 
   // TD.3: Tracker-Analysen -- dockt uebergangsweise hier an (SS.1 aus

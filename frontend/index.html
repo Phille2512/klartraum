@@ -252,6 +252,7 @@
 
       <div class="chip-row" id="stats-section-nav">
         <button class="chip active" data-section="write" data-i18n="stats.sectionWrite">✍️ Schreiben</button>
+        <button class="chip" data-section="sleep" data-i18n="stats.sectionSleep">😴 Schlaf</button>
         <button class="chip" data-section="lucidity" data-i18n="stats.sectionLucidity">✨ Luzidität</button>
         <button class="chip" data-section="emotions" data-i18n="stats.sectionEmotions">💛 Gefühle</button>
         <button class="chip" data-section="experiments" data-i18n="stats.sectionExperiments">🔬 Experimente</button>
@@ -329,10 +330,24 @@
           </div>
         </div>
 
-        <div class="stats-section hidden" data-section="experiments">
+        <!-- SS.1: Kopfzeile + Nacht-Balken + Rhythmus, darunter die drei
+             Schlaf-Karten aus 🔬 Experimente umgezogen (kein Duplikat --
+             Anker-IDs unveraendert, D.3-Insights/ⓘ-Verweise zeigen weiter
+             darauf). Akzeptanz laut Plan: voll nutzbar auch rein manuell,
+             ohne einen einzigen Tracker-Import. -->
+        <div class="stats-section hidden" data-section="sleep">
           <div class="card">
-            <h2 data-i18n="stats.beifussTitle">🌿 Wirkt Beifuß bei dir?</h2>
-            <div id="beifuss-compare"></div>
+            <h2 data-i18n="stats.sleepOverviewTitle">😴 Deine Nacht in Zahlen</h2>
+            <div id="sleep-overview-tiles" class="stat-cards"></div>
+          </div>
+          <div class="card chart-card">
+            <h2 data-i18n="stats.nightBarsTitle">Deine Nächte</h2>
+            <p class="hint" data-i18n="stats.nightBarsHint">Ein Balken pro Nacht, von Zubettgeh- bis Aufwachzeit. Schraffiert = grob geschätzt, Punkt = unbekannt. Tippen für Details.</p>
+            <div id="sleep-night-bars"></div>
+          </div>
+          <div class="card chart-card">
+            <h2 data-i18n="stats.weekdayRhythmTitle">Rhythmus</h2>
+            <div id="sleep-weekday-rhythm"></div>
           </div>
           <div class="card">
             <h2 id="sleep-analysis-heading" data-i18n="stats.sleepAnalysisTitle">😴 Schlaf &amp; Erinnerung</h2>
@@ -343,15 +358,19 @@
             <p class="hint" data-i18n="stats.trackerAnalysisHint">Schlafphasen, Puls und Wachmomente aus deinem Tracker-Import — ergänzt die Selbstauskunft oben um echte Messwerte.</p>
             <div id="tracker-analysis"></div>
           </div>
-          <!-- SS.2 (Übergangs-Einstieg, bis SS.1 die eigene Schlaf-Sektion mit
-               Nacht-Balken baut): eigenständige, klickbare Nächte-Liste --
-               bewusst NICHT ans Traum-Formular gehängt (dort waere sie beim
-               Bearbeiten störend). -->
           <div class="card hidden" id="night-list-card">
-            <h2 id="night-list-heading" data-i18n="ss2.nightListTitle">🌙 Deine Nächte</h2>
+            <h2 id="night-list-heading" data-i18n="ss2.nightListTitle">🌙 Deine Nächte im Detail</h2>
             <p class="hint" data-i18n="ss2.nightListHint">Tippe eine Nacht an, um sie im Detail zu sehen.</p>
             <div id="night-list"></div>
           </div>
+        </div>
+
+        <div class="stats-section hidden" data-section="experiments">
+          <div class="card">
+            <h2 data-i18n="stats.beifussTitle">🌿 Wirkt Beifuß bei dir?</h2>
+            <div id="beifuss-compare"></div>
+          </div>
+          <p class="hint" data-i18n="stats.sleepMovedHint">😴 Schlafdauer, Tracker-Phasen und die Nächte-Liste findest du jetzt in der eigenen „😴 Schlaf"-Sektion.</p>
           <div class="card">
             <h2 data-i18n="stats.connectionsTitle">🔗 Verbindungen</h2>
             <p class="hint" data-i18n="stats.connectionsHint">Welche Orte, Personen, Zeichen und Gefühle gehören zusammen?</p>

@@ -3,6 +3,7 @@ main.py (in eigenes Modul ausgelagert, damit routers/stats.py < 300 Zeilen bleib
 import datetime as dt
 import itertools
 import json
+import math
 from collections import Counter
 
 from helpers import has_substance
@@ -124,6 +125,112 @@ def build_sleep_analysis(dreams: list[Dream], nights: list[Night]) -> dict:
         "kurz": group_stats(terciles["kurz"]),
         "mittel": group_stats(terciles["mittel"]),
         "lang": group_stats(terciles["lang"]),
+    }
+
+
+# SS.1: Kopfzeile + Nacht-Balken + Wochentags-Rhythmus für die "😴 Schlaf"-
+# Sektion. Nutzt ALLE Nächte (nicht nur Tracker-Nächte) -- Akzeptanzkriterium
+# aus dem Plan: die Sektion muss mit rein manueller Erfassung voll nutzbar
+# sein.
+REGULARITY_MIN_NIGHTS = 5
+
+
+def _time_to_angle(hhmm: str) -> float:
+    h, m = hhmm.split(":")
+    minutes = int(h) * 60 + int(m)
+    return minutes / (24 * 60) * 2 * math.pi
+
+
+def _circular_mean_time(times: list[str]) -> str | None:
+    """Ø Uhrzeit über den Mitternachts-Übergang hinweg -- ein naiver
+    arithmetischer Mittelwert von 23:00 und 01:00 ergäbe 12:00 (Unsinn),
+    zirkulär gerechnet korrekt ~00:00."""
+    if not times:
+        return None
+    angles = [_time_to_angle(t) for t in times]
+    sin_sum = sum(math.sin(a) for a in angles)
+    cos_sum = sum(math.cos(a) for a in angles)
+    mean_angle = math.atan2(sin_sum, cos_sum)
+    if mean_angle < 0:
+        mean_angle += 2 * math.pi
+    minutes = round(mean_angle / (2 * math.pi) * 24 * 60) % (24 * 60)
+    return f"{minutes // 60:02d}:{minutes % 60:02d}"
+
+
+def _bedtime_regularity(bed_times: list[str]) -> str | None:
+    """Zirkuläre Streuung der Bettgehzeit als grobes Wort fürs Kopfzeilen-
+    Kachel-Label. Bewusst kein E.7c-Vollausbau (keine Korrelation zur
+    Erinnerung, nur diese eine Einordnung) -- R (0..1, "mean resultant
+    length") ist das Standardmaß für Streuung auf einem Kreis: 1 = alle
+    Zeiten identisch, 0 = gleichverteilt über den ganzen Tag."""
+    if len(bed_times) < REGULARITY_MIN_NIGHTS:
+        return None
+    angles = [_time_to_angle(t) for t in bed_times]
+    sin_sum = sum(math.sin(a) for a in angles)
+    cos_sum = sum(math.cos(a) for a in angles)
+    r = math.sqrt(sin_sum ** 2 + cos_sum ** 2) / len(angles)
+    if r > 0.9:
+        return "regular"
+    if r > 0.7:
+        return "medium"
+    return "irregular"
+
+
+def build_sleep_overview(nights: list[Night]) -> dict:
+    scored = [n for n in nights if n.sleep_minutes is not None]
+
+    cutoff_14 = dt.date.today() - dt.timedelta(days=14)
+    recent = [n for n in scored if n.date >= cutoff_14]
+    avg_duration_14d = round(sum(n.sleep_minutes for n in recent) / len(recent)) if recent else None
+    median_duration = median([n.sleep_minutes for n in scored])
+
+    exact_bed_times = [n.bed_time for n in nights if n.confidence == "exact" and n.bed_time]
+    regularity = _bedtime_regularity(exact_bed_times)
+
+    bars = sorted(nights, key=lambda n: n.date, reverse=True)[:30]
+    night_bars = [
+        {
+            "date": n.date.isoformat(), "bed_time": n.bed_time, "wake_time": n.wake_time,
+            "sleep_minutes": n.sleep_minutes, "confidence": n.confidence, "source": n.source,
+        }
+        for n in reversed(bars)
+    ]
+
+    exact_nights = [n for n in nights if n.confidence == "exact" and n.bed_time and n.wake_time]
+    by_weekday: dict[int, list[Night]] = {i: [] for i in range(7)}
+    for n in exact_nights:
+        by_weekday[n.date.weekday()].append(n)
+    weekday_names = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+    weekday_rhythm = [
+        {
+            "day": weekday_names[i],
+            "n": len(by_weekday[i]),
+            "avg_bed_time": _circular_mean_time([n.bed_time for n in by_weekday[i]]),
+            "avg_wake_time": _circular_mean_time([n.wake_time for n in by_weekday[i]]),
+        }
+        for i in range(7)
+    ]
+
+    # TD.2-Ergänzung (Plan-Punkt 5): erst zeigen, wenn Tracker-Nächte existieren.
+    tracker_nights = [n for n in nights if n.rem_minutes is not None and n.sleep_minutes]
+    tracker_tiles = None
+    if tracker_nights:
+        avg_rem_share = sum(n.rem_minutes / n.sleep_minutes for n in tracker_nights) / len(tracker_nights)
+        avg_awakenings = sum(n.awakenings or 0 for n in tracker_nights) / len(tracker_nights)
+        tracker_tiles = {
+            "n_tracker_nights": len(tracker_nights),
+            "avg_rem_share_pct": round(avg_rem_share * 100, 1),
+            "avg_awakenings": round(avg_awakenings, 1),
+        }
+
+    return {
+        "n_total": len(nights),
+        "avg_duration_14d": avg_duration_14d,
+        "median_duration": median_duration,
+        "regularity": regularity,
+        "night_bars": night_bars,
+        "weekday_rhythm": weekday_rhythm,
+        "tracker_tiles": tracker_tiles,
     }
 
 
