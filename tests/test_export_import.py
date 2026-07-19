@@ -1,5 +1,11 @@
 from test_dreams import make_dream
 
+import datetime as dt
+
+from database import engine
+from models import Night
+from sqlmodel import Session
+
 
 def test_export_json(auth_client):
     auth_client.post("/api/dreams", json=make_dream(title="Export-Test", tags=["klar"]))
@@ -41,6 +47,44 @@ def test_export_includes_night_fields_when_present(auth_client):
     assert "23:00" in resp.text and "480" in resp.text
 
 
+def test_export_includes_tracker_fields_when_present(auth_client):
+    # TD.1: Tracker-Import gibt es erst in TD.2 -- Nacht hier direkt per
+    # DB-Session simulieren.
+    with Session(engine) as session:
+        session.add(Night(
+            date=dt.date(2026, 3, 3), bed_time="23:15", wake_time="06:45",
+            sleep_minutes=450, confidence="exact", source="tracker",
+            rem_minutes=88, deep_minutes=140, light_minutes=210, awake_minutes=12,
+            awakenings=2, tracker_score=81, hr_min=44, hr_avg=52, hr_max=79,
+            sleep_latency_minutes=9, stages_json='{"segments":[{"s":1,"e":2,"st":2}]}',
+        ))
+        session.commit()
+    auth_client.post("/api/dreams", json=make_dream(title="Tracker-Nacht", date="2026-03-03"))
+
+    resp = auth_client.get("/api/export", params={"format": "json"})
+    row = resp.json()[0]
+    assert row["sleep_source"] == "tracker"
+    assert row["rem_minutes"] == 88
+    assert row["deep_minutes"] == 140
+    assert row["light_minutes"] == 210
+    assert row["awake_minutes"] == 12
+    assert row["awakenings"] == 2
+    assert row["tracker_score"] == 81
+    assert row["hr_min"] == 44 and row["hr_avg"] == 52 and row["hr_max"] == 79
+    assert row["sleep_latency_minutes"] == 9
+    assert row["stages_json"] == '{"segments":[{"s":1,"e":2,"st":2}]}'
+
+    resp = auth_client.get("/api/export", params={"format": "csv"})
+    header = resp.text.splitlines()[0].split(",")
+    for col in (
+        "sleep_source", "rem_minutes", "deep_minutes", "light_minutes", "awake_minutes",
+        "awakenings", "tracker_score", "hr_min", "hr_avg", "hr_max",
+        "sleep_latency_minutes", "stages_json",
+    ):
+        assert col in header
+    assert "tracker" in resp.text and "88" in resp.text
+
+
 def test_export_night_fields_empty_without_night_entry(auth_client):
     auth_client.post("/api/dreams", json=make_dream(title="Ohne Nacht", date="2026-03-02"))
 
@@ -50,6 +94,8 @@ def test_export_night_fields_empty_without_night_entry(auth_client):
     assert row["wake_time"] is None
     assert row["sleep_minutes"] is None
     assert row["sleep_confidence"] is None
+    for field in ("sleep_source", "rem_minutes", "tracker_score", "stages_json"):
+        assert row[field] is None
 
 
 def test_export_ordered_by_date(auth_client):

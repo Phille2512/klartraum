@@ -46,6 +46,20 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
         row["wake_time"] = night.wake_time if night else None
         row["sleep_minutes"] = night.sleep_minutes if night else None
         row["sleep_confidence"] = night.confidence if night else None
+        # TD.1: Tracker-Felder denormalisiert mit ausliefern -- stages_json
+        # roh als String (verschachteltes JSON in JSON/CSV-Zelle).
+        row["sleep_source"] = night.source if night else None
+        row["rem_minutes"] = night.rem_minutes if night else None
+        row["deep_minutes"] = night.deep_minutes if night else None
+        row["light_minutes"] = night.light_minutes if night else None
+        row["awake_minutes"] = night.awake_minutes if night else None
+        row["awakenings"] = night.awakenings if night else None
+        row["tracker_score"] = night.tracker_score if night else None
+        row["hr_min"] = night.hr_min if night else None
+        row["hr_avg"] = night.hr_avg if night else None
+        row["hr_max"] = night.hr_max if night else None
+        row["sleep_latency_minutes"] = night.sleep_latency_minutes if night else None
+        row["stages_json"] = night.stages_json if night else None
         rows.append(row)
     filename = f"klartraum-export-{dt.date.today().isoformat()}"
 
@@ -56,6 +70,9 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
             "id", "date", "title", "content", "lucidity", "sleep_quality",
             "substances", "substance_other", "tags", "dream_signs", "places", "persons", "notes_analysis",
             "bed_time", "wake_time", "sleep_minutes", "sleep_confidence",
+            "sleep_source", "rem_minutes", "deep_minutes", "light_minutes", "awake_minutes",
+            "awakenings", "tracker_score", "hr_min", "hr_avg", "hr_max",
+            "sleep_latency_minutes", "stages_json",
         ])
         for r in rows:
             writer.writerow([
@@ -67,6 +84,18 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
                 r["bed_time"] or "", r["wake_time"] or "",
                 r["sleep_minutes"] if r["sleep_minutes"] is not None else "",
                 r["sleep_confidence"] or "",
+                r["sleep_source"] or "",
+                r["rem_minutes"] if r["rem_minutes"] is not None else "",
+                r["deep_minutes"] if r["deep_minutes"] is not None else "",
+                r["light_minutes"] if r["light_minutes"] is not None else "",
+                r["awake_minutes"] if r["awake_minutes"] is not None else "",
+                r["awakenings"] if r["awakenings"] is not None else "",
+                r["tracker_score"] if r["tracker_score"] is not None else "",
+                r["hr_min"] if r["hr_min"] is not None else "",
+                r["hr_avg"] if r["hr_avg"] is not None else "",
+                r["hr_max"] if r["hr_max"] is not None else "",
+                r["sleep_latency_minutes"] if r["sleep_latency_minutes"] is not None else "",
+                r["stages_json"] or "",
             ])
         return Response(
             buf.getvalue(),

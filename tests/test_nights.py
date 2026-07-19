@@ -1,3 +1,10 @@
+import datetime as dt
+
+from database import engine
+from models import Night
+from sqlmodel import Session
+
+
 def test_night_not_found_initially(auth_client):
     resp = auth_client.get("/api/nights/2026-07-14")
     assert resp.status_code == 404
@@ -168,6 +175,42 @@ def test_median_bedtime_even_count_averages_middle_two(auth_client):
 
     resp = auth_client.get("/api/nights/median-bedtime")
     assert resp.json()["bed_time"] == "22:30"
+
+
+def test_new_night_defaults_to_manual_source_and_null_tracker_fields(auth_client):
+    resp = auth_client.put("/api/nights/2026-07-14", json={"bed_time": "23:00", "wake_time": "07:00"})
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["source"] == "manual"
+    for field in (
+        "rem_minutes", "deep_minutes", "light_minutes", "awake_minutes", "awakenings",
+        "tracker_score", "hr_min", "hr_avg", "hr_max", "sleep_latency_minutes", "stages",
+    ):
+        assert body[field] is None
+
+
+def test_manual_edit_resets_source_but_keeps_tracker_phases(auth_client):
+    # TD.1: Eine per Tracker befüllte Nacht simulieren (TD.2-Import existiert
+    # hier noch nicht) -- direkt über die DB-Session, wie es der spätere
+    # Import-Endpunkt tun wird.
+    with Session(engine) as session:
+        session.add(Night(
+            date=dt.date(2026, 7, 14), bed_time="23:00", wake_time="07:00",
+            sleep_minutes=480, confidence="exact", source="tracker",
+            rem_minutes=90, deep_minutes=120, light_minutes=250, awake_minutes=20,
+            awakenings=3, tracker_score=78,
+        ))
+        session.commit()
+
+    resp = auth_client.put("/api/nights/2026-07-14", json={"bed_time": "22:30", "wake_time": "06:30"})
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["source"] == "manual"  # zurückgesetzt
+    assert body["bed_time"] == "22:30"  # Zeiten wurden überschrieben
+    # Phasen-Felder bleiben stehen, da das PUT sie gar nicht anfasst:
+    assert body["rem_minutes"] == 90
+    assert body["deep_minutes"] == 120
+    assert body["tracker_score"] == 78
 
 
 def test_nights_require_authentication(client):

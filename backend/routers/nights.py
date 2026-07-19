@@ -6,6 +6,7 @@ sleep_minutes wird ausschließlich hier serverseitig abgeleitet:
 - unknown: null
 """
 import datetime as dt
+import json
 import re
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -44,6 +45,22 @@ def _night_out(night: Night) -> dict:
         "wake_time": night.wake_time,
         "sleep_minutes": night.sleep_minutes,
         "confidence": night.confidence,
+        # TD.1: Tracker-Vokabular -- source unterscheidet manuell/Tracker,
+        # der Rest ist nur bei source="tracker" befuellt (kommt aus TD.2).
+        "source": night.source,
+        "rem_minutes": night.rem_minutes,
+        "deep_minutes": night.deep_minutes,
+        "light_minutes": night.light_minutes,
+        "awake_minutes": night.awake_minutes,
+        "awakenings": night.awakenings,
+        "tracker_score": night.tracker_score,
+        "hr_min": night.hr_min,
+        "hr_avg": night.hr_avg,
+        "hr_max": night.hr_max,
+        "sleep_latency_minutes": night.sleep_latency_minutes,
+        # als Objekt statt Doppel-JSON-String ausliefern -- fürs Frontend
+        # (SS.2-Hypnogramm) direkt verwendbar.
+        "stages": json.loads(night.stages_json) if night.stages_json else None,
     }
 
 
@@ -86,6 +103,11 @@ def upsert_night(date: dt.date, payload: NightIn, session: Session = Depends(get
         raise HTTPException(422, "invalid_night_payload")
 
     night = session.get(Night, date) or Night(date=date)
+    # TD.1: manuelle Nachbearbeitung setzt source zurück auf "manual" -- auch
+    # wenn die Nacht zuvor per Tracker-Import befüllt wurde. Die Phasen-/
+    # Puls-/Score-Felder werden hier bewusst NICHT angefasst (bleiben stehen),
+    # nur Zeiten/Konfidenz wechseln je nach gewähltem Modus unten.
+    night.source = "manual"
 
     if is_rough_attempt:
         if payload.bucket not in BUCKET_MINUTES:

@@ -126,6 +126,23 @@ class Night(SQLModel, table=True):
     sleep_minutes: int | None = None  # serverseitig abgeleitet, einzige Quelle der Wahrheit
     confidence: str = "exact"  # exact | rough | unknown
 
+    # TD.1: Tracker-Vokabular (UMSETZUNGSPLAN-TRACKERDATEN.md). Alle Felder
+    # nullable und additiv -- kommen ausschliesslich aus dem Import (TD.2),
+    # die manuelle Erfassung (oben) kennt sie nicht. Phasen-Minuten sind
+    # Schaetzungen des Herstellers, keine medizinische Messung.
+    source: str = "manual"  # manual | tracker
+    rem_minutes: int | None = None
+    deep_minutes: int | None = None
+    light_minutes: int | None = None
+    awake_minutes: int | None = None
+    awakenings: int | None = None  # Anzahl Wachphasen
+    tracker_score: int | None = None  # herstellereigener Schlaf-Score (0-100), optional
+    hr_min: int | None = None  # Puls-Minimum der Nacht
+    hr_avg: int | None = None
+    hr_max: int | None = None
+    sleep_latency_minutes: int | None = None  # ins Bett -> eingeschlafen
+    stages_json: str | None = None  # JSON {"segments":[{"s":epoch,"e":epoch,"st":2|3|4|5}],"hr":[[epoch,bpm],...]}
+
 
 class DreamAnalysis(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
