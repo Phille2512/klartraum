@@ -12,3 +12,7 @@ certs/
 dist/
 build/
 *.spec.bak
+
+# Rohe Tracker-Exporte (echte Gesundheitsdaten) -- nie ins Repo, s. UMSETZUNGSPLAN-TRACKERDATEN.md
+*_MiFitness_*/
+*mi-fitness-testdaten*/
