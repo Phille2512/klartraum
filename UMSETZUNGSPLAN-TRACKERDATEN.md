@@ -40,6 +40,14 @@ light_minutes: int | None = None
 awake_minutes: int | None = None
 awakenings: int | None = None    # Anzahl Wachphasen
 tracker_score: int | None = None # herstellereigener Schlaf-Score (0-100), optional
+# Ergänzt 19.07.2026 nach Sichtung des echten Exports — der liefert mehr:
+hr_min: int | None = None        # Puls-Minimum der Nacht (Blob min_hr)
+hr_avg: int | None = None        # Blob avg_hr
+hr_max: int | None = None        # Blob max_hr
+sleep_latency_minutes: int | None = None  # ins Bett → eingeschlafen (bedtime − bed_timestamp)
+stages_json: str | None = None   # JSON {"segments":[{"s":epoch,"e":epoch,"st":2|3|4|5}],"hr":[[epoch,bpm],…]}
+                                 # segments = minutengenaue Phasen-Zeitleiste (Basis für SS.2);
+                                 # hr = auf ≤160 Punkte ausgedünnte Puls-Kurve (optional)
 ```
 
 **Zusammenspiel mit der manuellen Erfassung (verbindliche Regeln):**
@@ -64,13 +72,46 @@ Idempotent: gleicher Import zweimal → zweites Mal alles `skipped`.
 
 **Adapter (jeder eine kleine, getestete Funktion `parse_<adapter>(file) →
 list[NightData]`):**
-1. `zepp_mi` — Mi Fitness/Zepp-Export (CSV/JSON aus DSGVO-Export bzw.
-   App-Export; Format anhand von Philipps echten Dateien fixieren).
+1. `mi_fitness` — Mi-Fitness-DSGVO-Export. **Format am 19.07.2026 gegen
+   Philipps echte Dateien entschlüsselt (Referenz-Implementierung:
+   `prototyp-nachtkino-generator.py` im Projektordner):**
+   - Quelldatei: `*_hlth_center_fitness_data.csv` (Spalten Uid, Sid, Key,
+     Time, Value); Schlaf-Sessions sind die Zeilen mit `Key == "sleep"`,
+     `Value` ist ein JSON-Blob.
+   - Blob-Felder: `bedtime`/`wake_up_time` (Unix-Epoch, UTC) ·
+     `sleep_deep_duration`/`sleep_light_duration`/`sleep_rem_duration`/
+     `sleep_awake_duration` (Minuten) · `duration` (geschlafene Minuten) ·
+     `awake_count` · `sleep_efficiency` · `items` = Phasen-Segmente mit
+     `start_time`/`end_time`/`state`.
+   - **State-Codes:** 2 = Tiefschlaf · 3 = Leichtschlaf · 4 = REM ·
+     5 = Wach (verifiziert: Segment-Summen == Summenfelder).
+   - **Zeitzonen-Falle:** `timezone` ist in **Viertelstunden** (8 = UTC+2)
+     — für die lokale Bett-/Aufwachzeit verwenden, NICHT die
+     System-Zeitzone raten.
+   - `sleep_score` steht NICHT im Blob, sondern in
+     `*_hlth_center_aggregated_fitness_data.csv` (Key `sleep`, Feld
+     `sleep_score`) unter demselben Zeitraum → per Aufwach-Datum joinen.
+   - Mapping auf `Night`: `bed_time` aus `bed_timestamp` (ins Bett,
+     konsistent zur manuellen Semantik), `wake_time` aus `wake_up_time`,
+     jeweils Epoch+TZ; `sleep_minutes = duration`;
+     `sleep_latency_minutes = (bedtime − bed_timestamp) / 60`;
+     Phasen-/Score-Felder aus TD.1; `hr_min/avg/max` aus dem Blob;
+     `stages_json` aus `items` (+ optional ausgedünnte Puls-Kurve aus den
+     `heart_rate`/`single_heart_rate`-Zeilen des Nacht-Zeitraums);
+     `confidence = "exact"`, `source = "tracker"`.
+   - Upload-Erwartung: Nutzer lädt die `*_hlth_center_fitness_data.csv`
+     (Auto-Erkennung am Dateinamens-Muster und an `Key`-Spalte); die
+     Aggregat-CSV optional als zweite Datei für den Score.
 2. `fitbit_takeout` — Google-Takeout-Schlaf-JSONs (Struktur ist dokumentiert
    und stabil; Levels: wake/light/deep/rem mit Minuten-Summary).
 3. `generic_csv` — Fallback für alles andere: Nutzer ordnet im Dialog die
    Spalten zu (Datum, Bett, Aufwachen, REM-Minuten, …), Zuordnung wird in
    localStorage gemerkt.
+
+Die Voraussetzung „erst mit echten Dateien" ist damit **erfüllt** —
+Export liegt seit 19.07.2026 im Projektordner (git-ignoriert). Für
+Test-Fixtures die echte Struktur mit erfundenen Werten nachbauen, NICHT
+Philipps echte Nacht einchecken.
 
 **Datums-Zuordnung (wichtigste Fehlerquelle!):** Eine Tracker-Nacht gehört
 zum **Datum des Aufwachens** (= Traum-Datum der App). Nächte über
@@ -120,6 +161,9 @@ ausgewiesen:
    Wachphasen sind faktisch ungeplante WBTBs — Klartraum-Quote solcher
    Nächte vs. durchgeschlafene. Sobald E.6-Daten existieren, daneben die
    Quote der Träume mit `lucid_trigger = "wbtb"` spiegeln.
+   Mit `stages_json` zusätzlich konkret: **Wachmoment-Uhrzeiten und die
+   REM-Minuten direkt danach** ausweisen („Um 04:32 wach — danach 25 min
+   REM") — das macht WBTB vom Konzept zur eigenen, belegten Erfahrung.
 4. **Schlafarchitektur × Valenz** (Tracker-Vertiefung von E.7a/E.7b):
    Albtraum-Quote und POS/NEG-Emotions-Anteil je REM-Terzil und
    Awakenings-Gruppe. Dazu **Figuren-Valenz** (E.5): Anteil
@@ -135,7 +179,12 @@ ausgewiesen:
    macht die eigene 🌫️-Grob-Schätzung über Zeit besser.
 7. **Tracker-Score × Erinnerung** (nur wenn `tracker_score` vorhanden):
    einfache Balken je Score-Terzil.
-8. 💡-Wissens-Moment `tracker` an diesen Karten: die Ehrlichkeits-Einordnung
+8. **Einschlaf-Latenz** (`sleep_latency_minutes`): Ø und Verlauf; Aufriss
+   nach Substanzen und — sobald E.4b existiert — nach Tagesbilanz
+   („Nach schlechten Tagen brauchst du im Schnitt x min länger").
+   Vorsicht Kleinst-Latenz: Werte < 2 min nicht überinterpretieren
+   (Tracker-Auflösung).
+9. 💡-Wissens-Moment `tracker` an diesen Karten: die Ehrlichkeits-Einordnung
    (Phasen = Schätzung; Trends > Absolutwerte; Korrelation ≠ Ursache).
 
 **Tests:** Terzile/Gruppen gegen handgerechneten Fixture-Datensatz;

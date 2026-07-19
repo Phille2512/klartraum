@@ -43,6 +43,37 @@ Umbenennung auf **Traumader** inkl. Ader-Logo.
    Nach ~4 Wochen echter Nutzung: Vier-Wochen-Review (Unbenutztes einklappen
    oder entfernen).
 
+### Analyse-Ausbau (ergänzt 19.07.2026, Reihenfolge verbindlich)
+
+Sechs verzahnte Pläne; Details und Querverweise stehen in den Plänen selbst.
+Sind 1.–5. der alten Liste erledigt, gilt:
+
+1. **E.2** (`UMSETZUNGSPLAN-ERKENNTNISSE.md`) — n-Badges; Fundament für
+   alles Statistische. Klein, zuerst.
+2. **TD.1 + TD.2** (`UMSETZUNGSPLAN-TRACKERDATEN.md`) — Tracker-Import;
+   echtes Format ist im Plan entschlüsselt, Export liegt vor. Je früher,
+   desto mehr Nächte sammeln sich in der App.
+3. **SS.1** (`UMSETZUNGSPLAN-SCHLAFSCHULE.md`) — Analyse-Sektion „😴 Schlaf"
+   als Zuhause der Schlaf-Karten; SS.3 (Schlafschule-Texte) jederzeit
+   parallel möglich.
+4. **V-Fundament + V.1** (`UMSETZUNGSPLAN-VERBINDUNGEN.md`) — Verbindungs-
+   Analyse, danach V.2–V.4 nach Lust.
+5. **E.3 + E.4** — neue Datenerhebung (Erinnerungs-Block, Nacht-/Tages-
+   Kontext); früh, damit Daten wachsen. Dann **E.7**.
+6. **D.1–D.4** (`UMSETZUNGSPLAN-DASHBOARD.md`) — Analyse-UX + Erkenntnis-
+   Engine (braucht E.2; Generatoren wachsen mit E-/V-/TD-Stufen).
+7. **M.1–M.4** (`UMSETZUNGSPLAN-MASKE.md`) — Eingabemaske (eigener Branch
+   `maske-ux`, Rückweg-Garantien im Plan).
+8. **TD.3 + SS.2 + SS.4** — Tracker-Analysen und Nacht-Detail, sobald
+   ~2 Wochen Tracker-Nächte importiert sind. **E.5** (Valenz) und
+   **V.5**/**E.6** flexibel dazwischen.
+
+Merkregeln für alle neuen Pläne: Luzidität tritt bei Philipp aktuell nicht
+auf → überall Schlafend-Regel (Klartraum-UI erst ab erstem Traum mit
+Luzidität ≥ 3). Keine neuen Pflichtfelder. Additiv vor ersetzend.
+Der Nachtkino-Prototyp (`frontend/nachtkino.html`, git-ignoriert;
+Generator `prototyp-nachtkino-generator.py`) ist Design-Vorlage für SS.2.
+
 Separates Projekt: `~/Desktop/Klartraum App` (Multi-User-Version,
 `UMSETZUNGSPLAN-MULTIUSER.md`) — unabhängig, eigene Zeitlinie.
 

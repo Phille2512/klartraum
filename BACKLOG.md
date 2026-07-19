@@ -254,7 +254,26 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
 - **🌍 Local-First-PWA** (Stufe 2 aus `docs/VERTEILUNG.md`) und
   **Multi-User** (`~/Desktop/Klartraum App`) — große Ausbauten, je eigener Plan.
 
+- **🏃 Vortags-Aktivität als Auto-Kontext** (Idee 19.07.2026, aus dem
+  echten Mi-Fitness-Export): Schritte/Intensität/Training liegen im
+  selben Export — als automatische Ergänzung zur Tagesbilanz (E.4b):
+  „Bewegte Tage → besserer Tiefschlaf → andere Träume?" Erst sinnvoll
+  nach E.4b + TD.3.
+- **🎬 Nachtkino als App-Feature:** die geführte 6-Schritte-Tour durch
+  die eigene Nacht (aus dem Prototyp `frontend/nachtkino.html`) fest in
+  die App holen — z. B. als „Nacht ansehen"-Modus im SS.2-Detail oder
+  einmal pro Woche für die interessanteste Nacht. Erst wenn SS.2 sich
+  bewährt.
+
 ## 🅿️ Parkplatz (bewusst zurückgestellt)
+
+- **🫁 SpO2 + Atemfrequenz aus dem Tracker** (liegen im Export:
+  avg/min SpO2, avg_breath): bewusst NICHT auswerten — zu nah an der
+  Medizin-/MDR-Grenze (Apnoe-Assoziationen). Höchstens irgendwann als
+  neutrale Zahl im Nacht-Detail, nie mit Bewertung oder Warnung.
+- **❤️ Roh-Pulskurve komplett speichern** — aktuell nur auf ≤160 Punkte
+  ausgedünnt in `stages_json` (reicht für die Optik); volle Auflösung
+  nur, falls je eine echte Analyse sie braucht.
 
 - **✏️ Traumskizzen** (Canvas-Zeichnen) — Philipp skeptisch, erst validieren.
 - **⌚ Wearable-Integration** (live) — hardwareabhängig; CSV-Import (oben)

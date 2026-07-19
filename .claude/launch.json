@@ -3,9 +3,30 @@
   "configurations": [
     {
       "name": "klartraum-dev",
-      "runtimeExecutable": "/Users/phille/Desktop/Application Klarträumen/.venv/bin/uvicorn",
-      "runtimeArgs": ["main:app", "--app-dir", "/Users/phille/Desktop/Application Klarträumen/backend", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+      "runtimeExecutable": "/Users/phille/Desktop/Application Klartr\u00e4umen/.venv/bin/uvicorn",
+      "runtimeArgs": [
+        "main:app",
+        "--app-dir",
+        "/Users/phille/Desktop/Application Klartr\u00e4umen/backend",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload"
+      ],
       "port": 8000
+    },
+    {
+      "name": "nachtkino",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "/Users/phille/Desktop/Application Klartr\u00e4umen/frontend"
+      ],
+      "port": 8765
     }
   ]
 }

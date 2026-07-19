@@ -96,12 +96,20 @@ Experimente-Sektion zeigt keine Schlaf-Grundkarten mehr (kein Duplikat).
 Tap auf eine Nacht (SS.1-Balken oder Formular-Schlafblock) öffnet ein
 Bottom-Sheet:
 
-1. **Phasen-Balken** („Hypnogramm light"): ein horizontaler Balken der
-   Nacht, segmentiert nach REM / Tief / Leicht / Wach aus den
-   TD.1-Feldern (nur Minuten-Summen, keine Verlaufskurve — mehr geben
-   die Importe verlässlich nicht her; Ehrlichkeit vor Optik).
-   Farben über CSS-Variablen, Rotlicht-tauglich; Legende mit Klartext
-   („REM — hier träumst du am meisten").
+1. **Phasen-Zeitleiste** („Hypnogramm light", aktualisiert 19.07.2026 —
+   der echte Export liefert eine **minutengenaue Segment-Zeitleiste** in
+   `Night.stages_json`, s. TD.1): echtes Treppen-Hypnogramm mit
+   Tap-Erklärung pro Segment, optional zuschaltbarer Puls-Kurve und
+   Traumfenster-Hervorhebung — **Design-Vorlage ist der
+   Nachtkino-Prototyp** (`frontend/nachtkino.html`, git-ignoriert;
+   Generator `prototyp-nachtkino-generator.py`). Daraus übernehmen:
+   Segment-Tooltips, ✨-REM-Modus, ❤️-Puls-Overlay; die geführte Tour
+   bleibt dem Prototyp/der Schlafschule vorbehalten (im Sheet zu viel).
+   Zusätzlich: **REM-Fenster-Liste mit Uhrzeiten** (größtes markiert)
+   und **Wachmomente mit Uhrzeit + REM danach** (die WBTB-Brücke).
+   Fallback ohne `stages_json` (z. B. generic_csv-Import): gestapelter
+   Summen-Balken der vier Phasen. Farben über CSS-Variablen,
+   Rotlicht-tauglich; Legende mit Klartext („REM — hier träumst du").
 2. **Einordnung als Sätze:** je Phase „x min — dein Median: y min"
    (Median nur aus Tracker-Nächten). Auffälligstes weicht ab →
    ein Satz oben („Diese Nacht hatte ungewöhnlich viel REM").

@@ -16,3 +16,6 @@ build/
 # Rohe Tracker-Exporte (echte Gesundheitsdaten) -- nie ins Repo, s. UMSETZUNGSPLAN-TRACKERDATEN.md
 *_MiFitness_*/
 *mi-fitness-testdaten*/
+
+# Nachtkino-Prototyp (enthaelt echte Schlafdaten, generiert aus dem Tracker-Export)
+frontend/nachtkino.html
