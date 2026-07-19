@@ -304,6 +304,32 @@ const learn = {
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem">
           <button class="primary" id="data-export-btn">${t("learn.exportBtn")}</button>
           <button id="data-path-copy-btn">${t("learn.copyPathBtn")}</button>
+        </div>
+        <div class="tracker-import-section">
+          <h3 id="tracker-import-heading">${t("tracker.importTitle")}</h3>
+          <p class="hint">${t("tracker.importHint")}</p>
+          <div class="form-row">
+            <label><span>${t("tracker.adapterLabel")}</span>
+              <select id="tracker-adapter">
+                <option value="mi_fitness">${t("tracker.adapterMiFitness")}</option>
+              </select>
+            </label>
+            <label><span>${t("tracker.overwriteLabel")}</span>
+              <select id="tracker-overwrite-mode">
+                <option value="fill_empty" selected>${t("tracker.modeFillEmpty")}</option>
+                <option value="tracker_wins">${t("tracker.modeTrackerWins")}</option>
+                <option value="phases_only">${t("tracker.modePhasesOnly")}</option>
+              </select>
+            </label>
+          </div>
+          <label><span>${t("tracker.fileLabel")}</span>
+            <input type="file" id="tracker-file" accept=".csv">
+          </label>
+          <label><span>${t("tracker.scoreFileLabel")}</span>
+            <input type="file" id="tracker-score-file" accept=".csv">
+          </label>
+          <button type="button" class="primary" id="tracker-import-btn">${t("tracker.importBtn")}</button>
+          <div id="tracker-import-result" class="hint"></div>
         </div>`;
       container.appendChild(card);
 
@@ -313,7 +339,42 @@ const learn = {
       document.getElementById("data-path-copy-btn").addEventListener("click", () => {
         navigator.clipboard.writeText(info.data_dir).then(() => showToast(t("learn.pathCopied")));
       });
+      hilfe.attach(document.getElementById("tracker-import-heading"), "tracker-import");
+      document.getElementById("tracker-import-btn").addEventListener("click", () => this.importTrackerFile());
     } catch { /* Server unterstützt Endpunkt noch nicht */ }
+  },
+
+  // TD.2: Tracker-Import -- Datei(en) hochladen, Ergebnisbericht anzeigen.
+  async importTrackerFile() {
+    const fileInput = document.getElementById("tracker-file");
+    const scoreInput = document.getElementById("tracker-score-file");
+    const resultEl = document.getElementById("tracker-import-result");
+    if (!fileInput.files.length) {
+      showToast(t("tracker.noFileSelected"));
+      return;
+    }
+    const btn = document.getElementById("tracker-import-btn");
+    btn.disabled = true;
+    resultEl.textContent = t("tracker.importing");
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    if (scoreInput.files.length) formData.append("score_file", scoreInput.files[0]);
+    formData.append("adapter", document.getElementById("tracker-adapter").value);
+    formData.append("overwrite_mode", document.getElementById("tracker-overwrite-mode").value);
+
+    try {
+      const result = await api.importNights(formData);
+      let text = t("tracker.resultSummary", result);
+      if (result.errors.length) text += " " + t("tracker.resultErrors", { n: result.errors.length });
+      resultEl.textContent = text;
+      fileInput.value = "";
+      scoreInput.value = "";
+    } catch (err) {
+      resultEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
   },
 
   showFirstRunHint() {

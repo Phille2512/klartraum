@@ -1897,6 +1897,15 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   line-height: 1.5;
 }
 
+/* --- TD.2: Tracker-Import --- */
+.tracker-import-section {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-input);
+}
+.tracker-import-section h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+#tracker-import-result { min-height: 1.2em; }
+
 /* --- Lesezimmer: stiller Gegenpol zum Analyse-Tab, ein Traum pro Bildschirm --- */
 .lesezimmer-overlay {
   position: fixed;

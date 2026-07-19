@@ -1,7 +1,9 @@
 // Kleiner Wrapper um fetch für die REST-API
 const api = {
   async request(path, options = {}) {
-    const headers = { "Content-Type": "application/json" };
+    // TD.2: bei FormData (Datei-Upload) KEIN Content-Type setzen -- der
+    // Browser braucht die Kontrolle über den multipart-Boundary-String.
+    const headers = options.body instanceof FormData ? {} : { "Content-Type": "application/json" };
     if (auth.token) headers["Authorization"] = `Bearer ${auth.token}`;
     let res;
     try {
@@ -187,6 +189,9 @@ const api = {
   },
   medianBedtime() {
     return this.request("/api/nights/median-bedtime");
+  },
+  importNights(formData) {
+    return this.request("/api/nights/import", { method: "POST", body: formData });
   },
 };
 

@@ -9,14 +9,21 @@ import datetime as dt
 import json
 import re
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlmodel import Session, col, select
 
 from deps import get_session, require_auth
 from models import Night
 from schemas import NightIn
+from tracker_adapters import TrackerImportError, parse_mi_fitness
 
 router = APIRouter(prefix="/api/nights", dependencies=[Depends(require_auth)])
+
+# TD.2: fill_empty (Default) füllt nur Nächte ohne Zeiten, tracker_wins
+# überschreibt immer, phases_only lässt Zeiten/confidence/source unangetastet
+# und ergänzt nur die Tracker-Felder.
+OVERWRITE_MODES = {"fill_empty", "tracker_wins", "phases_only"}
+ADAPTERS = {"mi_fitness"}
 
 TIME_RE = re.compile(r"^([01]\d|2[0-3]):(00|15|30|45)$")
 
@@ -84,6 +91,92 @@ def median_bedtime(session: Session = Depends(get_session)):
     n = len(minutes)
     med = minutes[n // 2] if n % 2 else round((minutes[n // 2 - 1] + minutes[n // 2]) / 2)
     return {"bed_time": f"{med // 60:02d}:{med % 60:02d}"}
+
+
+def _apply_times(night: Night, nd) -> None:
+    night.bed_time = nd.bed_time
+    night.wake_time = nd.wake_time
+    night.sleep_minutes = nd.sleep_minutes
+
+
+def _apply_phases(night: Night, nd) -> None:
+    night.rem_minutes = nd.rem_minutes
+    night.deep_minutes = nd.deep_minutes
+    night.light_minutes = nd.light_minutes
+    night.awake_minutes = nd.awake_minutes
+    night.awakenings = nd.awakenings
+    night.tracker_score = nd.tracker_score
+    night.hr_min = nd.hr_min
+    night.hr_avg = nd.hr_avg
+    night.hr_max = nd.hr_max
+    night.sleep_latency_minutes = nd.sleep_latency_minutes
+    night.stages_json = nd.stages_json
+
+
+# TD.2: muss VOR der "/{date}"-Route stehen -- sonst matcht Starlette "import"
+# als Datums-Pfadparameter (Registrierungsreihenfolge = Match-Reihenfolge).
+@router.post("/import")
+async def import_nights(
+    file: UploadFile = File(...),
+    score_file: UploadFile | None = File(None),
+    adapter: str = Form(...),
+    overwrite_mode: str = Form("fill_empty"),
+    session: Session = Depends(get_session),
+):
+    if adapter not in ADAPTERS:
+        raise HTTPException(422, "unknown_adapter")
+    if overwrite_mode not in OVERWRITE_MODES:
+        raise HTTPException(422, "invalid_overwrite_mode")
+
+    try:
+        fitness_text = (await file.read()).decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(422, "tracker_import_bad_format")
+    score_text = None
+    if score_file is not None:
+        try:
+            score_text = (await score_file.read()).decode("utf-8-sig")
+        except UnicodeDecodeError:
+            raise HTTPException(422, "tracker_import_bad_format")
+
+    try:
+        nights_data, nap_skips, row_errors = parse_mi_fitness(fitness_text, score_text)
+    except TrackerImportError as exc:
+        raise HTTPException(422, str(exc))
+
+    imported = 0
+    updated = 0
+    skipped = nap_skips
+
+    for nd in nights_data:
+        existing = session.get(Night, nd.date)
+        is_new = existing is None
+        night = existing or Night(date=nd.date)
+
+        if overwrite_mode == "fill_empty":
+            if existing is not None and (existing.bed_time or existing.wake_time):
+                skipped += 1
+                continue
+            _apply_times(night, nd)
+            _apply_phases(night, nd)
+            night.source = "tracker"
+            night.confidence = "exact"
+        elif overwrite_mode == "tracker_wins":
+            _apply_times(night, nd)
+            _apply_phases(night, nd)
+            night.source = "tracker"
+            night.confidence = "exact"
+        else:  # phases_only -- Zeiten/confidence/source bewusst unangetastet
+            _apply_phases(night, nd)
+
+        session.add(night)
+        if is_new:
+            imported += 1
+        else:
+            updated += 1
+
+    session.commit()
+    return {"imported": imported, "updated": updated, "skipped": skipped, "errors": row_errors}
 
 
 @router.get("/{date}")

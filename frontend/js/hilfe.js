@@ -58,6 +58,12 @@ const HILFE = {
     wozu: t("hilfe.schlafAnalyse.wozu"),
     extraLink: { label: t("hilfe.schlafAnalyse.extraLink"), anchor: "guide-schlaf" },
   },
+  "tracker-import": {
+    title: t("hilfe.trackerImport.title"),
+    was: t("hilfe.trackerImport.was"),
+    wie: t("hilfe.trackerImport.wie"),
+    wozu: t("hilfe.trackerImport.wozu"),
+  },
 };
 
 const hilfe = {
