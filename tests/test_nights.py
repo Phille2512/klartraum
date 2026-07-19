@@ -213,6 +213,74 @@ def test_manual_edit_resets_source_but_keeps_tracker_phases(auth_client):
     assert body["tracker_score"] == 78
 
 
+# ---- SS.2: GET /api/nights (Liste) + GET /api/nights/medians ----
+
+def test_list_nights_empty(auth_client):
+    resp = auth_client.get("/api/nights")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_list_nights_sorted_newest_first(auth_client):
+    auth_client.put("/api/nights/2026-07-01", json={"bed_time": "23:00", "wake_time": "07:00"})
+    auth_client.put("/api/nights/2026-07-10", json={"bed_time": "23:00", "wake_time": "07:00"})
+    auth_client.put("/api/nights/2026-07-05", json={"bed_time": "23:00", "wake_time": "07:00"})
+    resp = auth_client.get("/api/nights")
+    dates = [n["date"] for n in resp.json()]
+    assert dates == ["2026-07-10", "2026-07-05", "2026-07-01"]
+
+
+def test_list_nights_flags_stages_without_including_raw_json(auth_client):
+    with Session(engine) as session:
+        session.add(Night(
+            date=dt.date(2026, 7, 6), confidence="exact", source="tracker",
+            stages_json='{"segments":[{"s":1,"e":2,"st":2}]}',
+        ))
+        session.commit()
+    resp = auth_client.get("/api/nights")
+    row = resp.json()[0]
+    assert row["has_stages"] is True
+    assert "stages_json" not in row
+    assert "stages" not in row
+
+
+def test_list_nights_respects_limit(auth_client):
+    for i in range(5):
+        auth_client.put(f"/api/nights/2026-07-{i + 1:02d}", json={"unknown": True})
+    resp = auth_client.get("/api/nights", params={"limit": 2})
+    assert len(resp.json()) == 2
+
+
+def test_medians_empty_without_tracker_nights(auth_client):
+    auth_client.put("/api/nights/2026-07-01", json={"bed_time": "23:00", "wake_time": "07:00"})
+    resp = auth_client.get("/api/nights/medians")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["n_total"] == 0
+    assert body["rem_minutes"] is None
+
+
+def test_medians_computed_from_tracker_nights_only(auth_client):
+    with Session(engine) as session:
+        for i, rem in enumerate([60, 80, 100]):  # Median = 80
+            session.add(Night(
+                date=dt.date(2026, 7, 1 + i), confidence="exact", source="tracker",
+                rem_minutes=rem, deep_minutes=100, light_minutes=200, awake_minutes=10,
+            ))
+        session.add(Night(date=dt.date(2026, 8, 1), confidence="exact", source="manual", sleep_minutes=400))
+        session.commit()
+    resp = auth_client.get("/api/nights/medians")
+    body = resp.json()
+    assert body["n_total"] == 3  # die manuelle Nacht zaehlt nicht mit
+    assert body["rem_minutes"] == 80
+    assert body["deep_minutes"] == 100
+
+
+def test_nights_list_and_medians_require_authentication(client):
+    assert client.get("/api/nights").status_code == 401
+    assert client.get("/api/nights/medians").status_code == 401
+
+
 def test_nights_require_authentication(client):
     resp = client.get("/api/nights/2026-07-14")
     assert resp.status_code == 401

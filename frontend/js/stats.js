@@ -527,6 +527,7 @@ const stats = {
     this.renderBeifuss(data.beifuss);
     this.renderSleepAnalysis(data.sleep);
     this.renderTrackerAnalysis(data.tracker);
+    nightDetail.loadList();
     this.renderConnections();
     this.renderCorrelations(data.correlations);
   },

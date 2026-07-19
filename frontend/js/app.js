@@ -103,6 +103,7 @@ journal.init();
 learn.init();
 offline.init();
 lesezimmer.init();
+nightDetail.init();
 
 // Abendritual
 const ritualOverlay = document.getElementById("ritual-overlay");

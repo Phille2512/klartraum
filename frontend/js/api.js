@@ -193,6 +193,12 @@ const api = {
   importNights(formData) {
     return this.request("/api/nights/import", { method: "POST", body: formData });
   },
+  listNights(limit) {
+    return this.request(`/api/nights${limit ? `?limit=${limit}` : ""}`);
+  },
+  nightMedians() {
+    return this.request("/api/nights/medians");
+  },
 };
 
 function showToast(message) {

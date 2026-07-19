@@ -179,6 +179,61 @@ async def import_nights(
     return {"imported": imported, "updated": updated, "skipped": skipped, "errors": row_errors}
 
 
+def _night_list_out(night: Night) -> dict:
+    # SS.2: kompakte Projektion fuer Listenansichten -- ohne stages_json
+    # (kann pro Nacht mehrere KB sein), das holt sich die Detail-Ansicht
+    # gezielt ueber GET /{date}. Dieselbe Liste soll spaeter SS.1s
+    # Nacht-Balken speisen koennen (deshalb generisch, nicht nur Tracker-Naechte).
+    return {
+        "date": night.date.isoformat(),
+        "bed_time": night.bed_time,
+        "wake_time": night.wake_time,
+        "sleep_minutes": night.sleep_minutes,
+        "confidence": night.confidence,
+        "source": night.source,
+        "rem_minutes": night.rem_minutes,
+        "deep_minutes": night.deep_minutes,
+        "light_minutes": night.light_minutes,
+        "awake_minutes": night.awake_minutes,
+        "tracker_score": night.tracker_score,
+        "has_stages": night.stages_json is not None,
+    }
+
+
+# Muss VOR "/{date}" stehen (Registrierungsreihenfolge = Match-Reihenfolge).
+@router.get("")
+def list_nights(limit: int = 90, session: Session = Depends(get_session)):
+    stmt = select(Night).order_by(col(Night.date).desc()).limit(limit)
+    nights = session.exec(stmt).all()
+    return [_night_list_out(n) for n in nights]
+
+
+@router.get("/medians")
+def night_medians(session: Session = Depends(get_session)):
+    """SS.2: Vergleichswerte fuer "diese Nacht hatte X min -- dein Median: Y
+    min". Nur aus Tracker-Naechten (manuelle Erfassung kennt keine Phasen)."""
+    tracker_nights = [
+        n for n in session.exec(select(Night)).all()
+        if n.rem_minutes is not None and n.deep_minutes is not None
+        and n.light_minutes is not None and n.awake_minutes is not None
+    ]
+
+    def med(values: list[int]) -> float | None:
+        if not values:
+            return None
+        s = sorted(values)
+        n = len(s)
+        return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+    return {
+        "n_total": len(tracker_nights),
+        "rem_minutes": med([n.rem_minutes for n in tracker_nights]),
+        "deep_minutes": med([n.deep_minutes for n in tracker_nights]),
+        "light_minutes": med([n.light_minutes for n in tracker_nights]),
+        "awake_minutes": med([n.awake_minutes for n in tracker_nights]),
+    }
+
+
 @router.get("/{date}")
 def get_night(date: dt.date, session: Session = Depends(get_session)):
     night = session.get(Night, date)

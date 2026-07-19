@@ -343,6 +343,15 @@
             <p class="hint" data-i18n="stats.trackerAnalysisHint">Schlafphasen, Puls und Wachmomente aus deinem Tracker-Import — ergänzt die Selbstauskunft oben um echte Messwerte.</p>
             <div id="tracker-analysis"></div>
           </div>
+          <!-- SS.2 (Übergangs-Einstieg, bis SS.1 die eigene Schlaf-Sektion mit
+               Nacht-Balken baut): eigenständige, klickbare Nächte-Liste --
+               bewusst NICHT ans Traum-Formular gehängt (dort waere sie beim
+               Bearbeiten störend). -->
+          <div class="card hidden" id="night-list-card">
+            <h2 id="night-list-heading" data-i18n="ss2.nightListTitle">🌙 Deine Nächte</h2>
+            <p class="hint" data-i18n="ss2.nightListHint">Tippe eine Nacht an, um sie im Detail zu sehen.</p>
+            <div id="night-list"></div>
+          </div>
           <div class="card">
             <h2 data-i18n="stats.connectionsTitle">🔗 Verbindungen</h2>
             <p class="hint" data-i18n="stats.connectionsHint">Welche Orte, Personen, Zeichen und Gefühle gehören zusammen?</p>
@@ -572,6 +581,38 @@
     <div id="dream-read-actions" class="entry-actions dream-read-actions"></div>
   </div>
 
+  <!-- SS.2: Nacht-Detail -- eigenständiges Overlay, unabhängig vom
+       Traum-Formular erreichbar (Nächte-Liste in Analyse → Experimente).
+       Hypnogramm-Design lehnt sich an den Nachtkino-Prototyp an
+       (prototyp-nachtkino-generator.py). -->
+  <div id="night-detail-overlay" class="lesezimmer-overlay hidden">
+    <div class="lesezimmer-glow" aria-hidden="true"></div>
+    <button id="night-detail-close" class="ritual-close-btn lesezimmer-close-btn" data-i18n-aria="ss2.closeAria" aria-label="Nacht-Detail schließen">✕</button>
+    <div class="lesezimmer-body">
+      <article class="lesezimmer-dream dream-read-card night-detail-card">
+        <p class="lesezimmer-date" id="night-detail-date"></p>
+        <h2 id="night-detail-title"></h2>
+        <p class="hint" id="night-detail-badge"></p>
+        <p id="night-detail-highlight" class="night-detail-highlight hidden"></p>
+        <div id="night-detail-hypno-wrap" class="hidden">
+          <div class="chip-row" id="night-detail-controls"></div>
+          <svg id="night-detail-hypno" viewBox="0 0 920 260" class="night-hypno" role="img" aria-label="Hypnogramm der Nacht"></svg>
+          <div id="night-detail-legend" class="night-legend"></div>
+          <p class="hint" id="night-detail-seginfo"></p>
+        </div>
+        <div id="night-detail-fallback" class="hidden"></div>
+        <div id="night-detail-medians"></div>
+        <div id="night-detail-remlist"></div>
+        <div id="night-detail-wakemoments"></div>
+        <div id="night-detail-bridge"></div>
+      </article>
+    </div>
+    <div class="lesezimmer-nav">
+      <button type="button" id="night-detail-prev" class="hint" data-i18n="ss2.prev">← Vorherige Nacht</button>
+      <button type="button" id="night-detail-next" class="hint" data-i18n="ss2.next">Nächste Nacht →</button>
+    </div>
+  </div>
+
   <!-- Reflexions-Overlay -->
   <div id="reflection-overlay" class="login-overlay hidden">
     <div class="card login-card reflection-card">
@@ -673,6 +714,7 @@
   <script src="/js/journal.js"></script>
   <script src="/js/lesezimmer.js"></script>
   <script src="/js/stats.js"></script>
+  <script src="/js/night_detail.js"></script>
   <script src="/js/wissen.js"></script>
   <script src="/js/hilfe.js"></script>
   <script src="/js/atlas.js"></script>
