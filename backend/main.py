@@ -1,6 +1,7 @@
 """S.3: App-Factory, Middleware, Static Files, Router-Includes.
 Die Endpunkte selbst leben in routers/ (reine Umzugsarbeit aus dem
 ehemals >1.100 Zeilen langen main.py, kein Verhalten geändert)."""
+import datetime as dt
 import traceback
 from contextlib import asynccontextmanager
 
@@ -10,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 import backup
 from database import init_db
-from paths import FRONTEND_DIR, frontend_version
+from paths import DATA_DIR, FRONTEND_DIR, frontend_version
 from routers import atlas, auth, cycle, dreams, export, jung, map as map_router, nights, stats, tags
 
 # S.4: einmal beim Serverstart berechnet, siehe frontend_version() in paths.py
@@ -31,6 +32,23 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Traumader", lifespan=lifespan)
 
 
+def _log_error(request_path: str) -> None:
+    """Traceback zusätzlich nach DATA_DIR/fehler.log schreiben — das
+    Konsolenfenster der Desktop-App scrollt weg bzw. ist beim Melden längst
+    zu; die Datei können Nutzer (z. B. Freunde auf Windows) einfach schicken.
+    encoding="utf-8" ist Pflicht: Windows schreibt sonst cp1252 und stolpert
+    über Emojis/Traumtexte im Traceback."""
+    try:
+        log = DATA_DIR / "fehler.log"
+        if log.exists() and log.stat().st_size > 512_000:
+            log.replace(DATA_DIR / "fehler.log.alt")  # eine Rotation genügt
+        with log.open("a", encoding="utf-8") as f:
+            f.write(f"\n[{dt.datetime.now().isoformat(timespec='seconds')}] {request_path}\n")
+            f.write(traceback.format_exc())
+    except Exception:
+        pass  # Fehler-Logging darf nie selbst einen Fehler auslösen
+
+
 @app.middleware("http")
 async def no_cache_static(request, call_next):
     # Browser sollen Frontend-Dateien immer gegen den Server prüfen (304, wenn
@@ -46,6 +64,7 @@ async def no_cache_static(request, call_next):
         response = await call_next(request)
     except Exception:
         traceback.print_exc()
+        _log_error(request.url.path)
         return JSONResponse(status_code=500, content={"detail": "internal_error"})
     if not request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-cache"
