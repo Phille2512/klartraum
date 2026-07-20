@@ -546,6 +546,17 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <div id="recovery-overlay" class="login-overlay hidden">
+    <div class="card login-card">
+      <h2>🩺 <span data-i18n="recovery.title">Deine Datenbank ist beschädigt</span></h2>
+      <p data-i18n="recovery.intro">Keine Panik: Traumader legt täglich Sicherungen an. Du kannst mit einem Klick zum letzten gesunden Stand zurückkehren.</p>
+      <p id="recovery-backup-line"></p>
+      <button id="recovery-restore-btn" class="primary" data-i18n="recovery.restore">Backup wiederherstellen</button>
+      <p class="hint" data-i18n="recovery.keepNote">Die beschädigte Datei wird aufgehoben (dreams-defekt-…), nichts wird gelöscht.</p>
+      <p class="hint hidden" id="recovery-error"></p>
+    </div>
+  </div>
+
   <div id="login-overlay" class="login-overlay hidden">
     <form id="login-form" class="card login-card">
       <h2 id="login-title">🔒 Anmelden</h2>

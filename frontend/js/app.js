@@ -98,12 +98,51 @@ themeBtn.addEventListener("click", () => {
   }
 });
 
+// Wiederherstellungs-Karte bei beschädigter Datenbank (Recovery-Modus).
+// Ausgelöst von api.js, sobald irgendein Aufruf das 503 db_defect erhält.
+const recovery = {
+  shown: false,
+  async show() {
+    if (this.shown) return;
+    this.shown = true;
+    document.getElementById("recovery-overlay").classList.remove("hidden");
+    try {
+      const s = await api.request("/api/recovery/status");
+      const line = document.getElementById("recovery-backup-line");
+      if (s.backup) {
+        line.textContent = t("recovery.backupLine", { date: s.backup_date });
+      } else {
+        line.textContent = t("recovery.noBackup");
+        document.getElementById("recovery-restore-btn").classList.add("hidden");
+      }
+    } catch {
+      // Status nicht abrufbar — Karte trotzdem zeigen, Button bleibt aktiv
+    }
+  },
+  init() {
+    const btn = document.getElementById("recovery-restore-btn");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        await api.request("/api/recovery/restore", { method: "POST" });
+        window.location.reload();
+      } catch (e) {
+        btn.disabled = false;
+        const errEl = document.getElementById("recovery-error");
+        errEl.textContent = e.message;
+        errEl.classList.remove("hidden");
+      }
+    });
+  },
+};
+
 auth.init();
 journal.init();
 learn.init();
 offline.init();
 lesezimmer.init();
 nightDetail.init();
+recovery.init();
 
 // Abendritual
 const ritualOverlay = document.getElementById("ritual-overlay");

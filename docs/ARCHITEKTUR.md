@@ -79,6 +79,7 @@ automatisch. Es gibt keine Down-Migrationen.
 | Innenwelt (Jung) | `GET innenwelt`, `GET/POST dreams/{id}/reflections`, `GET/POST dreams/{id}/imaginations`, `GET/POST dreams/{id}/analysis`, `GET/POST sync-events` (+ DELETEs) |
 | Zyklus | `GET intentions/current`, `POST intentions`, `PATCH intentions/{id}`, `GET/POST/PATCH/DELETE goals` |
 | Schlafzeit | `GET/PUT/DELETE nights/{date}`, `GET nights/latest-exact` (Formular-Vorbelegung), `GET nights/median-bedtime` (WBTB-Vorbelegung) |
+| Recovery | `GET recovery/status`, `POST recovery/restore` — nur relevant, wenn der Start-Integritätscheck die DB als beschädigt meldet (s. Betriebs-Wissen) |
 
 Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
 (`DreamIn`/`DreamOut` sind die wichtigsten).
@@ -109,6 +110,17 @@ Verbindliche Antwort-Formate: siehe Pydantic-Schemas in `main.py`
   echten Schema-Migration zusätzlich ein `dreams-pre-migration-*.db`-Snapshot
   (nie rotiert). Status/Warnung sichtbar in `GET /api/datainfo` und im
   Lernen-Tab („🔐 Deine Daten“).
+- **Integritäts-Check & Ein-Klick-Wiederherstellung (20.07.2026):** Beim
+  Serverstart prüft `backend/recovery.py` die `dreams.db` per
+  `PRAGMA integrity_check`. Bei Beschädigung startet die App im
+  Recovery-Modus: alle Daten-Endpunkte antworten `503 db_defect`
+  (Middleware in `main.py`), nur `auth/health/recovery` bleiben offen —
+  das Frontend (api.js → recovery-Overlay in `app.js`/`index.html`) zeigt
+  dann „Backup vom <Datum> wiederherstellen?". Die Wiederherstellung nimmt
+  das jüngste Backup, das selbst den Integritäts-Check besteht, benennt die
+  kaputte Datei in `dreams-defekt-<Zeitstempel>.db` um (nie löschen!) und
+  ruft `init_db()` (Migrationen) nach. Unbehandelte Fehler landen zusätzlich
+  mit Traceback in `DATA_DIR/fehler.log` (UTF-8, Rotation ab 512 KB).
 - **Backup = eine Datei:** zusätzlich `dreams.db` kopieren (bei gestopptem
   Server) oder Export (JSON/CSV) aus der Analyse — schützt vor Geräteverlust,
   was das automatische Backup (gleiche Platte) nicht kann. `auth.json`

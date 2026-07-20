@@ -24,6 +24,10 @@ const api = {
       const err = new Error(detail.detail ? tErrCode(detail.detail) : t("auth.genericError", { status: res.status }));
       err.status = res.status;
       err.code = detail.detail || null;
+      // Recovery-Modus (beschädigte DB): egal welcher Aufruf zuerst auf das
+      // 503 läuft — die Wiederherstellungs-Karte übernimmt (app.js).
+      // (typeof-Check statt window.*: top-level const hängt nicht an window)
+      if (err.code === "db_defect" && typeof recovery !== "undefined") recovery.show();
       throw err;
     }
     return res.status === 204 ? null : res.json();

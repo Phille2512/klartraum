@@ -254,6 +254,14 @@ sich immer nur EINE Sache auffällig — Träume sind seltsam, nicht hektisch.
 - **🌍 Local-First-PWA** (Stufe 2 aus `docs/VERTEILUNG.md`) und
   **Multi-User** (`~/Desktop/Klartraum App`) — große Ausbauten, je eigener Plan.
 
+- ✅ *(umgesetzt 20.07.2026 — `backend/recovery.py`, s. ARCHITEKTUR.md)*
+  **🩺 Integritäts-Check beim Start** (Anlass 20.07.2026: kaputte DB bei
+  Philipps Bruder, sqlite InternalError beim Speichern): beim Serverstart
+  `PRAGMA integrity_check`; bei Befund freundliche Seite statt kryptischer
+  500er — „Deine Datenbank ist beschädigt. Letztes gesundes Backup vom
+  <Datum> wiederherstellen? [Ja]" mit Ein-Klick-Restore (kaputte Datei
+  wird als dreams-defekt-<Datum>.db aufgehoben, nie gelöscht). Backups
+  vor dem Anbieten selbst per integrity_check prüfen.
 - **🏃 Vortags-Aktivität als Auto-Kontext** (Idee 19.07.2026, aus dem
   echten Mi-Fitness-Export): Schritte/Intensität/Training liegen im
   selben Export — als automatische Ergänzung zur Tagesbilanz (E.4b):

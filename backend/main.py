@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 import backup
+import recovery
 from database import init_db
 from paths import DATA_DIR, FRONTEND_DIR, frontend_version
 from routers import atlas, auth, cycle, dreams, export, jung, map as map_router, nights, stats, tags
@@ -20,6 +21,15 @@ FRONTEND_VERSION = frontend_version()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Integritäts-Check VOR allem anderen: Von einer beschädigten DB darf
+    # weder ein Backup gezogen noch eine Migration darauf losgelassen werden.
+    # Im Recovery-Modus bedient die App nur auth/health/recovery (s. Middleware);
+    # die Wiederherstellung selbst räumt auf und ruft init_db() nach.
+    if recovery.startup_check():
+        print("  ⚠️  dreams.db ist beschädigt — Recovery-Modus aktiv "
+              "(Wiederherstellung über die App-Oberfläche).")
+        yield
+        return
     # S.1: Backup-Fehler dürfen den Serverstart nicht verhindern.
     try:
         backup.create_daily_backup_if_missing()
@@ -60,6 +70,17 @@ async def no_cache_static(request, call_next):
     # einen registrierten Exception-Handler weiterzureichen. Saubere JSON-Antwort
     # statt HTML-Traceback; voller Traceback ins Server-Log. HTTPException
     # (404, 401, 422, ...) läuft unverändert durch call_next() als normale Response.
+    # Recovery-Modus: statt zufälliger 500er auf der kaputten DB bekommt
+    # jeder Daten-Endpoint ein klares 503 db_defect — das Frontend zeigt
+    # daraufhin die Wiederherstellungs-Karte. auth/health/recovery bleiben
+    # erreichbar (Login läuft über auth.json, nicht über die DB).
+    path = request.url.path
+    if (
+        recovery.STATE["defect"]
+        and path.startswith("/api/")
+        and not path.startswith(("/api/auth", "/api/health", "/api/recovery"))
+    ):
+        return JSONResponse(status_code=503, content={"detail": "db_defect"})
     try:
         response = await call_next(request)
     except Exception:
@@ -96,6 +117,7 @@ app.include_router(map_router.router)
 app.include_router(jung.router)
 app.include_router(export.router)
 app.include_router(nights.router)
+app.include_router(recovery.router)
 
 # Frontend zuletzt mounten (und /sw.js VOR dem Mount registriert, damit die
 # eigene Route Vorrang vor der statischen Datei hat); /api/* hat ohnehin Vorrang
