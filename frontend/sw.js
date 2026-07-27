@@ -23,6 +23,7 @@ const SHELL = [
   "/js/worldmap.js",
   "/js/mandala.js",
   "/js/learn.js",
+  "/js/night_detail.js",
   "/js/app.js",
   "/manifest.json",
   "/icons/icon-192.png",

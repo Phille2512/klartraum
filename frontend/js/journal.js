@@ -509,7 +509,8 @@ const journal = {
       `<button type="button" class="chip" data-suggest="${escapeHtml(tg.name)}">${escapeHtml(tg.name)}</button>`
     ).join("");
     state.suggEl.querySelectorAll("[data-suggest]").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("mousedown", (e) => {
+        e.preventDefault();
         this.addChipValue(key, btn.dataset.suggest);
         state.textEl.value = "";
         this.renderChipField(key);

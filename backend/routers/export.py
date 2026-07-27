@@ -68,7 +68,10 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
         writer = csv.writer(buf)
         writer.writerow([
             "id", "date", "title", "content", "lucidity", "sleep_quality",
-            "substances", "substance_other", "tags", "dream_signs", "places", "persons", "notes_analysis",
+            "substances", "substance_other",
+            "big_dream", "emotions",
+            "falsches_erwachen", "schlafparalyse", "traum_im_traum", "wiederkehrend", "albtraum",
+            "tags", "dream_signs", "places", "persons", "notes_analysis",
             "bed_time", "wake_time", "sleep_minutes", "sleep_confidence",
             "sleep_source", "rem_minutes", "deep_minutes", "light_minutes", "awake_minutes",
             "awakenings", "tracker_score", "hr_min", "hr_avg", "hr_max",
@@ -78,6 +81,10 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
             writer.writerow([
                 r["id"], r["date"], r["title"], r["content"], r["lucidity"],
                 r["sleep_quality"], "|".join(r["substances"]), r["substance_other"] or "",
+                1 if r["big_dream"] else 0, "|".join(r["emotions"]),
+                1 if r["falsches_erwachen"] else 0, 1 if r["schlafparalyse"] else 0,
+                1 if r["traum_im_traum"] else 0, 1 if r["wiederkehrend"] else 0,
+                1 if r["albtraum"] else 0,
                 "|".join(r["tags"]), "|".join(r["dream_signs"]),
                 "|".join(r["places"]), "|".join(r["persons"]),
                 r["notes_analysis"] or "",
@@ -98,8 +105,8 @@ def export_data(format: str = "json", session: Session = Depends(get_session)):
                 r["stages_json"] or "",
             ])
         return Response(
-            buf.getvalue(),
-            media_type="text/csv; charset=utf-8",
+            "﻿" + buf.getvalue(),
+            media_type="text/csv; charset=utf-8-sig",
             headers={"Content-Disposition": f"attachment; filename={filename}.csv"},
         )
 

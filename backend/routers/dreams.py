@@ -6,7 +6,7 @@ from sqlmodel import Session, col, select
 
 from deps import get_session, require_auth
 from helpers import apply_tags, to_out
-from models import Dream, DreamTag, Tag
+from models import Dream, DreamAnalysis, DreamTag, Imagination, Reflection, SyncEvent, Tag
 from schemas import DreamIn, DreamOut
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
@@ -118,5 +118,8 @@ def delete_dream(dream_id: int, session: Session = Depends(get_session)):
     if not dream:
         raise HTTPException(404, "dream_not_found")
     dream.tags = []
+    for model in (Reflection, Imagination, DreamAnalysis, SyncEvent):
+        for row in session.exec(select(model).where(model.dream_id == dream_id)).all():
+            session.delete(row)
     session.delete(dream)
     session.commit()
