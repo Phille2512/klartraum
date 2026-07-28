@@ -52,7 +52,7 @@ const offline = {
       const items = await this.list();
       let synced = 0;
       let existing;
-      try { existing = await api.listDreams(); } catch { break; }
+      try { existing = await api.listDreams(); } catch { return; }
       for (const item of items) {
         try {
           const isDupe = existing.some((d) =>
