@@ -158,18 +158,15 @@ def test_median_bedtime_odd_count(auth_client):
     assert resp.json()["bed_time"] == "22:30"
 
 
-def test_median_bedtime_sorts_numerically_not_by_clock_wraparound(auth_client):
-    # Bewusste Vereinfachung (s. Kommentar im Router): "00:00" ist numerisch
-    # die kleinste Minutenzahl, wird also wie die früheste Zeit behandelt --
-    # nicht wie eine Zeit "nach Mitternacht, später als 23:00".
+def test_median_bedtime_handles_midnight_crossing(auth_client):
     for date, bed in [("2026-07-01", "22:00"), ("2026-07-02", "23:00"), ("2026-07-03", "00:00")]:
         auth_client.put(f"/api/nights/{date}", json={"bed_time": bed, "wake_time": "07:00"})
 
     resp = auth_client.get("/api/nights/median-bedtime")
-    assert resp.json()["bed_time"] == "22:00"
+    assert resp.json()["bed_time"] == "23:00"
 
 
-def test_median_bedtime_even_count_averages_middle_two(auth_client):
+def test_median_bedtime_two_entries(auth_client):
     for date, bed in [("2026-07-01", "22:00"), ("2026-07-02", "23:00")]:
         auth_client.put(f"/api/nights/{date}", json={"bed_time": bed, "wake_time": "07:00"})
 

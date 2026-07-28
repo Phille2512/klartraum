@@ -51,15 +51,22 @@ const offline = {
     try {
       const items = await this.list();
       let synced = 0;
+      let existing;
+      try { existing = await api.listDreams(); } catch { break; }
       for (const item of items) {
         try {
+          const isDupe = existing.some((d) =>
+            d.date === item.payload.date && d.title === item.payload.title
+          );
+          if (isDupe) {
+            await this.remove(item.queueId);
+            continue;
+          }
           await api.createDream(item.payload);
           await this.remove(item.queueId);
           synced++;
         } catch (err) {
-          // Server offline oder noch nicht angemeldet: Einträge behalten, später erneut
           if (err.isNetworkError || err.isAuthError) break;
-          // Server hat den Eintrag abgelehnt (z. B. ungültige Daten): nicht endlos wiederholen
           await this.remove(item.queueId);
           showToast(t("offline.entryRejected", { title: item.payload.title, message: err.message }));
         }

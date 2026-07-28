@@ -71,7 +71,7 @@ def dream_echoes(text: str = Query(min_length=10), exclude_id: int | None = None
     if not text.strip():
         return []
     words = set(text.lower().split())
-    dreams = session.exec(select(Dream)).all()
+    dreams = session.exec(select(Dream).order_by(col(Dream.id).desc()).limit(500)).all()
     scored = []
     for d in dreams:
         if d.id == exclude_id:

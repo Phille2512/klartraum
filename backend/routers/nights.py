@@ -15,6 +15,7 @@ from sqlmodel import Session, col, select
 from deps import get_session, require_auth
 from models import Night
 from schemas import NightIn
+from stats_helpers import _circular_mean_time
 from tracker_adapters import TrackerImportError, parse_mi_fitness
 
 router = APIRouter(prefix="/api/nights", dependencies=[Depends(require_auth)])
@@ -85,12 +86,11 @@ def median_bedtime(session: Session = Depends(get_session)):
     Median auf Minuten-seit-Mitternacht, keine Kreisstatistik über den
     Mitternachts-Übergang — für eine grobe Vorbelegung ausreichend."""
     exact = session.exec(select(Night).where(Night.confidence == "exact")).all()
-    minutes = sorted(_time_to_minutes(n.bed_time) for n in exact if n.bed_time)
-    if not minutes:
+    bed_times = [n.bed_time for n in exact if n.bed_time]
+    result = _circular_mean_time(bed_times)
+    if not result:
         return None
-    n = len(minutes)
-    med = minutes[n // 2] if n % 2 else round((minutes[n // 2 - 1] + minutes[n // 2]) / 2)
-    return {"bed_time": f"{med // 60:02d}:{med % 60:02d}"}
+    return {"bed_time": result}
 
 
 def _apply_times(night: Night, nd) -> None:

@@ -204,10 +204,10 @@ const stats = {
     const writing = split ? null : data.writing;
     this.renderWritingHeadline(split ? null : data.writing, split);
     this.renderRecall(split ? null : data.per_bucket, split);
-    this.renderHeatmap(split ? data.writing.heatmap : data.writing.heatmap);
-    this.renderHistogram(data.writing.histogram);
-    this.renderDetailChart(data.writing.detail_depth_per_bucket);
-    this.renderScoreChart(data.writing.score_per_bucket);
+    this.renderHeatmap(split ? null : data.writing.heatmap);
+    this.renderHistogram(split ? null : data.writing.histogram);
+    this.renderDetailChart(split ? null : data.writing.detail_depth_per_bucket);
+    this.renderScoreChart(split ? null : data.writing.score_per_bucket);
   },
 
   renderWritingHeadline(writing, split) {
@@ -273,6 +273,7 @@ const stats = {
 
   renderHeatmap(heatmap) {
     const el = document.getElementById("writing-heatmap");
+    if (!heatmap) { el.innerHTML = ""; return; }
     const byDate = Object.fromEntries(heatmap.map((h) => [h.date, h]));
     const maxWords = Math.max(1, ...heatmap.map((h) => h.words));
     const today = new Date();
@@ -296,6 +297,7 @@ const stats = {
   },
 
   renderHistogram(histogram) {
+    if (!histogram) { this.charts["chart-histogram"]?.destroy(); return; }
     this.makeChart("chart-histogram", {
       type: "bar",
       data: {
@@ -307,6 +309,7 @@ const stats = {
   },
 
   renderDetailChart(detail) {
+    if (!detail) { this.charts["chart-detail"]?.destroy(); return; }
     this.makeChart("chart-detail", {
       type: "line",
       data: {
@@ -318,6 +321,7 @@ const stats = {
   },
 
   renderScoreChart(score) {
+    if (!score) { this.charts["chart-score"]?.destroy(); return; }
     this.makeChart("chart-score", {
       type: "line",
       data: {

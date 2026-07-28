@@ -662,6 +662,8 @@ const journal = {
     // M.3: form.reset() setzt nur die nativen Felder zurück -- Chip-Pills und
     // -Aktivzustände explizit nachziehen, sonst blieben sie vom letzten Traum stehen.
     Object.keys(this.chipFields || {}).forEach((key) => this.setChipFieldValues(key, []));
+    this.selectedEmotions = [];
+    document.querySelectorAll(".emotion-chip.selected").forEach((c) => c.classList.remove("selected"));
     this.syncLucidityChips();
     this.syncSleepChips();
   },
@@ -1110,9 +1112,9 @@ const journal = {
     this.dreams.forEach((d) => {
       this.loadReflections(d.id);
       this.loadImaginations(d.id);
-      this.loadSyncEvents(d.id);
       this.loadAnalysis(d.id);
     });
+    this.loadAllSyncEvents();
     this.updateTraumfadenButton();
     this.bindStreakNachtrag();
   },
@@ -1219,17 +1221,20 @@ const journal = {
 
     const finish = () => {
       clearInterval(tick);
+      this._morningTick = null;
       overlay.classList.add("hidden");
       skipBtn.replaceWith(skipBtn.cloneNode(true));
       this.openForm();
     };
 
+    if (this._morningTick) clearInterval(this._morningTick);
     const tick = setInterval(() => {
       remaining--;
       seconds.textContent = remaining;
       progress.style.strokeDashoffset = ((60 - remaining) / 60 * circumference).toString();
       if (remaining <= 0) finish();
     }, 1000);
+    this._morningTick = tick;
 
     skipBtn.addEventListener("click", finish, { once: true });
   },
@@ -1426,19 +1431,24 @@ const journal = {
         showToast(t("journal.toastSyncSaved"));
         el.innerHTML = "";
         el.dataset.loaded = "";
-        this.loadSyncEvents(dreamId);
+        this.loadAllSyncEvents();
       } catch (err) { showToast(err.message); }
     });
     el.querySelector(".sync-cancel-btn").addEventListener("click", () => { el.innerHTML = ""; });
   },
 
-  async loadSyncEvents(dreamId) {
+  async loadAllSyncEvents() {
+    try {
+      this._syncEventsCache = await api.listSyncEvents();
+    } catch { this._syncEventsCache = []; }
+    this.dreams.forEach((d) => this.renderSyncEvents(d.id));
+  },
+
+  renderSyncEvents(dreamId) {
     const el = document.getElementById(`sync-${dreamId}`);
     if (!el || el.dataset.loaded || el.querySelector(".sync-form")) return;
     el.dataset.loaded = "1";
-    try {
-      const events = await api.listSyncEvents();
-      const dreamEvents = events.filter((e) => e.dream_id === dreamId);
+    const dreamEvents = (this._syncEventsCache || []).filter((e) => e.dream_id === dreamId);
       if (!dreamEvents.length) return;
       el.innerHTML = `<details class="expand-detail"><summary>🔗 ${dreamEvents.length} ${dreamEvents.length > 1 ? t("journal.syncMany") : t("journal.syncOne")}</summary>
         ${dreamEvents.map((e) => {
@@ -1451,14 +1461,13 @@ const journal = {
           </div>`;
         }).join("")}
       </details>`;
-    } catch {}
   },
 
   async deleteSyncEvent(eventId, dreamId) {
     await api.deleteSyncEvent(eventId).catch(() => {});
     const el = document.getElementById(`sync-${dreamId}`);
     if (el) { el.dataset.loaded = ""; el.innerHTML = ""; }
-    this.loadSyncEvents(dreamId);
+    this.loadAllSyncEvents();
   },
 
   async removePending(queueId) {
