@@ -217,6 +217,7 @@ main.form-open-wide { max-width: 1080px; }
   border-radius: var(--radius);
   padding: 1rem;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .card h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
@@ -750,9 +751,12 @@ button.danger { color: var(--danger); }
 .sorter-chip:hover { outline: 2px solid var(--accent); }
 
 /* --- Steuerzeile & Sektionen (Analyse 2.0) --- */
+/* D.1: top:0 kollidiert mit dem ebenfalls sticky header (z-index 10) --
+   die Leiste "verschwindet" dahinter statt darunter zu kleben. Der reale
+   Header-Wert kommt per JS als CSS-Var (updateHeaderHeightVar in stats.js). */
 .stats-controlbar {
   position: sticky;
-  top: 0;
+  top: var(--app-header-h, 96px);
   z-index: 5;
   background: var(--bg);
   padding: 0.5rem 0;
@@ -760,6 +764,42 @@ button.danger { color: var(--danger); }
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  /* D.1: die Leiste aendert beim Ein-/Ausklappen ihre eigene Hoehe --
+     ohne das hier verschiebt Scroll-Anchoring die Seite und loest damit
+     ein "scroll"-Event aus, das den Tap-to-expand sofort wieder zuklappt. */
+  overflow-anchor: none;
+}
+
+/* D.1: eingeklappter Zustand beim Scrollen -- nur Zusammenfassungs-Zeile,
+   Tap darauf oeffnet die volle Leiste wieder (siehe stats.js). */
+.stats-controlbar-summary {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-input);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  width: fit-content;
+  cursor: pointer;
+}
+.stats-controlbar.collapsed .stats-controlbar-summary { display: flex; }
+.stats-controlbar.collapsed .chip-row,
+.stats-controlbar.collapsed .stats-custom-range,
+.stats-controlbar.collapsed #stats-gran-hint {
+  display: none;
+}
+
+/* D.1: Sektions-Chips kleben direkt unter der (ggf. eingeklappten)
+   Filterleiste -- top wird von stats.js dynamisch auf deren Unterkante
+   gesetzt, da diese Hoehe je nach Eingeklappt-Zustand wechselt. */
+#stats-section-nav {
+  position: sticky;
+  z-index: 4;
+  background: var(--bg);
+  padding: 0.3rem 0;
 }
 
 .chip-row {
@@ -2143,3 +2183,143 @@ details.guide .guide-body p, details.guide .guide-body li { font-size: 0.92rem; 
   font-size: 0.88rem;
 }
 .draft-prompt span { flex: 1; min-width: 180px; }
+
+/* --- D.2: Überblick (Analyse-Dashboard) --- */
+.overview-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.overview-tile {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  cursor: pointer;
+}
+.overview-tile:hover { outline: 1px solid var(--bg-input); }
+
+.overview-tile-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.overview-tile-icon { font-size: 1rem; }
+.overview-tile-value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+.overview-tile-trend { font-size: 0.85rem; }
+.overview-tile-trend.up { color: var(--lucid); }
+.overview-tile-trend.down { color: var(--text-dim); }
+.overview-tile-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0.15rem 0 0.4rem;
+}
+
+.sparkline { display: block; overflow: visible; }
+.sparkline-empty {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* D.1-Streak-Kachel: Praesenz-Strip statt Trend-Sparkline (siehe stats.js) */
+.streak-strip { display: flex; gap: 2px; align-items: flex-end; height: 22px; }
+.streak-dot {
+  flex: 1;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--bg-input);
+}
+.streak-dot.filled { background: var(--accent); height: 100%; }
+
+.overview-pinned { display: flex; flex-direction: column; }
+.overview-pinned-card { cursor: pointer; }
+.overview-pinned-card canvas { display: none; }
+
+/* D.2: Pin-Umschalter oben rechts auf jeder anheftbaren Karte */
+.card-pin-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  opacity: 0.35;
+  cursor: pointer;
+  filter: grayscale(1);
+  padding: 0.1rem;
+  line-height: 1;
+}
+.card-pin-btn.pinned { opacity: 1; filter: none; }
+
+/* D.2: kurzes Hervorhebungs-Blinken nach Tap-Navigation von Kachel/Karte */
+.jump-highlight { animation: jump-flash 1.5s ease; }
+@keyframes jump-flash {
+  0%, 100% { box-shadow: none; }
+  20% { box-shadow: 0 0 0 2px var(--accent); }
+}
+
+/* D.3: Erkenntnis-Karten im Ueberblick -- Satz + n-Badge + Sprung-Link */
+.insight-card { border-left: 3px solid var(--accent); }
+.insight-card p { margin: 0 0 0.5rem; }
+.insight-jump {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* D.4: Kompakte Ansicht -- Toggle neben den Sektions-Chips */
+.compact-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0.5rem 0 0.75rem;
+  cursor: pointer;
+  width: fit-content;
+}
+/* globales input{width:100%} wuerde die Checkbox sonst ueber die ganze
+   Zeile strecken (unsichtbarer riesiger Klick-Bereich, Label weit weg) */
+.compact-toggle-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* D.4: Accordion -- Ueberschrift bleibt anklickbar, Karteninhalt
+   (card-body) klappt weg. Hero-Karten (accordion-hero) bekommen keinen
+   Toggle und sind immer offen. */
+.card-heading-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.card-summary {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+.card-chevron {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  transition: transform 0.2s ease;
+}
+.card.collapsed .card-chevron { transform: rotate(-90deg); }
+.card.collapsed .card-body { display: none; }
+.card-takeaway {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.3rem 0 0;
+  padding-left: 0.1rem;
+}

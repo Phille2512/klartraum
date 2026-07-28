@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 
 from deps import get_session, require_auth
 from helpers import has_substance
+from insights import generate_findings
 from models import Dream, Intention, Night
 from stats_helpers import (
     build_connections,
@@ -16,6 +17,7 @@ from stats_helpers import (
     build_sleep_overview,
     build_tracker_analysis,
     build_writing,
+    compute_streak,
     split_groups,
 )
 
@@ -35,6 +37,23 @@ def stats_connections(
         stmt = stmt.where(Dream.date <= date_to)
     dreams = session.exec(stmt).all()
     return build_connections(dreams)
+
+
+@router.get("/stats/insights")
+def stats_insights(
+    date_from: dt.date | None = Query(default=None, alias="from"),
+    date_to: dt.date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    stmt = select(Dream)
+    if date_from:
+        stmt = stmt.where(Dream.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Dream.date <= date_to)
+    dreams = session.exec(stmt).all()
+    all_dreams = session.exec(select(Dream)).all()
+    nights = session.exec(select(Night)).all()
+    return {"findings": generate_findings(dreams, all_dreams, nights)}
 
 
 @router.get("/stats")
@@ -146,15 +165,7 @@ def stats(
     with_beifuss = [d for d in dreams if has_substance(d, "beifuss")]
     without_beifuss = [d for d in dreams if not has_substance(d, "beifuss")]
 
-    # Streak: an wie vielen Tagen in Folge (bis heute/gestern) wurde eingetragen?
-    days = {d.date for d in dreams}
-    streak = 0
-    cursor = dt.date.today()
-    if cursor not in days:
-        cursor -= dt.timedelta(days=1)
-    while cursor in days:
-        streak += 1
-        cursor -= dt.timedelta(days=1)
+    streak = compute_streak(dreams)
 
     # Emotionen (A.5)
     emotions_analysis = build_emotions_analysis(dreams, granularity)

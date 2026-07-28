@@ -44,6 +44,63 @@ function rateOrDash(pctText, n, minN = 3) {
     : pctText;
 }
 
+// D.1: Reihenfolge fuer die Swipe-Navigation zwischen den Analyse-Sektionen.
+const STATS_SECTION_ORDER = ["overview", "write", "sleep", "lucidity", "emotions", "experiments", "compass", "review"];
+
+// D.2: Karten in den Themen-Sektionen, die sich an den Ueberblick anheften
+// lassen. Review-Sektion (Archetypen/Mandala) bewusst ausgenommen -- deren
+// Render-Funktionen laden asynchron nach (api.getInnenwelt, mandala.render)
+// und passen nicht ins synchrone ensureCardRendered-Muster unten.
+const PINNABLE_CARD_IDS = [
+  "card-writing", "card-recall", "card-heatmap", "card-histogram", "card-detail", "card-score",
+  "card-weeks", "card-lucidity-dist", "incubation-card", "phenomena-card",
+  "emotion-section",
+  "card-beifuss", "card-connections", "correlation-section",
+  "card-compass", "card-signs", "new-elements-card",
+];
+// Reine Chart.js-Karten: Canvas-Inhalt laesst sich beim Klonen nicht als Bild
+// mitnehmen, daher fuer die Pin-Vorschau ohne eigenen Render-Aufruf geklont
+// (Titel/Hinweistext genuegen als Kontext, siehe renderPinnedCards).
+const CANVAS_ONLY_CARD_IDS = new Set([
+  "card-recall", "card-histogram", "card-detail", "card-score",
+  "card-weeks", "card-lucidity-dist", "card-compass", "card-signs",
+]);
+
+// D.2: reine Funktionen fuer Trend-Pfeil und Mini-Sparkline -- unabhaengig
+// von DOM/state testbar (drei Faelle: steigend/fallend/stabil + leere Buckets).
+function trendArrow(curr, prev) {
+  if (curr == null || prev == null || Number.isNaN(curr) || Number.isNaN(prev)) return "";
+  if (curr > prev) return "▲";
+  if (curr < prev) return "▼";
+  return "▬";
+}
+
+function sparklineSvg(values, { width = 72, height = 22, color = "var(--accent)" } = {}) {
+  const nums = values.filter((v) => v != null && !Number.isNaN(v));
+  if (nums.length < 2) return `<div class="sparkline-empty">${t("stats.overviewNoTrend")}</div>`;
+  const min = Math.min(...nums), max = Math.max(...nums);
+  const range = max - min || 1;
+  const step = width / (values.length - 1);
+  const points = values.map((v, i) => {
+    const x = i * step;
+    const y = v == null || Number.isNaN(v) ? height / 2 : height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return `<svg class="sparkline" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+// D.2: "Traeume/Woche" soll ohne Datumsformat-Parserei (Bucket-Keys sehen je
+// nach Granularitaet anders aus) aus der Bucket-Anzahl geschaetzt werden.
+function weeksInBuckets(perBucket, granularity) {
+  const n = perBucket.length;
+  if (!n) return 0;
+  if (granularity === "day") return n / 7;
+  if (granularity === "month") return n * (365.25 / 12 / 7);
+  return n;
+}
+
 const stats = {
   charts: {},
   data: null,
@@ -54,7 +111,7 @@ const stats = {
   set range(v) { localStorage.setItem("stats-range", v); },
   get granularity() { return localStorage.getItem("stats-granularity") || "week"; },
   set granularity(v) { localStorage.setItem("stats-granularity", v); },
-  get section() { return localStorage.getItem("stats-section") || "write"; },
+  get section() { return localStorage.getItem("stats-section") || "overview"; },
   set section(v) { localStorage.setItem("stats-section", v); },
   get split() { return localStorage.getItem("stats-split") || ""; },
   set split(v) { localStorage.setItem("stats-split", v); },
@@ -99,6 +156,11 @@ const stats = {
       return;
     }
     this.data = data;
+    // D.4: pro Datensatz neu tracken, welche Karten schon einen echten
+    // Render-Durchlauf hatten (fuer ensureCardRendered bei Pin-Vorschauen
+    // und um beim Aufklappen nicht doppelt zu rendern).
+    this._renderedCards = new Set();
+    this._insightsPromise = null;
     this.renderCards(data);
     this.renderSplitControls();
     this.renderSection(this.section);
@@ -110,6 +172,9 @@ const stats = {
       return;
     }
     this.bound = true;
+    this.bindAccordion();
+    this.bindCompactToggle();
+    this.bindPinButtons();
 
     document.getElementById("stats-range-chips").querySelectorAll(".chip").forEach((chip) => {
       chip.addEventListener("click", () => {
@@ -138,7 +203,260 @@ const stats = {
       });
     });
 
+    this.bindStickyNav();
+    this.bindSwipeNav();
     this.syncControlUI();
+  },
+
+  // D.1: Filterleiste + Sektions-Chips bleiben beim Scrollen sichtbar.
+  // header ist selbst sticky top:0 -- die Filterleiste muss darunter kleben
+  // (Hoehe per CSS-Var), die Sektions-Chips wiederum unter der Filterleiste,
+  // deren Hoehe sich durchs Einklappen aendert -- daher hier statt in CSS.
+  bindStickyNav() {
+    const updateHeaderHeightVar = () => {
+      const header = document.querySelector("header");
+      if (header) document.documentElement.style.setProperty("--app-header-h", `${header.offsetHeight}px`);
+    };
+    updateHeaderHeightVar();
+    window.addEventListener("resize", updateHeaderHeightVar);
+
+    let forceExpanded = false;
+    let expandedAt = 0;
+    let ticking = false;
+    const sync = () => {
+      ticking = false;
+      const bar = document.querySelector(".stats-controlbar");
+      const nav = document.getElementById("stats-section-nav");
+      if (!bar || !nav || !document.getElementById("tab-stats").classList.contains("active")) return;
+      const stickyTop = parseFloat(getComputedStyle(bar).top) || 0;
+      const isStuck = bar.getBoundingClientRect().top <= stickyTop + 0.5;
+      bar.classList.toggle("collapsed", isStuck && !forceExpanded);
+      nav.style.top = `${Math.round(bar.getBoundingClientRect().bottom)}px`;
+    };
+    window.addEventListener("scroll", () => {
+      // Tap-to-expand loest durchs eigene Hoehenwachstum ein "scroll"-Event
+      // aus (Scroll-Anchoring) -- kurze Schonfrist, damit das den gerade
+      // geoeffneten Zustand nicht sofort wieder zuklappt.
+      if (forceExpanded && Date.now() - expandedAt < 300) {
+        if (!ticking) { ticking = true; requestAnimationFrame(sync); }
+        return;
+      }
+      forceExpanded = false;
+      if (!ticking) { ticking = true; requestAnimationFrame(sync); }
+    }, { passive: true });
+
+    document.getElementById("stats-controlbar-summary").addEventListener("click", () => {
+      forceExpanded = true;
+      expandedAt = Date.now();
+      sync();
+    });
+    this._syncStickyNav = sync;
+  },
+
+  updateControlbarSummary() {
+    const el = document.getElementById("stats-controlbar-summary");
+    if (!el) return;
+    const rangeLabel = document.querySelector("#stats-range-chips .chip.active")?.textContent || "";
+    const granLabel = document.querySelector("#stats-gran-chips .chip.active")?.textContent || "";
+    el.textContent = `🔎 ${rangeLabel} · ${granLabel}`;
+  },
+
+  // D.1: Swipe zwischen den Sektionen (Zielgeraet Pixel, 412px) -- einfache
+  // touchstart/touchend-Delta-Logik, kein Bibliotheks-Import.
+  bindSwipeNav() {
+    const el = document.getElementById("stats-sections");
+    if (!el) return;
+    let startX = 0, startY = 0;
+    el.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener("touchend", (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+      const idx = STATS_SECTION_ORDER.indexOf(this.section);
+      const next = STATS_SECTION_ORDER[idx + (dx < 0 ? 1 : -1)];
+      if (!next) return;
+      this.section = next;
+      this.syncControlUI();
+      this.renderSection(this.section);
+    }, { passive: true });
+  },
+
+  // ---- D.4: Kompakte Ansicht (Accordion) ----
+  get compactMode() {
+    const v = localStorage.getItem("stats-compact-mode");
+    return v === null ? true : v === "1"; // Standard AN
+  },
+  set compactMode(v) { localStorage.setItem("stats-compact-mode", v ? "1" : "0"); },
+
+  get expandedCardIds() {
+    try { return JSON.parse(localStorage.getItem("stats-expanded-cards") || "[]"); } catch { return []; }
+  },
+  set expandedCardIds(v) { localStorage.setItem("stats-expanded-cards", JSON.stringify(v)); },
+
+  isCardExpanded(id) {
+    if (!this.compactMode) return true; // AUS = alles offen, wie vor D.4
+    return this.expandedCardIds.includes(id);
+  },
+
+  toggleCardExpanded(id) {
+    const ids = this.expandedCardIds;
+    const i = ids.indexOf(id);
+    if (i === -1) ids.push(id); else ids.splice(i, 1);
+    this.expandedCardIds = ids;
+    if (this.data) this.renderSection(this.section);
+  },
+
+  bindCompactToggle() {
+    const checkbox = document.getElementById("compact-toggle");
+    if (!checkbox) return;
+    checkbox.checked = this.compactMode;
+    checkbox.addEventListener("change", () => {
+      this.compactMode = checkbox.checked;
+      if (this.data) this.renderSection(this.section);
+    });
+  },
+
+  // D.4: Bestehende Chart-Karten bekommen per JS einen Accordion-Wrapper
+  // (kein Eingriff in die Karten-Markup selbst) -- alles nach dem <h2>
+  // wandert in einen .card-body-Container, der bei Collapsed ausgeblendet
+  // wird. Laeuft VOR bindPinButtons(), damit der 📌-Button als Geschwister
+  // von .card-body angehaengt wird, nicht mit hineingezogen.
+  bindAccordion() {
+    this.cardRegistry(this.data || {}).forEach(({ id, hero }) => {
+      const card = document.getElementById(id);
+      if (!card || card.dataset.accordionBound) return;
+      card.dataset.accordionBound = "1";
+      const heading = card.querySelector("h2");
+      if (!heading) return;
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+      [...card.children].forEach((child) => {
+        if (child !== heading) body.appendChild(child);
+      });
+      card.appendChild(body);
+
+      const takeaway = document.createElement("p");
+      takeaway.className = "card-takeaway hidden";
+      card.insertBefore(takeaway, body);
+
+      if (hero) {
+        card.classList.add("accordion-hero");
+        return; // Hero bleibt immer offen, kein Toggle
+      }
+
+      heading.classList.add("card-heading-toggle");
+      heading.appendChild(Object.assign(document.createElement("span"), { className: "card-summary" }));
+      heading.appendChild(Object.assign(document.createElement("span"), { className: "card-chevron", textContent: "▾" }));
+      heading.addEventListener("click", () => this.toggleCardExpanded(id));
+    });
+  },
+
+  // D.4: Deklarative Karten-Registry -- eine Stelle, die weiss, wie jede
+  // Karte gerendert wird (Leaf-Funktionen unveraendert, siehe D.4-Vorgabe
+  // "Render-Logik wird nicht angefasst"), welchen kompakten Summary-Text
+  // sie im eingeklappten Zustand zeigt und ob sie Chart.js braucht
+  // (expensive: nur dafuer lohnt sich Lazy Rendering).
+  cardRegistry(data) {
+    const split = data.split;
+    return [
+      // ---- ✍️ Schreiben ----
+      { id: "card-writing", section: "write", hero: false, expensive: false,
+        render: () => this.renderWritingHeadline(split ? null : data.writing, split),
+        summary: () => data.writing?.avg_words ? t("stats.summaryAvgWords", { n: data.writing.avg_words }) : null },
+      { id: "card-recall", section: "write", hero: true, expensive: true,
+        render: () => this.renderRecall(split ? null : data.per_bucket, split) },
+      { id: "card-heatmap", section: "write", hero: false, expensive: false,
+        render: () => this.renderHeatmap(data.writing.heatmap) },
+      { id: "card-histogram", section: "write", hero: false, expensive: true,
+        render: () => this.renderHistogram(data.writing.histogram) },
+      { id: "card-detail", section: "write", hero: false, expensive: true,
+        render: () => this.renderDetailChart(data.writing.detail_depth_per_bucket),
+        summary: () => {
+          const vals = data.writing.detail_depth_per_bucket.map((b) => b.avg_detail);
+          if (!vals.length) return null;
+          const avg = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+          return t("stats.summaryAvgDetail", { n: avg });
+        } },
+      { id: "card-score", section: "write", hero: false, expensive: true,
+        render: () => this.renderScoreChart(data.writing.score_per_bucket),
+        summary: () => {
+          const last = data.writing.score_per_bucket.at(-1);
+          return last ? t("stats.summaryScore", { n: last.score }) : null;
+        } },
+
+      // ---- ✨ Luzidität ----
+      { id: "card-weeks", section: "lucidity", hero: true, expensive: true,
+        render: () => { if (split) this.renderWeeksSplit(split); else this.renderWeeks(data.per_bucket); } },
+      { id: "card-lucidity-dist", section: "lucidity", hero: false, expensive: true,
+        render: () => this.renderLucidityChart(data.lucidity_distribution),
+        summary: () => t("stats.summaryFullyLucid", { n: data.lucidity_distribution[4] || 0 }) },
+      { id: "incubation-card", section: "lucidity", hero: false, expensive: false,
+        render: () => this.renderIncubation(data.incubation),
+        summary: () => data.incubation?.total ? t("stats.summaryIncubationRate", { n: data.incubation.rate }) : null },
+      { id: "phenomena-card", section: "lucidity", hero: false, expensive: false,
+        render: () => this.renderPhenomena(data.phenomena),
+        summary: () => {
+          const total = data.phenomena ? Object.values(data.phenomena.counts).reduce((a, b) => a + b, 0) : 0;
+          return total ? t("stats.summaryPhenomenaCount", { n: total }) : null;
+        } },
+
+      // ---- 💛 Gefühle (einzige Karte der Sektion -> zwangslaeufig Hero) ----
+      { id: "emotion-section", section: "emotions", hero: true, expensive: false,
+        render: () => this.renderEmotionsSection(data) },
+
+      // ---- 🔬 Experimente ----
+      { id: "card-beifuss", section: "experiments", hero: true, expensive: false,
+        render: () => this.renderBeifuss(data.beifuss) },
+      { id: "card-connections", section: "experiments", hero: false, expensive: false,
+        render: () => this.renderConnections() },
+      { id: "correlation-section", section: "experiments", hero: false, expensive: false,
+        render: () => this.renderCorrelations(data.correlations) },
+
+      // ---- 🧭 Kompass ----
+      { id: "card-compass", section: "compass", hero: true, expensive: true,
+        render: () => { this.renderCompass(data.compass); this.renderMission(data); this.renderSorter(); } },
+      { id: "card-signs", section: "compass", hero: false, expensive: true,
+        render: () => this.renderSigns(data.top_dream_signs),
+        summary: () => data.top_dream_signs?.[0]
+          ? t("stats.summaryTopSign", { name: escapeHtml(data.top_dream_signs[0].name), n: data.top_dream_signs[0].count })
+          : null },
+      { id: "new-elements-card", section: "compass", hero: false, expensive: false,
+        render: () => this.renderNewElements(data.new_elements),
+        summary: () => data.new_elements?.length ? t("stats.summaryNewCount", { n: data.new_elements.length }) : null },
+
+      // ---- 🌗 Rückblick (Render-Funktionen laden async nach) ----
+      { id: "archetype-figures-card", section: "review", hero: true, expensive: false,
+        render: () => this.renderArchetypeFigures() },
+      { id: "mandala-card", section: "review", hero: false, expensive: false,
+        render: () => { const mc = document.getElementById("mandala-card"); if (mc) mandala.render(mc); } },
+    ];
+  },
+
+  // D.4: Takeaway-Zeile aus derselben Finding-Logik wie D.3 -- ein Finding
+  // ist genau an eine Karte gebunden (finding.anchor === card-id). Ohne
+  // sicheres Finding fuer diese Karte: keine Zeile (Konvention aus dem Plan).
+  async renderCardTakeaway(cardId) {
+    const el = document.getElementById(cardId)?.querySelector(".card-takeaway");
+    if (!el) return;
+    const findings = await this.ensureInsightsLoaded();
+    const finding = findings.find((f) => f.anchor === cardId);
+    if (!finding) { el.classList.add("hidden"); el.textContent = ""; return; }
+    el.textContent = t(finding.text_key, this.resolveInsightParams(finding));
+    el.classList.remove("hidden");
+  },
+
+  // Erkenntnisse einmal pro Datensatz laden, von Überblick UND Takeaway-
+  // Zeilen gemeinsam genutzt (kein doppelter Request).
+  ensureInsightsLoaded() {
+    if (this._insightsPromise) return this._insightsPromise;
+    const range = this.computeFromTo();
+    this._insightsPromise = api.statsInsights({ from: range.from, to: range.to })
+      .then((r) => r.findings).catch(() => []);
+    return this._insightsPromise;
   },
 
   syncControlUI() {
@@ -157,6 +475,8 @@ const stats = {
     document.querySelectorAll(".stats-section").forEach((sec) => {
       sec.classList.toggle("hidden", sec.dataset.section !== this.section);
     });
+    this.updateControlbarSummary();
+    this._syncStickyNav?.();
   },
 
   // ---- Vergleichs-Aufriss (A.4) ----
@@ -181,13 +501,307 @@ const stats = {
   renderSection(section) {
     if (!this.data) return;
     const data = this.data;
-    if (section === "write") this.renderWriting(data);
-    if (section === "sleep") this.renderSleepSection(data);
-    if (section === "lucidity") this.renderLucidity(data);
-    if (section === "emotions") this.renderEmotionsSection(data);
-    if (section === "experiments") this.renderExperiments(data);
-    if (section === "compass") this.renderCompassSection(data);
-    if (section === "review") this.renderReview();
+    if (section === "overview") this.renderOverview(data);
+    else if (section === "sleep") this.renderSleepSection(data);
+    else this.renderAccordionSection(section, data);
+    if (section === "overview") this.renderOverview(data);
+    else this.renderAccordionSection(section, data);
+  },
+
+  // D.4: alle Themen-Sektionen (write/lucidity/emotions/experiments/
+  // compass/review) laufen ueber dieselbe Karten-Registry statt eigener
+  // Orchestrator-Funktionen -- damit gilt Lazy Rendering/Hero/Summary
+  // ueberall gleich, ohne dass die Leaf-Render-Funktionen angefasst werden.
+  renderAccordionSection(section, data) {
+    this.cardRegistry(data)
+      .filter((entry) => entry.section === section)
+      .forEach((entry) => {
+        const expanded = entry.hero || this.isCardExpanded(entry.id);
+        if (entry.hero || !entry.expensive || expanded) {
+          entry.render();
+          this._renderedCards?.add(entry.id);
+        }
+        this.syncCardHeader(entry);
+      });
+  },
+
+  // Summary-Text + Auf-/Zu-Zustand einer Karte nach dem Render aktualisieren.
+  syncCardHeader(entry) {
+    const card = document.getElementById(entry.id);
+    if (!card) return;
+    if (!entry.hero) {
+      const summaryEl = card.querySelector(".card-summary");
+      if (summaryEl) summaryEl.textContent = entry.summary ? (entry.summary() || "") : "";
+      card.classList.toggle("collapsed", !this.isCardExpanded(entry.id));
+    }
+    this.renderCardTakeaway(entry.id);
+  },
+
+  // ---- 🏠 Überblick (D.2) ----
+  renderOverview(data) {
+    this.renderOverviewTiles(data);
+    this.renderInsights();
+    this.renderPinnedCards();
+  },
+
+  // D.3: Erkenntnis-Karten -- eigener Endpoint (wie E.1s Verbindungen),
+  // respektiert den Zeitraum-Filter der Seite. Rotation: zuletzt gezeigte
+  // Finding-IDs (localStorage) ruecken ans Ende, Server-Ranking nach
+  // Effektstaerke bleibt sonst erhalten. Maximal 3 sichtbar; ohne Findings
+  // bleibt der Bereich komplett leer (kein "0 Erkenntnisse"-Leerkasten).
+  get insightsSeen() {
+    try { return JSON.parse(localStorage.getItem("stats-insights-seen") || "[]"); } catch { return []; }
+  },
+  set insightsSeen(v) { localStorage.setItem("stats-insights-seen", JSON.stringify(v)); },
+
+  async renderInsights() {
+    const el = document.getElementById("overview-insights");
+    if (!el) return;
+    const findings = await this.ensureInsightsLoaded();
+    if (!findings.length) {
+      el.innerHTML = "";
+      return;
+    }
+    const seen = this.insightsSeen;
+    const ordered = [...findings].sort((a, b) => {
+      const aSeen = seen.includes(a.id) ? 1 : 0;
+      const bSeen = seen.includes(b.id) ? 1 : 0;
+      return aSeen - bSeen; // stabiler Sort: Effekt-Reihenfolge bleibt sonst erhalten
+    });
+    const shown = ordered.slice(0, 3);
+    this.insightsSeen = shown.map((f) => f.id);
+
+    el.innerHTML = shown.map((f, i) => this.renderInsightCard(f, i)).join("");
+    el.querySelectorAll("[data-insight-jump]").forEach((btn) => {
+      const f = shown[Number(btn.dataset.insightJump)];
+      btn.addEventListener("click", () => this.jumpTo(f.section, f.anchor));
+    });
+  },
+
+  renderInsightCard(f, i) {
+    const text = t(f.text_key, this.resolveInsightParams(f));
+    return `<div class="card insight-card">
+      <p>${text} ${nBadge(f.n)}</p>
+      <button type="button" class="insight-jump" data-insight-jump="${i}">${t("insights.jumpToEvidence")}</button>
+    </div>`;
+  },
+
+  // Rohe Backend-Keys (Emotion, Wochentag) in lokalisierte Anzeigeform
+  // uebersetzen -- die Engine liefert bewusst nur Keys, keine Saetze.
+  resolveInsightParams(f) {
+    const p = { ...f.params };
+    if (p.emotion) {
+      const e = EMOTIONS[p.emotion];
+      p.emotion = e ? `${e.icon} ${e.label}` : p.emotion;
+    }
+    if (p.day) {
+      p.day = t(`insights.weekday.${p.day}`);
+    }
+    return p;
+  },
+
+  renderOverviewTiles(data) {
+    const el = document.getElementById("overview-tiles");
+    if (!el) return;
+    const perBucket = data.per_bucket;
+    const last = (arr, key, i = 1) => arr.length >= i ? arr[arr.length - i]?.[key] : null;
+
+    // 🔥 Streak -- hat keine natuerliche "vorherige Bucket"-Vergleichsgroesse
+    // (ein Streak ist ein laufender Zaehler, kein Messwert je Zeitfenster).
+    // Statt eines nicht-aussagekraeftigen Trend-Pfeils zeigt die Kachel einen
+    // 14-Tage-Praesenz-Streifen aus dem ohnehin geladenen Schreib-Kalender.
+    const last14 = data.writing.heatmap.slice(-14);
+    const byDate = Object.fromEntries(last14.map((h) => [h.date, h]));
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    const streakStrip = `<div class="streak-strip">${days.map((d) =>
+      `<span class="streak-dot${byDate[d] ? " filled" : ""}"></span>`).join("")}</div>`;
+
+    const dreamsTotal = perBucket.map((b) => b.total);
+    const weeks = weeksInBuckets(perBucket, data.granularity);
+    const perWeek = weeks > 0 ? Math.round(data.total / weeks) : null;
+
+    const avgWordsSeries = perBucket.map((b) => b.avg_words);
+
+    // Schlafend-Regel (wie E.6): Klartraum-Quote erst ab dem ersten Traum
+    // mit Luziditaet >= 3, sonst Erinnerungs-Score als Ersatz-Kachel.
+    const hasLucid = data.lucid > 0;
+    let fourth;
+    if (hasLucid) {
+      const rateSeries = perBucket.map((b) => b.total ? Math.round((b.lucid / b.total) * 100) : null);
+      fourth = {
+        icon: "✨", value: `${data.lucid_rate}%`, label: t("stats.cardLucidRate"),
+        series: rateSeries, color: "var(--lucid)",
+        jumpSection: "lucidity", jumpTarget: "card-lucidity-dist",
+      };
+    } else {
+      const scoreSeries = data.writing.score_per_bucket.map((s) => s.score);
+      const lastScore = last(data.writing.score_per_bucket, "score");
+      fourth = {
+        icon: "🧮", value: lastScore != null ? lastScore : "–", label: t("stats.overviewRecallScore"),
+        series: scoreSeries, color: "var(--accent)",
+        jumpSection: "write", jumpTarget: "card-score",
+      };
+    }
+
+    const tile = ({ icon, value, label, trend, sparkline, jumpSection, jumpTarget }) => `
+      <div class="overview-tile" data-jump-section="${jumpSection}" data-jump-target="${jumpTarget}">
+        <div class="overview-tile-top">
+          <span class="overview-tile-icon">${icon}</span>
+          <span class="overview-tile-value">${value}</span>
+          ${trend ? `<span class="overview-tile-trend ${trend === "▲" ? "up" : trend === "▼" ? "down" : ""}">${trend}</span>` : ""}
+        </div>
+        <div class="overview-tile-label">${label}</div>
+        ${sparkline}
+      </div>`;
+
+    el.innerHTML = [
+      tile({
+        icon: "🔥", value: data.streak, label: t("stats.cardStreak"),
+        trend: "", sparkline: streakStrip,
+        jumpSection: "write", jumpTarget: "card-heatmap",
+      }),
+      tile({
+        icon: "🌙", value: perWeek != null ? perWeek : "–", label: t("stats.overviewDreamsPerWeek"),
+        trend: trendArrow(last(perBucket, "total"), last(perBucket, "total", 2)),
+        sparkline: sparklineSvg(dreamsTotal, { color: "var(--accent)" }),
+        jumpSection: "lucidity", jumpTarget: "card-weeks",
+      }),
+      tile({
+        icon: "✍️", value: data.writing.avg_words, label: t("stats.avgWordsPerEntry"),
+        trend: trendArrow(last(perBucket, "avg_words"), last(perBucket, "avg_words", 2)),
+        sparkline: sparklineSvg(avgWordsSeries, { color: "var(--accent)" }),
+        jumpSection: "write", jumpTarget: "card-recall",
+      }),
+      tile({
+        icon: fourth.icon, value: fourth.value, label: fourth.label,
+        trend: trendArrow(fourth.series[fourth.series.length - 1], fourth.series[fourth.series.length - 2]),
+        sparkline: sparklineSvg(fourth.series, { color: fourth.color }),
+        jumpSection: fourth.jumpSection, jumpTarget: fourth.jumpTarget,
+      }),
+    ].join("");
+
+    el.querySelectorAll(".overview-tile").forEach((tileEl) => {
+      tileEl.addEventListener("click", () => this.jumpTo(tileEl.dataset.jumpSection, tileEl.dataset.jumpTarget));
+    });
+  },
+
+  // D.2/D.4: sorgt dafuer, dass eine Karte echten Inhalt hat, bevor sie fuer
+  // die Pin-Vorschau geklont wird -- noetig, weil eine Karte im Kompakt-
+  // Modus lazy sein kann (noch nie gerendert). Ruft die Registry-Render-
+  // Funktion direkt auf, unabhaengig vom Auf-/Zu-Zustand.
+  ensureCardRendered(id) {
+    if (CANVAS_ONLY_CARD_IDS.has(id)) return; // Canvas wird beim Pinnen ohnehin entfernt
+    if (this._renderedCards?.has(id)) return;
+    const entry = this.cardRegistry(this.data).find((e) => e.id === id);
+    if (!entry) return;
+    entry.render();
+    this._renderedCards?.add(id);
+  },
+
+  // D.2: "Render-Funktion wiederverwenden" -- statt eigener Kachel-Vorlagen
+  // je Pin wird die bereits gerenderte Quellkarte geklont. <canvas> laesst
+  // sich beim Klonen nicht als Bild mitnehmen (kein Bitmap-Transfer), daher
+  // wird es entfernt; Titel/Hinweistext bleiben als Kontext erhalten.
+  renderPinnedCards() {
+    const container = document.getElementById("overview-pinned");
+    if (!container) return;
+    const pins = this.pins.filter((id) => document.getElementById(id));
+    pins.forEach((id) => this.ensureCardRendered(id));
+
+    container.innerHTML = "";
+    pins.forEach((id) => {
+      const source = document.getElementById(id);
+      if (!source) return;
+      const clone = source.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.classList.add("overview-pinned-card");
+      clone.querySelectorAll("canvas").forEach((c) => c.remove());
+      clone.querySelectorAll(".card-pin-btn").forEach((b) => b.remove());
+
+      const pinBtn = document.createElement("button");
+      pinBtn.type = "button";
+      pinBtn.className = "card-pin-btn pinned";
+      pinBtn.title = t("stats.pinRemove");
+      pinBtn.innerHTML = "📌";
+      pinBtn.addEventListener("click", (e) => { e.stopPropagation(); this.togglePin(id); });
+      clone.appendChild(pinBtn);
+
+      clone.addEventListener("click", (e) => {
+        if (e.target.closest(".card-pin-btn")) return;
+        const section = source.closest(".stats-section")?.dataset.section;
+        if (section) this.jumpTo(section, id);
+      });
+      container.appendChild(clone);
+    });
+  },
+
+  // D.2: Tap auf Kachel/gepinnte Karte -> zugehoerige Sektion oeffnen, zur
+  // Quell-Karte scrollen, kurz hervorheben (~1,5s CSS-Animation).
+  jumpTo(section, targetId) {
+    // D.4: Sprungziel kann eine eingeklappte, noch nicht gerenderte Karte
+    // sein -- vor dem Rendern aufklappen, sonst landet man auf einer
+    // leeren Karte.
+    if (this.compactMode && !this.expandedCardIds.includes(targetId)) {
+      this.expandedCardIds = [...this.expandedCardIds, targetId];
+    }
+    this.section = section;
+    this.syncControlUI();
+    this.renderSection(section);
+    requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      target.classList.add("jump-highlight");
+      setTimeout(() => target.classList.remove("jump-highlight"), 1500);
+    });
+  },
+
+  // ---- 📌 Pins (D.2) ----
+  get pins() {
+    try { return JSON.parse(localStorage.getItem("stats-pins") || "[]"); } catch { return []; }
+  },
+  set pins(v) { localStorage.setItem("stats-pins", JSON.stringify(v)); },
+
+  togglePin(id) {
+    const pins = this.pins;
+    const i = pins.indexOf(id);
+    if (i === -1) pins.push(id); else pins.splice(i, 1);
+    this.pins = pins;
+    this.syncPinButtons();
+    if (this.section === "overview") this.renderPinnedCards();
+  },
+
+  syncPinButtons() {
+    const pins = this.pins;
+    PINNABLE_CARD_IDS.forEach((id) => {
+      const btn = document.querySelector(`#${id} > .card-pin-btn`);
+      if (!btn) return;
+      const pinned = pins.includes(id);
+      btn.classList.toggle("pinned", pinned);
+      btn.title = pinned ? t("stats.pinRemove") : t("stats.pinAdd");
+    });
+  },
+
+  bindPinButtons() {
+    PINNABLE_CARD_IDS.forEach((id) => {
+      const card = document.getElementById(id);
+      if (!card || card.querySelector(":scope > .card-pin-btn")) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "card-pin-btn";
+      btn.innerHTML = "📌";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.togglePin(id);
+      });
+      card.appendChild(btn);
+    });
+    this.syncPinButtons();
   },
 
   renderCards(data) {
@@ -199,16 +813,8 @@ const stats = {
   },
 
   // ---- ✍️ Schreiben (A.3) ----
-  renderWriting(data) {
-    const split = data.split;
-    const writing = split ? null : data.writing;
-    this.renderWritingHeadline(split ? null : data.writing, split);
-    this.renderRecall(split ? null : data.per_bucket, split);
-    this.renderHeatmap(split ? null : data.writing.heatmap);
-    this.renderHistogram(split ? null : data.writing.histogram);
-    this.renderDetailChart(split ? null : data.writing.detail_depth_per_bucket);
-    this.renderScoreChart(split ? null : data.writing.score_per_bucket);
-  },
+  // D.4: renderWriting()-Orchestrator entfernt -- cardRegistry() ruft die
+  // Leaf-Funktionen unten jetzt einzeln auf (lazy pro Karte).
 
   renderWritingHeadline(writing, split) {
     const el = document.getElementById("writing-headline-cards");
@@ -333,26 +939,21 @@ const stats = {
   },
 
   // ---- ✨ Luzidität ----
-  renderLucidity(data) {
-    this.renderIncubation(data.incubation);
-    this.renderPhenomena(data.phenomena);
-    if (data.split) {
-      const a = data.split.per_bucket_a, b = data.split.per_bucket_b;
-      this.makeChart("chart-weeks", {
-        type: "bar",
-        data: {
-          labels: this.mergedBuckets(a, b),
-          datasets: [
-            { label: `${t("stats.cardLucidDreams")} · ${data.split.label_a}`, data: this.alignSeries(a, "lucid"), backgroundColor: "#f5c66a" },
-            { label: `${t("stats.cardLucidDreams")} · ${data.split.label_b}`, data: this.alignSeries(b, "lucid"), backgroundColor: "#8b7ff5" },
-          ],
-        },
-        options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
-      });
-    } else {
-      this.renderWeeks(data.per_bucket);
-    }
-    this.renderLucidityChart(data.lucidity_distribution);
+  // D.4: aus renderLucidity() herausgeloest, damit cardRegistry() dieselbe
+  // Split-Logik fuer chart-weeks aufrufen kann, ohne sie zu duplizieren.
+  renderWeeksSplit(split) {
+    const a = split.per_bucket_a, b = split.per_bucket_b;
+    this.makeChart("chart-weeks", {
+      type: "bar",
+      data: {
+        labels: this.mergedBuckets(a, b),
+        datasets: [
+          { label: `${t("stats.cardLucidDreams")} · ${split.label_a}`, data: this.alignSeries(a, "lucid"), backgroundColor: "#f5c66a" },
+          { label: `${t("stats.cardLucidDreams")} · ${split.label_b}`, data: this.alignSeries(b, "lucid"), backgroundColor: "#8b7ff5" },
+        ],
+      },
+      options: this.baseOptions({ y: { ticks: { stepSize: 1 } } }),
+    });
   },
 
   renderIncubation(incubation) {
@@ -528,11 +1129,7 @@ const stats = {
   },
 
   // ---- 🔬 Experimente ----
-  renderExperiments(data) {
-    this.renderBeifuss(data.beifuss);
-    this.renderConnections();
-    this.renderCorrelations(data.correlations);
-  },
+  // D.4: renderExperiments()-Orchestrator entfernt -- siehe cardRegistry().
 
   // ---- 😴 Schlaf (SS.1) ----
   renderSleepSection(data) {
@@ -884,13 +1481,7 @@ const stats = {
   },
 
   // ---- 🧭 Kompass ----
-  renderCompassSection(data) {
-    this.renderCompass(data.compass);
-    this.renderMission(data);
-    this.renderSorter();
-    this.renderSigns(data.top_dream_signs);
-    this.renderNewElements(data.new_elements);
-  },
+  // D.4: renderCompassSection()-Orchestrator entfernt -- siehe cardRegistry().
 
   renderNewElements(newElements) {
     const el = document.getElementById("new-elements-list");
@@ -1017,11 +1608,7 @@ const stats = {
   },
 
   // ---- 🌗 Rückblick ----
-  async renderReview() {
-    await this.renderArchetypeFigures();
-    const mc = document.getElementById("mandala-card");
-    if (mc) await mandala.render(mc);
-  },
+  // D.4: renderReview()-Orchestrator entfernt -- siehe cardRegistry().
 
   // ---- 🌗 Deine inneren Figuren (H.3: Bezug Lexikon ↔ eigene Analyse) ----
   async renderArchetypeFigures() {

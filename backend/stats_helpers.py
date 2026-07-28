@@ -636,3 +636,21 @@ def build_connections(dreams: list[Dream]) -> dict:
         "emotion_elements": emotion_elements,
         "n_dreams": n_dreams,
     }
+
+
+def compute_streak(dreams: list[Dream]) -> int:
+    """An wie vielen Tagen in Folge (bis heute/gestern) wurde eingetragen?
+    Ausgelagert aus routers/stats.py, da D.3 (insights.py) dieselbe Logik
+    braucht. Nimmt entgegen, was der Aufrufer uebergibt (zeitraum-gefiltert
+    oder komplette Historie) -- /api/stats gibt bewusst weiterhin die
+    gefilterte Liste rein, damit sich die Streak-Kachel konsistent zum
+    Rest der Seite verhaelt."""
+    days = {d.date for d in dreams}
+    streak = 0
+    cursor = dt.date.today()
+    if cursor not in days:
+        cursor -= dt.timedelta(days=1)
+    while cursor in days:
+        streak += 1
+        cursor -= dt.timedelta(days=1)
+    return streak
