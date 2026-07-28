@@ -128,8 +128,12 @@ async def import_nights(
     if overwrite_mode not in OVERWRITE_MODES:
         raise HTTPException(422, "invalid_overwrite_mode")
 
+    MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+    raw = await file.read()
+    if len(raw) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "tracker_import_too_large")
     try:
-        fitness_text = (await file.read()).decode("utf-8-sig")
+        fitness_text = raw.decode("utf-8-sig")
     except UnicodeDecodeError:
         raise HTTPException(422, "tracker_import_bad_format")
     score_text = None
@@ -273,6 +277,8 @@ def upsert_night(date: dt.date, payload: NightIn, session: Session = Depends(get
         if payload.bed_time is None or payload.wake_time is None:
             raise HTTPException(422, "invalid_night_payload")
         if not TIME_RE.match(payload.bed_time) or not TIME_RE.match(payload.wake_time):
+            raise HTTPException(422, "invalid_night_payload")
+        if payload.bed_time == payload.wake_time:
             raise HTTPException(422, "invalid_night_payload")
         night.bed_time = payload.bed_time
         night.wake_time = payload.wake_time

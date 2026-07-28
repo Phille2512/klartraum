@@ -26,20 +26,40 @@ def _backup_file(dest: Path) -> None:
     finally:
         dst_conn.close()
         src_conn.close()
+    check_conn = sqlite3.connect(str(dest))
+    try:
+        result = check_conn.execute("PRAGMA integrity_check").fetchone()
+        if result[0] != "ok":
+            dest.unlink(missing_ok=True)
+            raise RuntimeError(f"Backup-Integritätscheck fehlgeschlagen: {result[0]}")
+    finally:
+        check_conn.close()
 
 
 def _daily_backup_path(day: dt.date) -> Path:
     return BACKUP_DIR / f"dreams-{day.isoformat()}.db"
 
 
+def _backup_auth(day: dt.date) -> None:
+    auth_src = DATA_DIR / "auth.json"
+    if auth_src.exists():
+        auth_dest = BACKUP_DIR / f"auth-{day.isoformat()}.json"
+        if not auth_dest.exists():
+            import shutil
+            auth_dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(auth_src, auth_dest)
+
+
 def create_daily_backup_if_missing() -> bool:
     """Legt höchstens einmal pro Tag ein Backup an. True, wenn neu erzeugt."""
     if not DB_PATH.exists():
         return False  # Neuinstallation: noch keine Datenbank zu sichern
-    dest = _daily_backup_path(dt.date.today())
+    today = dt.date.today()
+    dest = _daily_backup_path(today)
     if dest.exists():
         return False
     _backup_file(dest)
+    _backup_auth(today)
     _rotate()
     return True
 

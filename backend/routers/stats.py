@@ -118,7 +118,7 @@ def stats(
     # Wort-Neuheiten: Zeichen/Orte/Personen/Tags, die zum ersten Mal überhaupt
     # auftauchen — unabhängig vom gewählten Zeitraum-Filter der Seite, sonst
     # würde ein enger Filter ältere Elemente fälschlich als "neu" zeigen.
-    all_dreams = session.exec(select(Dream)).all()
+    # (all_dreams stammt aus der Abfrage weiter oben, kein zweiter DB-Roundtrip)
     first_seen: dict[tuple[str, str], dt.date] = {}
     for d in sorted(all_dreams, key=lambda x: x.date):
         for t in d.tags:
